@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Maquette de travail — Audit fiscal GEM</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #0f62fe;
+      --ok: #198754;
+      --warn: #d97706;
+    }
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 32px auto;
+      padding: 0 20px;
+    }
+    .header {
+      background: linear-gradient(135deg, #0f62fe, #3b82f6);
+      color: white;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 10px 24px rgba(15, 98, 254, 0.2);
+      margin-bottom: 18px;
+    }
+    .header h1 { margin: 0 0 6px 0; font-size: 1.6rem; }
+    .header p { margin: 0; opacity: .95; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 4px 16px rgba(2, 6, 23, 0.08);
+    }
+    .span-12 { grid-column: span 12; }
+    .span-6 { grid-column: span 6; }
+    .span-4 { grid-column: span 4; }
+    h2 { margin-top: 0; font-size: 1.05rem; color: #0b3ea8; }
+    ul, ol { margin: 8px 0 0 18px; padding: 0; }
+    li { margin: 5px 0; }
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: .78rem;
+      margin-right: 6px;
+      background: #e8f0ff;
+      color: #0b3ea8;
+      font-weight: 600;
+    }
+    .risk { color: var(--warn); font-weight: 700; }
+    .measure { color: var(--ok); font-weight: 700; }
+    .muted { color: var(--muted); }
+    .timeline li { list-style: none; margin-left: -16px; }
+    .timeline b { color: #0f62fe; }
+    @media (max-width: 900px) {
+      .span-6, .span-4 { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="header">
+      <h1>Maquette de travail — Cadrage audit fiscal GEM</h1>
+      <p>Version visuelle simplifiée pour revue interne avant validation en kick-off.</p>
+    </section>
+
+    <section class="grid">
+      <article class="card span-6">
+        <h2>Contexte & objectifs</h2>
+        <p class="muted">Relancer un audit fiscal structuré pour sécuriser la conformité et prioriser les remédiations.</p>
+        <ul>
+          <li>Vision claire du niveau de conformité par impôt/taxe</li>
+          <li>Cartographie des risques priorisée (impact × probabilité)</li>
+          <li>Écarts documentés avec pièces justificatives</li>
+          <li>Plan de remédiation chiffré et planifié</li>
+        </ul>
+      </article>
+
+      <article class="card span-6">
+        <h2>Périmètre</h2>
+        <p>
+          <span class="pill">IS</span>
+          <span class="pill">TVA</span>
+          <span class="pill">Taxes locales</span>
+          <span class="pill">Paie (si applicable)</span>
+        </p>
+        <ul>
+          <li>Entité GEM + filiales validées</li>
+          <li>Finance, Comptabilité, Contrôle de gestion, RH/Paie, Juridique, IT</li>
+          <li>3 derniers exercices clos (+ extension en cours si risque élevé)</li>
+        </ul>
+      </article>
+
+      <article class="card span-4">
+        <h2>Méthodologie</h2>
+        <ol class="timeline">
+          <li><b>S1</b> — Lancement & collecte</li>
+          <li><b>S2–S4</b> — Revue technique & tests</li>
+          <li><b>S5</b> — Consolidation des constats</li>
+          <li><b>S6</b> — Restitution finale & plan d’actions</li>
+        </ol>
+      </article>
+
+      <article class="card span-4">
+        <h2>Livrables</h2>
+        <ul>
+          <li>Note de cadrage validée</li>
+          <li>Matrice des risques fiscaux</li>
+          <li>Rapport d’audit fiscal</li>
+          <li>Plan de remédiation priorisé</li>
+          <li>Support de restitution Direction</li>
+        </ul>
+      </article>
+
+      <article class="card span-4">
+        <h2>Gouvernance</h2>
+        <ul>
+          <li><b>Sponsor :</b> Direction Financière GEM</li>
+          <li><b>Pilotage :</b> Responsable Fiscalité / Comptable</li>
+          <li><b>Rythme :</b> point hebdomadaire (30–45 min)</li>
+          <li><b>Comité :</b> décision aux jalons</li>
+        </ul>
+      </article>
+
+      <article class="card span-12">
+        <h2>Risques projet & mesures</h2>
+        <ul>
+          <li><span class="risk">Documentation incomplète</span> → <span class="measure">check-list et relances hebdomadaires</span></li>
+          <li><span class="risk">Indisponibilité des contributeurs</span> → <span class="measure">planning verrouillé + suppléants</span></li>
+          <li><span class="risk">Évolution du périmètre</span> → <span class="measure">gestion des changements validée par le Sponsor</span></li>
+        </ul>
+      </article>
+    </section>
+  </div>
+</body>
+</html>
