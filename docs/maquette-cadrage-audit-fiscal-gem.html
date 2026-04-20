@@ -3,148 +3,236 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Maquette de travail — Audit fiscal GEM</title>
+  <title>Maquette réelle de travail — Audit fiscal GEM</title>
   <style>
     :root {
-      --bg: #f6f8fb;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --accent: #0f62fe;
-      --ok: #198754;
+      --bg: #f3f6fb;
+      --card: #fff;
+      --text: #111827;
+      --subtle: #6b7280;
+      --primary: #0f62fe;
+      --border: #e5e7eb;
+      --good: #198754;
       --warn: #d97706;
+      --danger: #dc2626;
     }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
-      background: var(--bg);
       color: var(--text);
+      background: var(--bg);
       line-height: 1.45;
     }
-    .container {
-      max-width: 1100px;
-      margin: 32px auto;
-      padding: 0 20px;
-    }
-    .header {
-      background: linear-gradient(135deg, #0f62fe, #3b82f6);
-      color: white;
-      padding: 24px;
+    .container { max-width: 1180px; margin: 24px auto 36px; padding: 0 18px; }
+    .hero {
+      background: linear-gradient(135deg, #0f62fe, #2563eb);
+      color: #fff;
       border-radius: 14px;
-      box-shadow: 0 10px 24px rgba(15, 98, 254, 0.2);
-      margin-bottom: 18px;
+      padding: 22px;
+      box-shadow: 0 10px 30px rgba(15,98,254,.25);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 16px;
     }
-    .header h1 { margin: 0 0 6px 0; font-size: 1.6rem; }
-    .header p { margin: 0; opacity: .95; }
+    .hero h1 { margin: 0 0 6px; font-size: 1.45rem; }
+    .hero p { margin: 0; opacity: .95; }
+    .meta { text-align: right; font-size: .9rem; opacity: .95; }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: 0 3px 10px rgba(0,0,0,.04);
+    }
+    .kpi .label { color: var(--subtle); font-size: .82rem; }
+    .kpi .value { font-size: 1.22rem; font-weight: 700; margin-top: 2px; }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(12, 1fr);
-      gap: 16px;
+      gap: 14px;
     }
     .card {
       background: var(--card);
+      border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 16px 18px;
-      box-shadow: 0 4px 16px rgba(2, 6, 23, 0.08);
+      padding: 14px 16px;
+      box-shadow: 0 3px 10px rgba(0,0,0,.04);
     }
-    .span-12 { grid-column: span 12; }
+    .span-8 { grid-column: span 8; }
     .span-6 { grid-column: span 6; }
     .span-4 { grid-column: span 4; }
-    h2 { margin-top: 0; font-size: 1.05rem; color: #0b3ea8; }
-    ul, ol { margin: 8px 0 0 18px; padding: 0; }
+    .span-12 { grid-column: span 12; }
+
+    h2 {
+      margin: 0 0 8px;
+      color: #0b3ea8;
+      font-size: 1.02rem;
+      border-bottom: 1px dashed #dbe4ff;
+      padding-bottom: 6px;
+    }
+    ul { margin: 8px 0 0 18px; padding: 0; }
     li { margin: 5px 0; }
     .pill {
       display: inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: .78rem;
-      margin-right: 6px;
       background: #e8f0ff;
       color: #0b3ea8;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: .78rem;
+      margin: 0 5px 6px 0;
       font-weight: 600;
     }
-    .risk { color: var(--warn); font-weight: 700; }
-    .measure { color: var(--ok); font-weight: 700; }
-    .muted { color: var(--muted); }
-    .timeline li { list-style: none; margin-left: -16px; }
-    .timeline b { color: #0f62fe; }
-    @media (max-width: 900px) {
-      .span-6, .span-4 { grid-column: span 12; }
+    .timeline {
+      border-left: 3px solid #cddcff;
+      margin-left: 7px;
+      padding-left: 12px;
+    }
+    .timeline p { margin: 10px 0; }
+    .phase { color: #0f62fe; font-weight: 700; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: .92rem;
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 8px 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { color: var(--subtle); font-weight: 600; font-size: .82rem; text-transform: uppercase; }
+
+    .tag {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: .74rem;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .tag-critical { background: #fee2e2; color: var(--danger); }
+    .tag-major { background: #ffedd5; color: var(--warn); }
+    .tag-ok { background: #dcfce7; color: var(--good); }
+
+    .footnote { color: var(--subtle); font-size: .84rem; margin-top: 12px; }
+
+    @media (max-width: 980px) {
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+      .span-8, .span-6, .span-4 { grid-column: span 12; }
+      .meta { text-align: left; }
+      .hero { flex-direction: column; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <section class="header">
-      <h1>Maquette de travail — Cadrage audit fiscal GEM</h1>
-      <p>Version visuelle simplifiée pour revue interne avant validation en kick-off.</p>
+    <section class="hero">
+      <div>
+        <h1>Audit fiscal GEM — Maquette réelle de pilotage</h1>
+        <p>Support visuel pour revue de cadrage avant validation en comité de lancement.</p>
+      </div>
+      <div class="meta">
+        <div><strong>Période auditée :</strong> N-3 à N-1</div>
+        <div><strong>Horizon mission :</strong> 6 semaines</div>
+        <div><strong>Version :</strong> v2 (travail)</div>
+      </div>
+    </section>
+
+    <section class="kpis">
+      <article class="kpi"><div class="label">Impôts / taxes couverts</div><div class="value">4</div></article>
+      <article class="kpi"><div class="label">Fonctions contributrices</div><div class="value">6</div></article>
+      <article class="kpi"><div class="label">Livrables majeurs</div><div class="value">5</div></article>
+      <article class="kpi"><div class="label">Rythme de suivi</div><div class="value">Hebdo</div></article>
     </section>
 
     <section class="grid">
-      <article class="card span-6">
-        <h2>Contexte & objectifs</h2>
-        <p class="muted">Relancer un audit fiscal structuré pour sécuriser la conformité et prioriser les remédiations.</p>
+      <article class="card span-8">
+        <h2>Objectifs opérationnels</h2>
         <ul>
-          <li>Vision claire du niveau de conformité par impôt/taxe</li>
-          <li>Cartographie des risques priorisée (impact × probabilité)</li>
-          <li>Écarts documentés avec pièces justificatives</li>
-          <li>Plan de remédiation chiffré et planifié</li>
+          <li>Évaluer la conformité par impôt/taxe et par entité.</li>
+          <li>Qualifier les risques fiscaux (impact × probabilité) avec priorisation.</li>
+          <li>Consolider les écarts et justificatifs dans une piste d’audit exploitable.</li>
+          <li>Produire un plan de remédiation chiffré, affecté et séquencé.</li>
         </ul>
       </article>
 
-      <article class="card span-6">
-        <h2>Périmètre</h2>
-        <p>
+      <article class="card span-4">
+        <h2>Périmètre fiscal</h2>
+        <div>
           <span class="pill">IS</span>
           <span class="pill">TVA</span>
           <span class="pill">Taxes locales</span>
-          <span class="pill">Paie (si applicable)</span>
-        </p>
-        <ul>
-          <li>Entité GEM + filiales validées</li>
-          <li>Finance, Comptabilité, Contrôle de gestion, RH/Paie, Juridique, IT</li>
-          <li>3 derniers exercices clos (+ extension en cours si risque élevé)</li>
-        </ul>
+          <span class="pill">Obligations paie</span>
+        </div>
+        <p class="footnote">Périmètre final validé en lancement selon entités et disponibilité documentaire.</p>
       </article>
 
-      <article class="card span-4">
-        <h2>Méthodologie</h2>
-        <ol class="timeline">
-          <li><b>S1</b> — Lancement & collecte</li>
-          <li><b>S2–S4</b> — Revue technique & tests</li>
-          <li><b>S5</b> — Consolidation des constats</li>
-          <li><b>S6</b> — Restitution finale & plan d’actions</li>
-        </ol>
+      <article class="card span-6">
+        <h2>Méthodologie (6 semaines)</h2>
+        <div class="timeline">
+          <p><span class="phase">S1</span> — Kick-off, collecte, cadrage détaillé.</p>
+          <p><span class="phase">S2–S4</span> — Revue technique, tests ciblés, rapprochements.</p>
+          <p><span class="phase">S5</span> — Consolidation des constats et restitution intermédiaire.</p>
+          <p><span class="phase">S6</span> — Rapport final et plan d’actions priorisé.</p>
+        </div>
       </article>
 
-      <article class="card span-4">
-        <h2>Livrables</h2>
-        <ul>
-          <li>Note de cadrage validée</li>
-          <li>Matrice des risques fiscaux</li>
-          <li>Rapport d’audit fiscal</li>
-          <li>Plan de remédiation priorisé</li>
-          <li>Support de restitution Direction</li>
-        </ul>
-      </article>
-
-      <article class="card span-4">
-        <h2>Gouvernance</h2>
-        <ul>
-          <li><b>Sponsor :</b> Direction Financière GEM</li>
-          <li><b>Pilotage :</b> Responsable Fiscalité / Comptable</li>
-          <li><b>Rythme :</b> point hebdomadaire (30–45 min)</li>
-          <li><b>Comité :</b> décision aux jalons</li>
-        </ul>
+      <article class="card span-6">
+        <h2>Livrables attendus</h2>
+        <table>
+          <thead>
+            <tr><th>Livrable</th><th>Responsable</th><th>Échéance</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Note de cadrage validée</td><td>Pilote mission</td><td>S1</td></tr>
+            <tr><td>Matrice des risques fiscaux</td><td>Équipe audit</td><td>S5</td></tr>
+            <tr><td>Rapport d’audit fiscal</td><td>Équipe audit</td><td>S6</td></tr>
+            <tr><td>Plan de remédiation</td><td>Finance + métiers</td><td>S6</td></tr>
+            <tr><td>Support comité Direction</td><td>Sponsor / PMO</td><td>S6</td></tr>
+          </tbody>
+        </table>
       </article>
 
       <article class="card span-12">
-        <h2>Risques projet & mesures</h2>
-        <ul>
-          <li><span class="risk">Documentation incomplète</span> → <span class="measure">check-list et relances hebdomadaires</span></li>
-          <li><span class="risk">Indisponibilité des contributeurs</span> → <span class="measure">planning verrouillé + suppléants</span></li>
-          <li><span class="risk">Évolution du périmètre</span> → <span class="measure">gestion des changements validée par le Sponsor</span></li>
-        </ul>
+        <h2>Registre de risques projet (extrait)</h2>
+        <table>
+          <thead>
+            <tr><th>Risque</th><th>Niveau</th><th>Mesure de maîtrise</th><th>Statut</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Documentation incomplète</td>
+              <td><span class="tag tag-major">Majeur</span></td>
+              <td>Check-list documentaire + relances hebdomadaires</td>
+              <td><span class="tag tag-ok">En cours</span></td>
+            </tr>
+            <tr>
+              <td>Indisponibilité des référents clés</td>
+              <td><span class="tag tag-major">Majeur</span></td>
+              <td>Planning verrouillé + suppléants nommés</td>
+              <td><span class="tag tag-ok">À suivre</span></td>
+            </tr>
+            <tr>
+              <td>Extension de périmètre en cours de mission</td>
+              <td><span class="tag tag-critical">Critique</span></td>
+              <td>Gestion de changement validée par Sponsor</td>
+              <td><span class="tag tag-ok">Contrôlé</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="footnote">Cette maquette est un support de travail visuel. Le document source contractuel reste le cadrage Markdown.</p>
       </article>
     </section>
   </div>
