@@ -1,0 +1,979 @@
+<title>Label Pack Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout : atelier en trois zones — réglages | plan 3D & plan de découpe | devis. S'empile sur tablette et mobile. */
+:root{
+  --paper:#eceeea; --surface:#ffffff; --surface-2:#f5f6f3; --ink:#15181d; --muted:#5b626b; --line:#d6d9d2;
+  --accent:#b80f5a; --accent-soft:rgba(184,15,90,.09); --on-accent:#ffffff;
+  --stage:#e1e4de; --cut:#d4261c; --crease:#2360d0; --bleed:#1f9fc4; --warn:#a85b00; --warn-soft:rgba(168,91,0,.1);
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111317; --surface:#1a1d22; --surface-2:#20242a; --ink:#eceeea; --muted:#9aa1aa; --line:#2e333b;
+  --accent:#ff4f9b; --accent-soft:rgba(255,79,155,.12); --on-accent:#16080f;
+  --stage:#0c0e11; --cut:#ff5d50; --crease:#6c9cff; --bleed:#41c4e8; --warn:#ffb347; --warn-soft:rgba(255,179,71,.12);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111317; --surface:#1a1d22; --surface-2:#20242a; --ink:#eceeea; --muted:#9aa1aa; --line:#2e333b;
+  --accent:#ff4f9b; --accent-soft:rgba(255,79,155,.12); --on-accent:#16080f;
+  --stage:#0c0e11; --cut:#ff5d50; --crease:#6c9cff; --bleed:#41c4e8; --warn:#ffb347; --warn-soft:rgba(255,179,71,.12);
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  border-bottom:1px solid var(--line);background:var(--surface)}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:30px;height:30px;flex:none}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:800;font-size:19px;letter-spacing:-.01em}
+.brand h1 span{font-weight:500;color:var(--muted)}
+@media (max-width:560px){.steps{display:none!important}}
+.steps{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.steps span{padding:3px 8px;border:1px solid var(--line);border-radius:99px}
+
+.app{display:grid;gap:16px;grid-template-columns:300px minmax(0,1fr) 330px;align-items:start;
+  padding-block:16px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (max-width:1180px){.app{grid-template-columns:290px minmax(0,1fr)}.quote{grid-column:1 / -1}}
+@media (max-width:760px){.app{grid-template-columns:minmax(0,1fr)}.stage{order:-1}}
+
+.panel,.quote,.stage{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+.panel{display:flex;flex-direction:column}
+.sec{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.sec:last-child{border-bottom:0}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h2.eyebrow{margin:0;font-weight:500}
+
+.models{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.model input{position:absolute;opacity:0;pointer-events:none}
+.model label{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px 8px;border:1px solid var(--line);border-radius:var(--r);
+  cursor:pointer;text-align:center;font-size:12px;line-height:1.2;background:var(--surface-2);height:100%}
+.model svg{width:42px;height:34px;color:var(--muted)}
+.model input:checked + label{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.model input:checked + label svg{color:var(--accent)}
+.model input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
+.model-desc{font-size:12.5px;color:var(--muted);margin:0}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label,.lbl{font-size:12px;color:var(--muted)}
+.field input[type=number],.field input[type=text],.field select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:5px;background:var(--surface-2);min-width:0}
+.unit{position:relative}
+.unit input{padding-right:34px!important;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.unit::after{content:attr(data-unit);position:absolute;right:9px;top:50%;transform:translateY(-50%);font-family:var(--f-mono);font-size:11px;color:var(--muted);pointer-events:none}
+.checks{display:flex;flex-direction:column;gap:6px}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
+.check input{accent-color:var(--accent);width:16px;height:16px}
+.colors{display:flex;gap:10px;flex-wrap:wrap}
+.swatch{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.swatch input{width:34px;height:28px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer}
+.upload{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 12px;border:1px solid var(--line);border-radius:5px;background:var(--surface-2);cursor:pointer;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.file-btn input{position:absolute;width:1px;height:1px;opacity:0}
+.file-btn{position:relative}
+.file-btn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.warn{font-size:12px;color:var(--warn);background:var(--warn-soft);padding:6px 9px;border-radius:5px;margin:0}
+
+/* scène */
+.stage{display:flex;flex-direction:column;overflow:hidden}
+.stage-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tabs{display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:2px}
+.tabs button{border:0;background:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:13px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--f-mono);font-size:11.5px;font-variant-numeric:tabular-nums}
+.chips span{padding:3px 8px;border-radius:4px;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.view{position:relative;height:clamp(360px,64vh,700px);background:var(--stage)}
+.view canvas{display:block;width:100%;height:100%;touch-action:none}
+#v2d{overflow:auto;display:flex;align-items:center;justify-content:center;padding:12px}
+#v2d svg{width:100%;height:100%;max-width:100%}
+.legend{position:absolute;left:12px;bottom:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:6px 10px}
+.legend i{display:inline-block;width:18px;height:0;vertical-align:middle;margin-right:6px;border-top:2px solid}
+.lg-cut i{border-color:var(--cut)} .lg-crease i{border-top-style:dashed;border-color:var(--crease)} .lg-bleed i{border-top-width:6px;border-color:var(--bleed);opacity:.45}
+.view-tools{position:absolute;right:12px;top:12px;display:flex;gap:6px}
+.view-tools .btn{background:var(--surface)}
+.foldbar{display:flex;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid var(--line);flex-wrap:wrap}
+.foldbar label{font-size:12px;color:var(--muted);white-space:nowrap}
+.foldbar input[type=range]{flex:1;min-width:140px;accent-color:var(--accent)}
+.foldbar output{font-family:var(--f-mono);font-size:12px;width:44px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* devis */
+.quote{display:flex;flex-direction:column}
+.q-head{display:flex;justify-content:space-between;align-items:center}
+.pill{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:99px;border:1px solid var(--warn);color:var(--warn)}
+.qty-row{display:flex;gap:6px;flex-wrap:wrap}
+.qty-row .field{flex:1 1 110px}
+.presets{display:flex;gap:4px;flex-wrap:wrap}
+.presets button{padding:4px 8px;font-size:12px;font-family:var(--f-mono);border:1px solid var(--line);background:var(--surface-2);border-radius:4px;cursor:pointer}
+.presets button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.unit-price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.unit-price b{font-family:var(--f-display);font-weight:800;font-size:34px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.unit-price span{color:var(--muted);font-size:12.5px}
+.totals{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin:0;font-variant-numeric:tabular-nums}
+.totals dt{color:var(--muted)} .totals dd{margin:0;text-align:right;font-family:var(--f-mono)}
+.totals .ttc{font-weight:600;color:var(--ink)} .totals dd.ttc{font-weight:600}
+.err{color:var(--cut);font-size:13px;margin:0}
+table.tiers{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:12.5px}
+.tiers th{font-weight:500;color:var(--muted);text-align:right;padding:4px 6px;border-bottom:1px solid var(--line);font-size:11.5px}
+.tiers th:first-child,.tiers td:first-child{text-align:left}
+.tiers td{padding:5px 6px;text-align:right;font-family:var(--f-mono);border-bottom:1px solid var(--line);cursor:pointer}
+.tiers tr:hover td{background:var(--surface-2)}
+.tiers tr.on td{background:var(--accent-soft);color:var(--ink)}
+.tiers tr.on td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.lines{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;font-size:12.5px}
+.lines li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.lines li:last-child{border-bottom:0}
+.lines small{grid-column:1;color:var(--muted);font-family:var(--f-mono);font-size:11px}
+.lines b{font-weight:500;font-family:var(--f-mono);font-variant-numeric:tabular-nums;grid-row:1 / span 2;grid-column:2;align-self:center}
+details summary{cursor:pointer;font-size:13px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";font-family:var(--f-mono);color:var(--muted)}
+details[open] summary::after{content:"−"}
+details > :not(summary){margin-top:8px}
+.tech{display:grid;grid-template-columns:1fr auto;gap:5px 12px;margin:0;font-size:12.5px}
+.tech dt{color:var(--muted)} .tech dd{margin:0;text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.actions .btn{flex:1 1 140px}
+.params{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.fallback{display:flex;flex-direction:column;gap:6px}
+.fallback textarea{width:100%;height:120px;font-family:var(--f-mono);font-size:11px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:6px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:8px 14px;border-radius:5px;font-size:13px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.foot{grid-column:1 / -1;font-size:12px;color:var(--muted);margin:0}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+</style>
+
+<header class="top">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 30 30" aria-hidden="true"><rect x="1" y="1" width="28" height="28" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11h14M8 19h14M11 8v14M19 8v14" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="2.5 2"/><rect x="11" y="11" width="8" height="8" fill="var(--accent)"/></svg>
+    <h1>Label Pack <span>Studio</span></h1>
+  </div>
+  <nav class="steps" aria-label="Étapes"><span>1 · Modèle</span><span>2 · Format</span><span>3 · Matière</span><span>4 · Visuel</span><span>5 · Devis</span></nav>
+</header>
+
+<main class="app">
+  <aside class="panel" aria-label="Configuration">
+    <section class="sec">
+      <h2 class="eyebrow">Modèle</h2>
+      <div class="models" role="radiogroup" aria-label="Modèle d'emballage">
+        <div class="model"><input type="radio" name="model" id="m-tuck" value="tuck"><label for="m-tuck">
+          <svg viewBox="0 0 42 34" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 8l10-4 10 4v20l-10 4-10-4z"/><path d="M14 8l10 4 10-4M24 12v20"/><path d="M14 8l-4-4 10-2"/></svg>Étui pliant</label></div>
+        <div class="model"><input type="radio" name="model" id="m-tray" value="tray"><label for="m-tray">
+          <svg viewBox="0 0 42 34" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 14l16-7 16 7-16 7z"/><path d="M5 14v8l16 7 16-7v-8M21 21v8"/></svg>Barquette</label></div>
+        <div class="model"><input type="radio" name="model" id="m-label" value="label"><label for="m-label">
+          <svg viewBox="0 0 42 34" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="12" y="3" width="18" height="5" rx="1"/><path d="M11 9h20v21a2 2 0 0 1-2 2H13a2 2 0 0 1-2-2z"/><rect x="11" y="14" width="20" height="11" fill="currentColor" fill-opacity=".18"/></svg>Étiquette</label></div>
+      </div>
+      <p class="model-desc" id="modelDesc"></p>
+    </section>
+
+    <section class="sec">
+      <h2 class="eyebrow">Format (mm)</h2>
+      <div class="grid2" id="dims"></div>
+      <p class="warn" id="dimWarn" hidden></p>
+    </section>
+
+    <section class="sec">
+      <h2 class="eyebrow">Matière &amp; impression</h2>
+      <div class="field"><label for="mat">Support</label><select id="mat"></select></div>
+      <div class="grid2">
+        <div class="field"><label for="print">Impression</label><select id="print"></select></div>
+        <div class="field"><label for="lam">Finition</label><select id="lam"></select></div>
+      </div>
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="varnish"> Vernis sélectif UV</label>
+        <label class="check"><input type="checkbox" id="foil"> Dorure à chaud (marque)</label>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2 class="eyebrow">Visuel</h2>
+      <div class="field"><label for="brand">Marque</label><input type="text" id="brand" maxlength="28"></div>
+      <div class="field"><label for="product">Produit</label><input type="text" id="product" maxlength="60"></div>
+      <div class="field"><label for="mention">Mention</label><input type="text" id="mention" maxlength="60"></div>
+      <div class="colors">
+        <label class="swatch"><input type="color" id="bg"> Fond</label>
+        <label class="swatch"><input type="color" id="accent"> Accent</label>
+        <div class="field" style="flex:1 1 120px"><label for="pattern" class="lbl">Motif</label>
+          <select id="pattern"><option value="none">Uni</option><option value="zellige">Zellige</option><option value="lines">Rayures</option><option value="dots">Points</option></select></div>
+      </div>
+      <label class="check"><input type="checkbox" id="raw"> Laisser le support brut (sans aplat)</label>
+      <div class="upload">
+        <label class="btn file-btn">Importer un logo<input type="file" id="logo" accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>
+        <button type="button" class="btn" id="logoClear" hidden>Retirer</button>
+      </div>
+      <p class="hint">Exemple de marque fictive. Remplacez par le visuel du client (PNG/SVG, fond transparent de préférence).</p>
+    </section>
+  </aside>
+
+  <section class="stage" aria-label="Aperçu">
+    <div class="stage-bar">
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tab3d" aria-selected="true" aria-controls="v3d">Maquette 3D</button>
+        <button role="tab" id="tab2d" aria-selected="false" aria-controls="v2d">Plan de découpe</button>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="view" id="v3d" role="tabpanel" aria-labelledby="tab3d">
+      <div class="view-tools"><button class="btn" id="reframe" type="button">Recadrer</button></div>
+    </div>
+    <div class="view" id="v2d" role="tabpanel" aria-labelledby="tab2d" hidden>
+      <div class="legend"><span class="lg-cut"><i></i>Coupe</span><span class="lg-crease"><i></i>Rainage / pli</span><span class="lg-bleed"><i></i>Fond perdu</span></div>
+      <div class="view-tools"><label class="btn check" style="gap:6px"><input type="checkbox" id="showArt" checked> Visuel</label></div>
+    </div>
+    <div class="foldbar">
+      <label for="fold" id="foldLbl">Pliage</label>
+      <input type="range" id="fold" min="0" max="100" step="1" value="100">
+      <output id="foldOut" for="fold">100 %</output>
+      <button class="btn" id="animate" type="button" aria-pressed="false">Animer</button>
+    </div>
+  </section>
+
+  <aside class="quote" aria-label="Devis">
+    <section class="sec">
+      <div class="q-head"><h2 class="eyebrow">Devis instantané</h2><span class="pill">Tarifs indicatifs</span></div>
+      <div class="qty-row">
+        <div class="field"><label for="qty">Quantité</label><div class="unit" data-unit="ex."><input type="number" id="qty" min="100" step="100"></div></div>
+      </div>
+      <div class="presets" id="presets"></div>
+    </section>
+    <section class="sec" id="qMain"></section>
+    <section class="sec">
+      <table class="tiers"><thead><tr><th>Quantité</th><th>Total HT</th><th>Unitaire HT</th></tr></thead><tbody id="tiers"></tbody></table>
+    </section>
+    <section class="sec"><details open><summary>Détail des coûts</summary><ul class="lines" id="qLines"></ul></details></section>
+    <section class="sec"><details open><summary>Fiche technique</summary><dl class="tech" id="tech"></dl></details></section>
+    <section class="sec">
+      <div class="actions">
+        <button class="btn primary" id="copyQuote" type="button">Copier le devis</button>
+        <button class="btn" id="copySvg" type="button">Copier le plan SVG</button>
+      </div>
+      <div class="fallback" id="fallback" hidden>
+        <label for="fallbackText" class="hint">La copie automatique est bloquée ici. Le texte est sélectionné : copiez-le avec Ctrl+C / ⌘C.</label>
+        <textarea id="fallbackText" readonly></textarea>
+        <button class="btn" type="button" id="fallbackClose">Fermer</button>
+      </div>
+    </section>
+    <section class="sec"><details><summary>Paramètres tarifaires</summary>
+      <p class="hint">Hypothèses de démonstration en TND. Remplacez-les par la grille tarifaire de l'imprimerie.</p>
+      <div class="params" id="params"></div></details></section>
+  </aside>
+  <p class="foot">Prototype de configurateur d'emballage inspiré des outils de maquettage en ligne. Les prix sont des estimations à valider par l'atelier avant tout BAT.</p>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+const fmt3 = new Intl.NumberFormat("fr-FR", {minimumFractionDigits:3, maximumFractionDigits:3});
+const fmt0 = new Intl.NumberFormat("fr-FR", {maximumFractionDigits:0});
+const fmt1 = new Intl.NumberFormat("fr-FR", {maximumFractionDigits:1});
+const tnd = v => fmt3.format(v) + " TND";
+
+/* ---------- Catalogue ---------- */
+const MODELS = {
+  tuck: {name:"Étui pliant", desc:"Étui à rabats rentrants avec patte de collage — cosmétique, pharmacie, agroalimentaire.", kind:"box", fold:"Pliage"},
+  tray: {name:"Barquette", desc:"Plateau à bords relevés et pattes d'angle — coffrets, pâtisserie, fruits secs.", kind:"box", fold:"Pliage"},
+  label:{name:"Étiquette", desc:"Étiquette adhésive en bobine, posée sur pot ou bouteille cylindrique.", kind:"label", fold:"Enroulement"},
+};
+const DIM_FIELDS = {
+  tuck:[["L","Longueur",20,300],["W","Profondeur",15,200],["H","Hauteur",25,350]],
+  tray:[["L","Longueur",40,480],["W","Largeur",40,400],["H","Hauteur des bords",10,150]],
+  label:[["lw","Largeur étiquette",20,320],["lh","Hauteur étiquette",15,250],["d","Diamètre du pot",30,200],["ch","Hauteur du pot",40,300]],
+};
+const MAT = {
+  box:{
+    gc1:{name:"Carton GC1 300 g · blanc/blanc", inside:"#f2f2ef", raw:"#f7f7f4"},
+    duplex:{name:"Carton duplex 350 g · dos gris", inside:"#c8c5bc", raw:"#f7f7f4"},
+    kraft:{name:"Carton kraft 350 g", inside:"#a98352", raw:"#b78b58"},
+    micro:{name:"Micro-cannelure E · ondulé", inside:"#be9767", raw:"#c6a173"},
+  },
+  label:{
+    couche:{name:"Papier couché adhésif", raw:"#ffffff"},
+    ppw:{name:"Polypropylène blanc", raw:"#ffffff"},
+    ppt:{name:"Polypropylène transparent", raw:null},
+    verge:{name:"Papier vergé (vins, huiles)", raw:"#efe8d6"},
+  }
+};
+const PRINT = {box:{cmjn:"Offset quadri CMJN", cmjnp:"Quadri + 1 Pantone", noir:"1 couleur (noir)"}, label:{num:"Numérique quadri", numb:"Quadri + blanc de soutien"}};
+const LAM = {box:{none:"Sans pelliculage", mat:"Pelliculage mat", brillant:"Pelliculage brillant", soft:"Soft-touch"}, label:{none:"Sans finition", vernis:"Vernis brillant", lam:"Lamination mate"}};
+const ROUGH = {none:.8, mat:.75, brillant:.28, soft:.95, vernis:.3, lam:.7};
+
+/* Grille tarifaire de démonstration (TND) — à remplacer par la grille réelle */
+const PRICING = {
+  marge:25, gache:6, tva:19,
+  box:{sheet:{gc1:1.10, duplex:0.85, kraft:0.95, micro:1.60}, sheetsCal:80,
+    plates:{cmjn:4, cmjnp:5, noir:1}, platePrice:45, printCal:{cmjn:180, cmjnp:240, noir:70}, printSheet:{cmjn:0.07, cmjnp:0.09, noir:0.03},
+    lam:{none:0, mat:0.22, brillant:0.20, soft:0.45}, varnishCal:120, varnishSheet:0.10, foilCal:230, foilSheet:0.14,
+    dieBase:150, diePerM:45, cutCal:60, cutSheet:0.05, glueCal:50, gluePc:0.025},
+  label:{m2:{couche:2.6, ppw:4.2, ppt:4.8, verge:4.5}, web:330, gap:3, calM:25, printCal:40, printM2:{num:6.5, numb:8.9},
+    fin:{none:0, vernis:0.9, lam:1.6}, toolBase:160, toolOval:40, cutM:0.05, foilCal:120, foilM2:2.5, varnishCal:60, varnishM2:1.1, rollPer:1000, rollCost:0.8}
+};
+const TIERS = [500, 1000, 2500, 5000, 10000];
+
+const DEFAULT = {
+  model:"tuck",
+  dims:{tuck:{L:60, W:40, H:150}, tray:{L:220, W:150, H:45}, label:{lw:200, lh:62, d:75, ch:95, shape:"rect", r:4}},
+  mat:{box:"gc1", label:"couche"}, print:{box:"cmjn", label:"num"}, lam:{box:"mat", label:"vernis"},
+  varnish:false, foil:true, raw:false,
+  design:{bg:"#123c3a", accent:"#e2b25a", brand:"Néroli", product:"Crème mains à la fleur d'oranger", mention:"75 ml · Fabriqué en Tunisie", pattern:"zellige"},
+  qty:2500, fold:1, showArt:true, view:"3d"
+};
+let state = structuredClone(DEFAULT);
+let logoImg = null, logoData = null;
+try {
+  const saved = JSON.parse(localStorage.getItem("lp-studio-v1") || "null");
+  if (saved && saved.dims) { state = Object.assign(structuredClone(DEFAULT), saved, {fold:1}); state.dims = Object.assign(structuredClone(DEFAULT.dims), saved.dims); }
+} catch (e) {}
+const save = () => { try { localStorage.setItem("lp-studio-v1", JSON.stringify(state)); } catch (e) {} };
+const kind = () => MODELS[state.model].kind;
+
+/* ---------- Géométrie des panneaux (coordonnées mm, y vers le haut) ---------- */
+const R = (x0, y0, x1, y1) => [[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
+function tuckPoly(L, t, s){ const k = Math.min(t*.35, L*.2); return [[0,0],[L,0],[L-2,s*t*.55],[L-2-k,s*t],[2+k,s*t],[2,s*t*.55]]; }
+function dustPoly(W, d, s, slantRight){
+  const k = d*.35;
+  return slantRight ? [[0,0],[W,0],[W-k,s*d],[2,s*d]] : [[0,0],[W,0],[W-2,s*d],[k,s*d]];
+}
+function buildTuck({L, W, H}){
+  const g = Math.min(15, L*.3), t = Math.min(18, W*.5, H*.25), d = Math.min(W*.9, L*.45);
+  return [
+    {id:"front", name:"Face avant", poly:R(0,0,L,H), role:{type:"main", up:[0,1]}},
+    {id:"s1", name:"Côté", parent:"front", anchor:[L,0], axis:"right", poly:R(0,0,W,H), stage:[.15,.5], role:{type:"side", up:[-1,0]}},
+    {id:"back", name:"Face arrière", parent:"s1", anchor:[W,0], axis:"right", poly:R(0,0,L,H), stage:[.15,.5], role:{type:"back", up:[0,1]}},
+    {id:"s2", name:"Côté", parent:"back", anchor:[L,0], axis:"right", poly:R(0,0,W,H), stage:[.15,.5], role:{type:"side", up:[-1,0]}},
+    {id:"glue", name:"Collage", parent:"s2", anchor:[W,0], axis:"right", inset:[-.6,0,-.3], poly:[[0,0],[g,6],[g,H-6],[0,H]], stage:[0,.15], glue:true},
+    {id:"dT1", parent:"s1", anchor:[0,H], axis:"top", poly:dustPoly(W,d,1,true), stage:[.6,.75]},
+    {id:"dT2", parent:"s2", anchor:[0,H], axis:"top", poly:dustPoly(W,d,1,false), stage:[.6,.75]},
+    {id:"lidT", name:"Rabat", parent:"back", anchor:[0,H], axis:"top", inset:[0,.6,0], poly:R(0,0,L,W), stage:[.72,.93], role:{type:"lid", up:[0,1]}},
+    {id:"tuckT", parent:"lidT", anchor:[0,W], axis:"top", inset:[0,-.6,-.3], poly:tuckPoly(L,t,1), stage:[.82,1]},
+    {id:"dB1", parent:"s1", anchor:[0,0], axis:"bottom", poly:dustPoly(W,d,-1,false), stage:[.42,.56]},
+    {id:"dB2", parent:"s2", anchor:[0,0], axis:"bottom", poly:dustPoly(W,d,-1,true), stage:[.42,.56]},
+    {id:"lidB", name:"Fond", parent:"front", anchor:[0,0], axis:"bottom", inset:[0,-.6,0], poly:R(0,-W,L,0), stage:[.52,.7]},
+    {id:"tuckB", parent:"lidB", anchor:[0,-W], axis:"bottom", inset:[0,.6,-.3], poly:tuckPoly(L,t,-1), stage:[.58,.74]},
+  ];
+}
+function buildTray({L, W, H}){
+  const t = Math.min(18, W*.35, L*.35);
+  return [
+    {id:"base", name:"Fond", poly:R(0,0,L,W), role:{type:"base", up:[0,1]}},
+    {id:"fw", name:"Bord avant", parent:"base", anchor:[0,0], axis:"bottom", poly:R(0,-H,L,0), stage:[.5,.92], role:{type:"main", up:[0,-1]}},
+    {id:"bw", name:"Bord arrière", parent:"base", anchor:[0,W], axis:"top", poly:R(0,0,L,H), stage:[.5,.92], role:{type:"back", up:[0,1]}},
+    {id:"rw", name:"Bord", parent:"base", anchor:[L,0], axis:"right", poly:R(0,0,H,W), stage:[.2,.55], role:{type:"side", up:[1,0]}},
+    {id:"lw", name:"Bord", parent:"base", anchor:[0,0], axis:"left", poly:R(-H,0,0,W), stage:[.2,.55], role:{type:"side", up:[-1,0]}},
+    {id:"fwR", parent:"fw", anchor:[L,0], axis:"right", inset:[-.6,0,-.3], poly:[[0,0],[t,-3],[t,-H+3],[0,-H]], stage:[0,.25], glue:true},
+    {id:"fwL", parent:"fw", anchor:[0,0], axis:"left", inset:[.6,0,-.3], poly:[[0,0],[0,-H],[-t,-H+3],[-t,-3]], stage:[0,.25], glue:true},
+    {id:"bwR", parent:"bw", anchor:[L,0], axis:"right", inset:[-.6,0,-.3], poly:[[0,0],[t,3],[t,H-3],[0,H]], stage:[0,.25], glue:true},
+    {id:"bwL", parent:"bw", anchor:[0,0], axis:"left", inset:[.6,0,-.3], poly:[[0,0],[0,H],[-t,H-3],[-t,3]], stage:[0,.25], glue:true},
+  ];
+}
+function roundRectPoly(w, h, r){
+  if (r < .5) return R(0,0,w,h);
+  const pts = [], c = [[w-r,r,-90],[w-r,h-r,0],[r,h-r,90],[r,r,180]];
+  for (const [cx, cy, a0] of c) for (let i = 0; i <= 6; i++){ const a = (a0 + i*15) * Math.PI/180; pts.push([cx + r*Math.cos(a), cy + r*Math.sin(a)]); }
+  return pts;
+}
+function ellipsePoly(w, h){ const pts = []; for (let i = 0; i < 72; i++){ const a = i/72*2*Math.PI; pts.push([w/2 + w/2*Math.cos(a), h/2 + h/2*Math.sin(a)]); } return pts; }
+function buildLabel({lw, lh, shape, r}){
+  const poly = shape === "ovale" ? ellipsePoly(lw, lh) : roundRectPoly(lw, lh, Math.min(r, lw/2, lh/2));
+  return [{id:"label", name:"Étiquette", poly, role:{type:"label", up:[0,1]}}];
+}
+
+function polyBox(pts){ let a=1e9,b=1e9,c=-1e9,d=-1e9; for (const [x,y] of pts){ a=Math.min(a,x); b=Math.min(b,y); c=Math.max(c,x); d=Math.max(d,y);} return {minX:a,minY:b,maxX:c,maxY:d,w:c-a,h:d-b}; }
+function onSeg(p, a, b){
+  const cr = (b[0]-a[0])*(p[1]-a[1]) - (b[1]-a[1])*(p[0]-a[0]);
+  const len = Math.hypot(b[0]-a[0], b[1]-a[1]);
+  if (Math.abs(cr)/len > .01) return false;
+  const dot = ((p[0]-a[0])*(b[0]-a[0]) + (p[1]-a[1])*(b[1]-a[1])) / (len*len);
+  return dot > -1e-4 && dot < 1 + 1e-4;
+}
+function computeLayout(){
+  const m = state.model, dims = state.dims[m];
+  const panels = m === "tuck" ? buildTuck(dims) : m === "tray" ? buildTray(dims) : buildLabel(dims);
+  const byId = {};
+  for (const p of panels){
+    byId[p.id] = p;
+    const par = p.parent ? byId[p.parent] : null;
+    p.g = par ? [par.g[0] + p.anchor[0], par.g[1] + p.anchor[1]] : [0,0];
+    p.gpoly = p.poly.map(([x,y]) => [x + p.g[0], y + p.g[1]]);
+  }
+  const hinges = [];
+  for (const p of panels){
+    if (!p.parent) continue;
+    const vert = p.axis === "right" || p.axis === "left";
+    const on = p.poly.filter(([x,y]) => Math.abs(vert ? x : y) < 1e-6).map(([x,y]) => vert ? y : x);
+    const lo = Math.min(...on), hi = Math.max(...on);
+    hinges.push(vert ? [[p.g[0], p.g[1]+lo],[p.g[0], p.g[1]+hi]] : [[p.g[0]+lo, p.g[1]],[p.g[0]+hi, p.g[1]]]);
+  }
+  const cuts = [];
+  for (const p of panels){
+    const q = p.gpoly;
+    for (let i = 0; i < q.length; i++){
+      const a = q[i], b = q[(i+1) % q.length];
+      if (Math.hypot(b[0]-a[0], b[1]-a[1]) < 1e-6) continue;
+      if (hinges.some(([s,e]) => onSeg(a,s,e) && onSeg(b,s,e))) continue;
+      cuts.push([a,b]);
+    }
+  }
+  const segLen = arr => arr.reduce((s,[a,b]) => s + Math.hypot(b[0]-a[0], b[1]-a[1]), 0);
+  const cbb = polyBox(panels.flatMap(p => p.gpoly));
+  const bleed = kind() === "label" ? 2 : 3;
+  const bb = {minX:cbb.minX-bleed, minY:cbb.minY-bleed, maxX:cbb.maxX+bleed, maxY:cbb.maxY+bleed, w:cbb.w+2*bleed, h:cbb.h+2*bleed};
+  return {panels, byId, hinges, cuts, cutLen:segLen(cuts), creaseLen:segLen(hinges), cbb, bb, bleed};
+}
+
+/* ---------- Visuel (canvas couvrant tout le développé) ---------- */
+function hexLum(hex){ const n = parseInt(hex.slice(1),16); const c = [n>>16&255, n>>8&255, n&255].map(v => { v/=255; return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); }); return .2126*c[0] + .7152*c[1] + .0722*c[2]; }
+function eanBits(d12){
+  const L = ["0001101","0011001","0010011","0111101","0100011","0110001","0101111","0111011","0110111","0001011"];
+  const Rr = L.map(s => s.replace(/./g, c => c === "0" ? "1" : "0"));
+  const G = Rr.map(s => s.split("").reverse().join(""));
+  const P = ["LLLLLL","LLGLGG","LLGGLG","LLGGGL","LGLLGG","LGGLLG","LGGGLL","LGLGLG","LGLGGL","LGGLGL"];
+  const d = d12.split("").map(Number);
+  const sum = d.reduce((s,v,i) => s + v*(i % 2 ? 3 : 1), 0);
+  d.push((10 - sum % 10) % 10);
+  let bits = "101";
+  for (let i = 1; i <= 6; i++) bits += (P[d[0]][i-1] === "L" ? L : G)[d[i]];
+  bits += "01010";
+  for (let i = 7; i <= 12; i++) bits += Rr[d[i]];
+  return {bits: bits + "101", digits: d.join("")};
+}
+const EAN = eanBits("619123456789"); // préfixe GS1 Tunisie 619 — code d'exemple
+function drawEAN(ctx, x, y, w, h, ink){
+  const qz = w*.08, mw = (w - 2*qz) / 95;
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = ink;
+  const barH = h*.78;
+  for (let i = 0; i < 95; i++){
+    if (EAN.bits[i] !== "1") continue;
+    const guard = i < 3 || (i >= 45 && i < 50) || i >= 92;
+    ctx.fillRect(x + qz + i*mw, y + h*.05, mw + .02, guard ? barH + h*.06 : barH);
+  }
+  ctx.font = `500 ${h*.13}px "IBM Plex Mono", monospace`; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(EAN.digits.replace(/^(\d)(\d{6})(\d{6})$/, "$1  $2  $3"), x + w/2, y + h*.97);
+}
+function fitFont(ctx, text, maxW, size, weight, fam){
+  let s = size;
+  ctx.font = `${weight} ${s}px ${fam}`;
+  const w = ctx.measureText(text).width;
+  if (w > maxW) { s = s * maxW / w; ctx.font = `${weight} ${s}px ${fam}`; }
+  return s;
+}
+function wrapLines(ctx, text, maxW, maxLines){
+  const words = text.split(/\s+/).filter(Boolean), lines = [];
+  let cur = "";
+  for (const w of words){ const t = cur ? cur + " " + w : w; if (ctx.measureText(t).width > maxW && cur){ lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur);
+  if (lines.length > maxLines){ lines.length = maxLines; lines[maxLines-1] += "…"; }
+  return lines;
+}
+const DISPLAY = '"Archivo", "Helvetica Neue", Arial, sans-serif', BODY = '"IBM Plex Sans", Arial, sans-serif';
+
+function drawPattern(ctx, bb, kindName, color){
+  if (kindName === "none") return;
+  ctx.save(); ctx.strokeStyle = color; ctx.fillStyle = color; ctx.globalAlpha = .22; ctx.lineWidth = .5;
+  const sp = 14;
+  if (kindName === "lines"){
+    ctx.beginPath();
+    for (let x = bb.minX - bb.h; x < bb.maxX; x += sp*.5){ ctx.moveTo(x, bb.minY); ctx.lineTo(x + bb.h, bb.maxY); }
+    ctx.stroke();
+  } else if (kindName === "dots"){
+    for (let y = bb.minY; y < bb.maxY; y += sp*.6) for (let x = bb.minX + ((Math.round((y-bb.minY)/(sp*.6)) % 2) * sp*.3); x < bb.maxX; x += sp*.6){ ctx.beginPath(); ctx.arc(x, y, .9, 0, 7); ctx.fill(); }
+  } else {
+    const r = sp*.42;
+    for (let y = bb.minY; y < bb.maxY + sp; y += sp) for (let x = bb.minX; x < bb.maxX + sp; x += sp){
+      ctx.beginPath();
+      for (let k = 0; k < 2; k++){ for (let i = 0; i < 4; i++){ const a = (i*90 + k*45) * Math.PI/180; const px = x + r*Math.cos(a), py = y + r*Math.sin(a); i ? ctx.lineTo(px,py) : ctx.moveTo(px,py); } ctx.closePath(); }
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawArt(layout){
+  const {bb} = layout, d = state.design, k = kind();
+  const s = Math.min(8, 4096 / Math.max(bb.w, bb.h));
+  const cv = document.createElement("canvas");
+  cv.width = Math.ceil(bb.w * s); cv.height = Math.ceil(bb.h * s);
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(s, 0, 0, -s, -bb.minX * s, bb.maxY * s);
+  const mat = MAT[k][state.mat[k]];
+  const rawColor = mat.raw;
+  const transparentRaw = state.raw && rawColor === null;
+  const ground = state.raw ? (rawColor || "#ffffff") : d.bg;
+  if (!transparentRaw){ ctx.fillStyle = ground; ctx.fillRect(bb.minX, bb.minY, bb.w, bb.h); }
+  if (!state.raw) drawPattern(ctx, bb, d.pattern, d.accent);
+  const ink = transparentRaw ? "#1b1b1b" : (hexLum(ground) > .42 ? "#1b1d20" : "#fbfaf6");
+  for (const p of layout.panels) if (p.role) drawPanel(ctx, p, d, ink);
+  if (k === "label"){
+    ctx.globalCompositeOperation = "destination-in";
+    ctx.beginPath(); layout.panels[0].gpoly.forEach(([x,y],i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y)); ctx.closePath(); ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+  }
+  return cv;
+}
+function brandFill(ctx, x, w, ink){
+  if (!state.foil) return ink;
+  const g = ctx.createLinearGradient(x, 0, x + w, 0);
+  g.addColorStop(0, "#9a7328"); g.addColorStop(.35, "#f6dc8c"); g.addColorStop(.55, "#b88a33"); g.addColorStop(.8, "#f3d27a"); g.addColorStop(1, "#8e6a22");
+  return g;
+}
+function drawPanel(ctx, p, d, ink){
+  const b = polyBox(p.gpoly), up = p.role.up, vert = up[0] !== 0;
+  const pw = vert ? b.h : b.w, ph = vert ? b.w : b.h;
+  ctx.save();
+  ctx.translate(b.minX + b.w/2, b.minY + b.h/2); ctx.scale(1, -1); ctx.rotate(Math.atan2(up[0], up[1]));
+  const m = Math.min(pw, ph) * .09, iw = pw - 2*m, top = -ph/2 + m, bottom = ph/2 - m;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = ink;
+  const type = p.role.type;
+  if (type === "main" || type === "label"){
+    let codeW = 0;
+    if (type === "label" && pw > 2.4*ph){ codeW = Math.min(pw*.2, 38); const ch = Math.min(ph*.5, codeW*.7); drawEAN(ctx, pw/2 - m - codeW, bottom - ch, codeW, ch, "#111"); ctx.fillStyle = ink; }
+    const cx = -codeW/2, cw = iw - (codeW ? codeW + m : 0);
+    const items = [];
+    if (logoImg){ const r = logoImg.width / logoImg.height; let lh = Math.min(ph*.22, cw*.5 / r); items.push({h:lh, draw:y => ctx.drawImage(logoImg, cx - lh*r/2, y, lh*r, lh)}); }
+    const bs = fitFont(ctx, d.brand, cw, Math.min(cw*.26, ph*(type === "label" ? .26 : .13)), 800, DISPLAY);
+    items.push({h:bs*1.05, draw:y => { ctx.font = `800 ${bs}px ${DISPLAY}`; ctx.fillStyle = brandFill(ctx, cx - cw/2, cw, ink); ctx.fillText(d.brand, cx, y + bs*.55); ctx.fillStyle = ink; }});
+    items.push({h:bs*.35, draw:y => { ctx.fillStyle = d.accent; ctx.fillRect(cx - cw*.12, y + bs*.15, cw*.24, Math.max(.4, bs*.05)); ctx.fillStyle = ink; }});
+    ctx.font = `500 ${bs*.34}px ${BODY}`;
+    const ps = Math.max(bs*.34, 2);
+    ctx.font = `500 ${ps}px ${BODY}`;
+    const lines = wrapLines(ctx, d.product, cw, 3);
+    items.push({h:lines.length*ps*1.3, draw:y => { ctx.font = `500 ${ps}px ${BODY}`; lines.forEach((l,i) => ctx.fillText(l, cx, y + ps*.65 + i*ps*1.3)); }});
+    const gap = Math.min(ph*.04, bs*.35);
+    const total = items.reduce((s,it) => s + it.h, 0) + gap*(items.length - 1);
+    const ms = Math.max(Math.min(ps*.8, cw*.05), 1.6);
+    const avail = ph - 2*m - ms*2;
+    let y = top + Math.max(0, (avail - total)/2);
+    for (const it of items){ it.draw(y); y += it.h + gap; }
+    ctx.font = `400 ${ms}px ${BODY}`; ctx.globalAlpha = .85;
+    ctx.fillText(fitText(ctx, d.mention, cw), cx, bottom - ms*.5); ctx.globalAlpha = 1;
+  } else if (type === "side"){
+    const bs = fitFont(ctx, d.brand, iw*.7, ph*.42, 800, DISPLAY);
+    ctx.fillStyle = brandFill(ctx, -iw*.35, iw*.7, ink); ctx.fillText(d.brand, 0, 0); ctx.fillStyle = ink;
+    if (ph > 25){ ctx.font = `400 ${Math.min(bs*.32, 3.2)}px ${BODY}`; ctx.globalAlpha = .8; ctx.fillText(fitText(ctx, d.mention, iw), 0, ph/2 - m*1.2); ctx.globalAlpha = 1; }
+  } else if (type === "back"){
+    const ts = Math.min(iw*.07, 5);
+    ctx.font = `700 ${ts}px ${DISPLAY}`;
+    let y = top + ts;
+    for (const l of wrapLines(ctx, d.product, iw, 2)){ ctx.fillText(l, 0, y); y += ts*1.25; }
+    ctx.font = `400 ${ts*.7}px ${BODY}`; ctx.fillText(fitText(ctx, d.mention, iw), 0, y + ts*.2);
+    const cw = Math.min(iw*.8, 37.29), chh = cw * 25.93/37.29;
+    const boxTop = y + ts*1.2, boxBottom = bottom - chh - m*.6;
+    if (boxBottom - boxTop > ts*2){
+      ctx.save(); ctx.strokeStyle = ink; ctx.globalAlpha = .45; ctx.setLineDash([1,1]); ctx.lineWidth = .3;
+      ctx.strokeRect(-iw/2, boxTop, iw, boxBottom - boxTop);
+      ctx.font = `400 ${ts*.6}px ${BODY}`; ctx.fillText("Zone mentions légales / ingrédients", 0, (boxTop + boxBottom)/2); ctx.restore();
+    }
+    if (ph > chh*1.6) drawEAN(ctx, -cw/2, bottom - chh, cw, chh, "#111");
+  } else if (type === "base"){
+    const bs = fitFont(ctx, d.brand, iw*.5, ph*.14, 800, DISPLAY);
+    ctx.globalAlpha = .9; ctx.fillStyle = brandFill(ctx, -iw*.25, iw*.5, ink); ctx.fillText(d.brand, 0, 0); ctx.globalAlpha = 1;
+  } else if (type === "lid"){
+    fitFont(ctx, d.brand, iw*.6, ph*.4, 800, DISPLAY); ctx.globalAlpha = .9; ctx.fillStyle = brandFill(ctx, -iw*.3, iw*.6, ink); ctx.fillText(d.brand, 0, 0); ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+function fitText(ctx, text, maxW){ if (ctx.measureText(text).width <= maxW) return text; let t = text; while (t.length > 1 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1); return t + "…"; }
+
+/* ---------- Scène 3D ---------- */
+const v3d = $("#v3d");
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+v3d.prepend(renderer.domElement);
+renderer.domElement.setAttribute("aria-label", "Maquette 3D interactive : faites glisser pour tourner, molette pour zoomer");
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, 1, 1, 30000);
+camera.position.set(260, 220, 420);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = .08; controls.maxPolarAngle = Math.PI*.495;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x9aa0a8, .75));
+const key = new THREE.DirectionalLight(0xffffff, .85);
+key.position.set(350, 700, 500); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -.0004;
+scene.add(key);
+const fill = new THREE.DirectionalLight(0xffffff, .3); fill.position.set(-500, 200, -300); scene.add(fill);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000), new THREE.ShadowMaterial({opacity:.14}));
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+const holder = new THREE.Group(); scene.add(holder);
+let layout = null, artCanvas = null, texture = null, labelMesh = null, autoFrame = true;
+const box3 = new THREE.Box3(), v = new THREE.Vector3();
+const lin = c => new THREE.Color(c).convertSRGBToLinear();
+
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#e1e4de"; }
+function applyTheme(){ scene.background = new THREE.Color(cssVar("--stage")); }
+applyTheme();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { applyTheme(); render2D(); });
+new MutationObserver(() => { applyTheme(); render2D(); }).observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]});
+
+function disposeHolder(){
+  holder.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(m => m.dispose()); });
+  holder.clear(); holder.rotation.set(0,0,0); holder.position.set(0,0,0);
+}
+function build3D(){
+  disposeHolder();
+  if (texture) texture.dispose();
+  texture = new THREE.CanvasTexture(artCanvas);
+  texture.encoding = THREE.sRGBEncoding; texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const k = kind(), bb = layout.bb;
+  const rough = ROUGH[state.lam[k]] ?? .7;
+  if (k === "box"){
+    const matOut = new THREE.MeshStandardMaterial({map:texture, roughness:rough, metalness:0, side:THREE.FrontSide});
+    const matIn = new THREE.MeshStandardMaterial({color:lin(MAT.box[state.mat.box].inside), roughness:.95, side:THREE.BackSide});
+    const edge = new THREE.LineBasicMaterial({color:0x000000, transparent:true, opacity:.18});
+    const nodes = {};
+    for (const p of layout.panels){
+      const grp = new THREE.Group(), ins = p.inset || [0,0,0];
+      if (p.parent){ grp.position.set(p.anchor[0] + ins[0], p.anchor[1] + ins[1], ins[2]); nodes[p.parent].add(grp); } else holder.add(grp);
+      const geo = new THREE.ShapeGeometry(new THREE.Shape(p.poly.map(([x,y]) => new THREE.Vector2(x,y))));
+      const pos = geo.attributes.position, uv = geo.attributes.uv;
+      for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) + p.g[0] - bb.minX)/bb.w, (pos.getY(i) + p.g[1] - bb.minY)/bb.h);
+      uv.needsUpdate = true;
+      const out = new THREE.Mesh(geo, matOut); out.castShadow = true;
+      const inn = new THREE.Mesh(geo, matIn); inn.castShadow = true;
+      grp.add(out, inn, new THREE.LineSegments(new THREE.EdgesGeometry(geo), edge));
+      nodes[p.id] = grp; p.node = grp;
+    }
+  } else {
+    const {lw, lh, d, ch} = state.dims.label, r0 = d/2;
+    const glass = new THREE.Mesh(new THREE.CylinderGeometry(r0, r0, ch, 72), new THREE.MeshStandardMaterial({color:lin(0xdde8e4), transparent:true, opacity:.28, roughness:.06, metalness:.1, depthWrite:false}));
+    glass.position.y = ch/2; glass.renderOrder = 3;
+    const fillM = new THREE.Mesh(new THREE.CylinderGeometry(r0*.92, r0*.92, ch*.8, 64), new THREE.MeshStandardMaterial({color:lin(0xd59a2c), roughness:.35}));
+    fillM.position.y = ch*.4 + 2; fillM.castShadow = true;
+    const capH = Math.min(18, ch*.16);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(r0*1.03, r0*1.03, capH, 72), new THREE.MeshStandardMaterial({color:lin(0x24272c), roughness:.35, metalness:.55}));
+    cap.position.y = ch + capH/2; cap.castShadow = true;
+    holder.add(fillM, glass, cap);
+    const sx = 96, geo = new THREE.BufferGeometry(), uvs = [], idx = [];
+    for (let j = 0; j <= 1; j++) for (let i = 0; i <= sx; i++){ const x = lw*i/sx, y = lh*j; uvs.push((x - bb.minX)/bb.w, (y - bb.minY)/bb.h); }
+    for (let i = 0; i < sx; i++){ const a = i, c = i + sx + 1; idx.push(a, a+1, c, a+1, c+1, c); }
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array((sx+1)*2*3), 3));
+    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+    geo.setIndex(idx);
+    labelMesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({map:texture, roughness:rough, transparent:true, alphaTest:.04, side:THREE.DoubleSide}));
+    labelMesh.castShadow = true; labelMesh.userData = {sx, lw, lh, R:r0 + .5, yc:Math.min(ch*.46, ch - lh/2 - 2)};
+    holder.add(labelMesh);
+  }
+}
+function applyFold(t){
+  const k = kind();
+  if (k === "box"){
+    for (const p of layout.panels){
+      if (!p.parent) continue;
+      const [s0, s1] = p.stage || [0,1];
+      const a = (p.fold ?? 90) * ease(clamp((t - s0)/(s1 - s0), 0, 1)) * Math.PI/180;
+      p.node.rotation.set(0,0,0);
+      if (p.axis === "right") p.node.rotation.y = a; else if (p.axis === "left") p.node.rotation.y = -a;
+      else if (p.axis === "top") p.node.rotation.x = -a; else p.node.rotation.x = a;
+    }
+    holder.rotation.order = "YXZ";
+    holder.rotation.x = state.model === "tray" ? Math.PI/2 * ease(t) : 0;
+    holder.rotation.y = state.model === "tray" ? Math.PI * ease(t) : 0;
+    holder.position.set(0,0,0); holder.updateMatrixWorld(true);
+    box3.setFromObject(holder); box3.getCenter(v);
+    holder.position.set(-v.x, -box3.min.y, -v.z);
+  } else if (labelMesh){
+    const {sx, lw, lh, R: rr, yc} = labelMesh.userData, e = ease(t), pos = labelMesh.geometry.attributes.position;
+    const gap = 30;
+    for (let j = 0; j <= 1; j++) for (let i = 0; i <= sx; i++){
+      const x = lw*i/sx - lw/2, y = yc - lh/2 + lh*j, th = x/rr, n = j*(sx+1) + i;
+      pos.setXYZ(n, x*(1-e) + rr*Math.sin(th)*e, y, (rr + gap)*(1-e) + rr*Math.cos(th)*e);
+    }
+    pos.needsUpdate = true; labelMesh.geometry.computeVertexNormals(); labelMesh.geometry.computeBoundingSphere();
+    holder.position.set(0,0,0);
+  }
+}
+function frame(snap){
+  holder.updateMatrixWorld(true); box3.setFromObject(holder);
+  const size = box3.getSize(new THREE.Vector3()), c = box3.getCenter(new THREE.Vector3());
+  const rad = Math.max(size.length()/2, 20);
+  const dist = rad / Math.sin(camera.fov*Math.PI/360) * (camera.aspect < 1 ? 1.25 : 1.02);
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  const tgt = new THREE.Vector3(0, c.y, 0);
+  const k = snap ? 1 : .12;
+  controls.target.lerp(tgt, k);
+  const cur = camera.position.distanceTo(controls.target);
+  camera.position.copy(controls.target).addScaledVector(dir, cur + (dist - cur)*k);
+  const sh = Math.max(size.x, size.z, size.y) * 1.3;
+  Object.assign(key.shadow.camera, {left:-sh, right:sh, top:sh, bottom:-sh, near:10, far:3000});
+  key.shadow.camera.updateProjectionMatrix();
+}
+renderer.domElement.addEventListener("wheel", () => { autoFrame = false; }, {passive:true});
+renderer.domElement.addEventListener("touchstart", e => { if (e.touches.length > 1) autoFrame = false; }, {passive:true});
+$("#reframe").addEventListener("click", () => { autoFrame = true; });
+function resize(){ const w = v3d.clientWidth, h = v3d.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(v3d);
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let anim = null;
+function loop(now){
+  if (anim){
+    const p = clamp((now - anim.t0)/anim.dur, 0, 1);
+    setFold(anim.from + (anim.to - anim.from)*p);
+    if (p >= 1){ if (anim.pingpong){ anim = {...anim, from:anim.to, to:anim.from, t0:now}; } else { anim = null; $("#animate").setAttribute("aria-pressed", "false"); } }
+  }
+  if (autoFrame) frame(false);
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+function setFold(t){ state.fold = t; applyFold(t); $("#fold").value = Math.round(t*100); $("#foldOut").textContent = Math.round(t*100) + " %"; }
+
+/* ---------- Plan de découpe (SVG) ---------- */
+function dielineSVG(forExport){
+  const L = layout, bb = L.bb, cb = L.cbb;
+  const pad = Math.max(bb.w, bb.h)*.09 + 10, fs = clamp(Math.max(bb.w, bb.h)/60, 2.4, 9);
+  const C = forExport ? {cut:"#E30613", crease:"#0050FF", bleed:"#00A0E3", text:"#3a3a3a", fill:"#FFFFFF"} : {cut:"var(--cut)", crease:"var(--crease)", bleed:"var(--bleed)", text:"var(--muted)", fill:"var(--surface)"};
+  const P = pts => pts.map(([x,y]) => `${+x.toFixed(2)},${+(-y).toFixed(2)}`).join(" ");
+  const vb = [bb.minX - pad, -bb.maxY - pad, bb.w + 2*pad, bb.h + 2*pad + fs*2].map(n => +n.toFixed(2));
+  const sw = forExport ? .25 : 1.4, vef = forExport ? "" : ' vector-effect="non-scaling-stroke"';
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb.join(" ")}"${forExport ? ` width="${vb[2]}mm" height="${vb[3]}mm"` : ' role="img" aria-label="Plan de découpe"'}>`;
+  s += `<defs><pattern id="hatch" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" style="stroke:${C.text};stroke-width:.4;opacity:.5"/></pattern>`;
+  s += `<clipPath id="clipP">${L.panels.map(p => `<polygon points="${P(p.gpoly)}"/>`).join("")}</clipPath></defs>`;
+  s += `<g id="FOND_PERDU">${L.panels.map(p => `<polygon points="${P(p.gpoly)}" style="fill:${C.bleed};stroke:${C.bleed};stroke-width:${L.bleed*2};stroke-linejoin:round;opacity:.28"/>`).join("")}</g>`;
+  s += `<g>${L.panels.map(p => `<polygon points="${P(p.gpoly)}" style="fill:${C.fill}"/>`).join("")}</g>`;
+  if (!forExport && state.showArt && artCanvas){
+    s += `<image href="${artCanvas.toDataURL("image/jpeg", .82)}" x="${bb.minX}" y="${-bb.maxY}" width="${bb.w}" height="${bb.h}" preserveAspectRatio="none" clip-path="url(#clipP)"/>`;
+  }
+  s += `<g>${L.panels.filter(p => p.glue).map(p => `<polygon points="${P(p.gpoly)}" style="fill:url(#hatch)"/>`).join("")}</g>`;
+  s += `<g id="RAINAGE">${L.hinges.map(([a,b]) => `<line x1="${a[0]}" y1="${-a[1]}" x2="${b[0]}" y2="${-b[1]}" style="stroke:${C.crease};stroke-width:${sw};stroke-dasharray:${forExport ? "2 1.2" : "6 4"}"${vef}/>`).join("")}</g>`;
+  s += `<g id="COUPE"><path d="${L.cuts.map(([a,b]) => `M${+a[0].toFixed(2)} ${+(-a[1]).toFixed(2)}L${+b[0].toFixed(2)} ${+(-b[1]).toFixed(2)}`).join("")}" style="fill:none;stroke:${C.cut};stroke-width:${sw};stroke-linecap:round"${vef}/></g>`;
+  {
+    s += `<g id="COTES" style="font-family:IBM Plex Mono,monospace;fill:${C.text}">`;
+    for (const p of L.panels){
+      if (!p.name) continue;
+      const b = polyBox(p.gpoly);
+      if (Math.min(b.w, b.h) < fs*3.2 || (!forExport && state.showArt && p.role)) continue;
+      s += `<text x="${b.minX + b.w/2}" y="${-(b.minY + b.h/2)}" text-anchor="middle" style="font-size:${fs}px">${p.name}</text>`;
+      s += `<text x="${b.minX + b.w/2}" y="${-(b.minY + b.h/2) + fs*1.3}" text-anchor="middle" style="font-size:${fs*.8}px;opacity:.75">${fmt1.format(b.w)} × ${fmt1.format(b.h)}</text>`;
+    }
+    const y0 = -cb.minY + pad*.45, x1 = cb.minX, x2 = cb.maxX;
+    s += `<g style="stroke:${C.text};stroke-width:${forExport ? .2 : 1}"${vef}><line x1="${x1}" y1="${y0}" x2="${x2}" y2="${y0}"${vef}/><line x1="${x1}" y1="${y0 - fs*.6}" x2="${x1}" y2="${y0 + fs*.6}"${vef}/><line x1="${x2}" y1="${y0 - fs*.6}" x2="${x2}" y2="${y0 + fs*.6}"${vef}/>`;
+    const xr = cb.maxX + pad*.45;
+    s += `<line x1="${xr}" y1="${-cb.maxY}" x2="${xr}" y2="${-cb.minY}"${vef}/><line x1="${xr - fs*.6}" y1="${-cb.maxY}" x2="${xr + fs*.6}" y2="${-cb.maxY}"${vef}/><line x1="${xr - fs*.6}" y1="${-cb.minY}" x2="${xr + fs*.6}" y2="${-cb.minY}"${vef}/></g>`;
+    s += `<text x="${(x1 + x2)/2}" y="${y0 + fs*1.6}" text-anchor="middle" style="font-size:${fs}px">${fmt1.format(cb.w)} mm</text>`;
+    s += `<text transform="translate(${xr + fs*1.5} ${-(cb.minY + cb.maxY)/2}) rotate(90)" text-anchor="middle" style="font-size:${fs}px">${fmt1.format(cb.h)} mm</text></g>`;
+  }
+  return s + "</svg>";
+}
+function render2D(){ if (!layout || $("#v2d").hidden) return; const box = $("#v2d"); box.querySelectorAll("svg[role=img]").forEach(n => n.remove()); box.insertAdjacentHTML("beforeend", dielineSVG(false)); }
+
+/* ---------- Devis ---------- */
+function quote(qty){
+  const k = kind(), P = PRICING, lines = [], tech = [];
+  const add = (label, detail, amount) => { if (amount > 0) lines.push({label, detail, amount}); };
+  if (k === "box"){
+    const B = P.box, cb = layout.cbb, pw = cb.w + 4, ph = cb.h + 4, SW = 980, SH = 680;
+    const poses = Math.max(Math.floor(SW/pw)*Math.floor(SH/ph), Math.floor(SW/ph)*Math.floor(SH/pw));
+    tech.push(["Développé à plat", `${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm`], ["Format feuille", "70 × 100 cm"]);
+    if (poses < 1) return {error:"Le développé dépasse la feuille 70 × 100 cm : réduisez le format ou prévoyez une feuille 100 × 140.", tech};
+    const sheets = Math.ceil(Math.ceil(qty/poses) * (1 + P.gache/100)) + B.sheetsCal;
+    const pr = state.print.box, lam = state.lam.box, cutM = layout.cutLen/1000;
+    add("Support", `${fmt0.format(sheets)} feuilles × ${fmt3.format(B.sheet[state.mat.box])}`, sheets * B.sheet[state.mat.box]);
+    add("Plaques offset", `${B.plates[pr]} plaque(s) × ${fmt0.format(B.platePrice)}`, B.plates[pr]*B.platePrice);
+    add("Impression", `calage + ${fmt0.format(sheets)} passages`, B.printCal[pr] + sheets*B.printSheet[pr]);
+    add(LAM.box[lam], `${fmt0.format(sheets)} feuilles`, sheets * B.lam[lam]);
+    if (state.varnish) add("Vernis sélectif UV", "calage + passages", B.varnishCal + sheets*B.varnishSheet);
+    if (state.foil) add("Dorure à chaud", "cliché, calage + passages", B.foilCal + sheets*B.foilSheet);
+    add("Forme de découpe", `${poses} pose(s) × ${fmt1.format(cutM)} m de filet`, B.dieBase + poses*cutM*B.diePerM);
+    add("Découpe & rainage", `calage + ${fmt0.format(sheets)} feuilles`, B.cutCal + sheets*B.cutSheet);
+    add("Collage", `${fmt0.format(qty)} pièces`, B.glueCal + qty*B.gluePc);
+    tech.push(["Poses par feuille", poses], ["Feuilles (gâche incluse)", fmt0.format(sheets)], ["Longueur de coupe", `${fmt1.format(cutM)} m / pose`], ["Longueur de rainage", `${fmt1.format(layout.creaseLen/1000)} m / pose`], ["Fond perdu", `${layout.bleed} mm`]);
+  } else {
+    const Lb = P.label, {lw, lh, shape} = state.dims.label;
+    const across = Math.floor((Lb.web - 10)/(lw + Lb.gap));
+    tech.push(["Format étiquette", `${fmt1.format(lw)} × ${fmt1.format(lh)} mm`], ["Laize machine", `${Lb.web} mm`]);
+    if (across < 1) return {error:`L'étiquette dépasse la laize utile (${Lb.web - 10} mm).`, tech};
+    const pas = lh + Lb.gap, mNet = Math.ceil(qty/across)*pas/1000, m = mNet*(1 + P.gache/100) + Lb.calM;
+    const bandW = (across*(lw + Lb.gap) + 10)/1000, m2 = m*bandW;
+    const pr = state.print.label, fin = state.lam.label;
+    add("Support adhésif", `${fmt1.format(m2)} m² × ${fmt3.format(Lb.m2[state.mat.label])}`, m2*Lb.m2[state.mat.label]);
+    add("Impression numérique", `calage + ${fmt1.format(m2)} m²`, Lb.printCal + m2*Lb.printM2[pr]);
+    add(LAM.label[fin], `${fmt1.format(m2)} m²`, m2*Lb.fin[fin]);
+    if (state.varnish) add("Vernis sélectif UV", "calage + m²", Lb.varnishCal + m2*Lb.varnishM2);
+    if (state.foil) add("Dorure à chaud", "cliché + m²", Lb.foilCal + m2*Lb.foilM2);
+    add("Outil de découpe", shape === "ovale" ? "outil magnétique, forme ovale" : "outil magnétique", Lb.toolBase + (shape === "ovale" ? Lb.toolOval : 0));
+    add("Découpe & échenillage", `${fmt0.format(m)} m linéaires`, m*Lb.cutM);
+    const rolls = Math.ceil(qty/Lb.rollPer);
+    add("Rebobinage", `${rolls} bobine(s) de ${fmt0.format(Lb.rollPer)} ex.`, rolls*Lb.rollCost);
+    tech.push(["Poses en laize", across], ["Bande imprimée", `${fmt0.format(bandW*1000)} mm`], ["Métrage (gâche incluse)", `${fmt0.format(m)} m`], ["Surface", `${fmt1.format(m2)} m²`], ["Longueur de coupe", `${fmt0.format(layout.cutLen)} mm / étiq.`], ["Fond perdu", `${layout.bleed} mm`]);
+  }
+  const cost = lines.reduce((s,l) => s + l.amount, 0), ht = cost*(1 + P.marge/100), tva = ht*P.tva/100;
+  return {lines, tech, cost, ht, tva, ttc:ht + tva, unit:ht/qty};
+}
+function renderQuote(){
+  const q = quote(state.qty);
+  $("#presets").innerHTML = TIERS.map(n => `<button type="button" data-q="${n}" aria-pressed="${n === state.qty}">${fmt0.format(n)}</button>`).join("");
+  if (q.error){
+    $("#qMain").innerHTML = `<p class="err">${q.error}</p>`;
+    $("#tiers").innerHTML = ""; $("#qLines").innerHTML = "";
+  } else {
+    $("#qMain").innerHTML = `<div class="unit-price"><b>${fmt3.format(q.unit)}</b><span>TND HT / unité</span></div>
+      <dl class="totals"><dt>Total HT</dt><dd>${tnd(q.ht)}</dd><dt>TVA ${PRICING.tva} %</dt><dd>${tnd(q.tva)}</dd><dt class="ttc">Total TTC</dt><dd class="ttc">${tnd(q.ttc)}</dd></dl>`;
+    $("#tiers").innerHTML = TIERS.map(n => { const t = quote(n); return `<tr data-q="${n}" class="${n === state.qty ? "on" : ""}"><td>${fmt0.format(n)}</td><td>${fmt0.format(t.ht)}</td><td>${fmt3.format(t.unit)}</td></tr>`; }).join("");
+    $("#qLines").innerHTML = q.lines.map(l => `<li><span>${l.label}</span><b>${fmt3.format(l.amount)}</b><small>${l.detail}</small></li>`).join("")
+      + `<li><span>Marge atelier ${PRICING.marge} %</span><b>${fmt3.format(q.ht - q.cost)}</b><small>sur coût de revient ${fmt3.format(q.cost)}</small></li>`;
+  }
+  $("#tech").innerHTML = q.tech.map(([a,b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("");
+  renderChips(q);
+  return q;
+}
+function renderChips(q){
+  const cb = layout.cbb, k = kind();
+  const c = [`à plat ${fmt0.format(cb.w)} × ${fmt0.format(cb.h)} mm`];
+  if (k === "box") c.push(`coupe ${fmt1.format(layout.cutLen/1000)} m`, `rainage ${fmt1.format(layout.creaseLen/1000)} m`);
+  else c.push(`Ø ${state.dims.label.d} mm`);
+  $("#chips").innerHTML = c.map(t => `<span>${t}</span>`).join("");
+}
+function renderParams(){
+  const k = kind(), fields = [["marge","Marge", "%", PRICING, "marge"], ["gache","Gâche", "%", PRICING, "gache"]];
+  if (k === "box"){
+    fields.push(["sheet", "Feuille 70×100 (support actuel)", "TND", PRICING.box.sheet, state.mat.box], ["diePerM", "Forme : filet au mètre", "TND", PRICING.box, "diePerM"], ["platePrice", "Plaque offset", "TND", PRICING.box, "platePrice"], ["gluePc", "Collage / pièce", "TND", PRICING.box, "gluePc"]);
+  } else {
+    fields.push(["m2", "Support au m² (actuel)", "TND", PRICING.label.m2, state.mat.label], ["printM2", "Impression au m²", "TND", PRICING.label.printM2, state.print.label], ["toolBase", "Outil de découpe", "TND", PRICING.label, "toolBase"], ["web", "Laize machine", "mm", PRICING.label, "web"]);
+  }
+  $("#params").innerHTML = fields.map(([id, lbl, u, obj, key], i) => `<div class="field"><label for="pp-${id}">${lbl}</label><div class="unit" data-unit="${u}"><input type="number" id="pp-${id}" data-i="${i}" step="any" min="0" value="${obj[key]}"></div></div>`).join("");
+  $("#params").oninput = e => { const f = fields[+e.target.dataset.i]; const n = parseFloat(e.target.value); if (!f || !(n >= 0)) return; f[3][f[4]] = n; renderQuote(); };
+}
+
+/* ---------- Formulaire ---------- */
+function opts(sel, map, val){ sel.innerHTML = Object.entries(map).map(([k, o]) => `<option value="${k}"${k === val ? " selected" : ""}>${typeof o === "string" ? o : o.name}</option>`).join(""); }
+function renderControls(){
+  const m = state.model, k = kind();
+  document.querySelector(`input[name=model][value=${m}]`).checked = true;
+  $("#modelDesc").textContent = MODELS[m].desc;
+  $("#foldLbl").textContent = MODELS[m].fold;
+  const dims = state.dims[m];
+  let h = DIM_FIELDS[m].map(([key, lbl, mn, mx]) => `<div class="field"><label for="dim-${key}">${lbl}</label><div class="unit" data-unit="mm"><input type="number" id="dim-${key}" data-k="${key}" min="${mn}" max="${mx}" step="1" value="${dims[key]}"></div></div>`).join("");
+  if (m === "label") h += `<div class="field"><label for="dim-shape">Forme</label><select id="dim-shape" data-k="shape"><option value="rect"${dims.shape === "rect" ? " selected" : ""}>Rectangle</option><option value="ovale"${dims.shape === "ovale" ? " selected" : ""}>Ovale</option></select></div>
+    <div class="field"><label for="dim-r">Rayon des coins</label><div class="unit" data-unit="mm"><input type="number" id="dim-r" data-k="r" min="0" max="20" step="0.5" value="${dims.r}"${dims.shape === "ovale" ? " disabled" : ""}></div></div>`;
+  $("#dims").innerHTML = h;
+  opts($("#mat"), MAT[k], state.mat[k]); opts($("#print"), PRINT[k], state.print[k]); opts($("#lam"), LAM[k], state.lam[k]);
+  const d = state.design;
+  $("#brand").value = d.brand; $("#product").value = d.product; $("#mention").value = d.mention;
+  $("#bg").value = d.bg; $("#accent").value = d.accent; $("#pattern").value = d.pattern;
+  $("#varnish").checked = state.varnish; $("#foil").checked = state.foil; $("#raw").checked = state.raw;
+  $("#qty").value = state.qty; $("#showArt").checked = state.showArt;
+  renderParams();
+}
+function dimWarnings(){
+  const m = state.model, d = state.dims[m], w = [];
+  if (m === "label"){
+    const circ = Math.PI*d.d;
+    if (d.lw > circ) w.push(`L'étiquette (${d.lw} mm) dépasse la circonférence du pot (${fmt1.format(circ)} mm) : chevauchement.`);
+    if (d.lh > d.ch*.9) w.push("L'étiquette est plus haute que la zone d'étiquetage du pot.");
+  }
+  if (m === "tuck" && d.W > d.L*1.6) w.push("Profondeur très supérieure à la longueur : vérifiez le sens des rabats.");
+  $("#dimWarn").hidden = !w.length; $("#dimWarn").textContent = w.join(" ");
+}
+
+let pending = 0;
+function refresh(full){
+  if (pending) return;
+  pending = requestAnimationFrame(() => {
+    pending = 0;
+    layout = computeLayout();
+    artCanvas = drawArt(layout);
+    build3D(); applyFold(state.fold);
+    if (full) { autoFrame = true; frame(true); }
+    render2D(); renderQuote(); dimWarnings(); save();
+  });
+}
+
+document.querySelectorAll("input[name=model]").forEach(r => r.addEventListener("change", () => {
+  state.model = r.value; renderControls(); refresh(true);
+  if (!reduce) { anim = {from:0, to:1, t0:performance.now() + 150, dur:2200}; setFold(0); }
+}));
+$("#dims").addEventListener("change", e => {
+  const k = e.target.dataset.k; if (!k) return;
+  const dims = state.dims[state.model];
+  if (k === "shape"){ dims.shape = e.target.value; renderControls(); }
+  else {
+    const f = DIM_FIELDS[state.model].find(x => x[0] === k);
+    const n = parseFloat(e.target.value), lo = f ? f[2] : 0, hi = f ? f[3] : 20;
+    dims[k] = Number.isFinite(n) ? clamp(n, lo, hi) : dims[k]; e.target.value = dims[k];
+  }
+  refresh(true);
+});
+const kindKey = () => kind();
+$("#mat").addEventListener("change", e => { state.mat[kindKey()] = e.target.value; renderParams(); refresh(); });
+$("#print").addEventListener("change", e => { state.print[kindKey()] = e.target.value; renderParams(); refresh(); });
+$("#lam").addEventListener("change", e => { state.lam[kindKey()] = e.target.value; refresh(); });
+["varnish","foil","raw"].forEach(id => $("#" + id).addEventListener("change", e => { state[id] = e.target.checked; refresh(); }));
+["brand","product","mention","bg","accent","pattern"].forEach(id => $("#" + id).addEventListener("input", e => { state.design[id] = e.target.value; refresh(); }));
+$("#logo").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { const img = new Image(); img.onload = () => { logoImg = img; logoData = rd.result; $("#logoClear").hidden = false; refresh(); toast("Logo importé"); }; img.onerror = () => toast("Image illisible : utilisez un PNG, JPG ou SVG."); img.src = rd.result; };
+  rd.readAsDataURL(f); e.target.value = "";
+});
+$("#logoClear").addEventListener("click", () => { logoImg = null; logoData = null; $("#logoClear").hidden = true; refresh(); });
+$("#qty").addEventListener("change", e => { const n = Math.round(parseFloat(e.target.value)); state.qty = n >= 50 ? n : 50; e.target.value = state.qty; renderQuote(); save(); });
+const pickQty = e => { const t = e.target.closest("[data-q]"); if (!t) return; state.qty = +t.dataset.q; $("#qty").value = state.qty; renderQuote(); save(); };
+$("#presets").addEventListener("click", pickQty); $("#tiers").addEventListener("click", pickQty);
+$("#fold").addEventListener("input", e => { anim = null; $("#animate").setAttribute("aria-pressed", "false"); setFold(e.target.value/100); });
+$("#animate").addEventListener("click", e => {
+  if (anim){ anim = null; e.currentTarget.setAttribute("aria-pressed", "false"); return; }
+  e.currentTarget.setAttribute("aria-pressed", "true");
+  anim = {from:state.fold > .5 ? 1 : 0, to:state.fold > .5 ? 0 : 1, t0:performance.now(), dur:2400, pingpong:true};
+});
+$("#showArt").addEventListener("change", e => { state.showArt = e.target.checked; render2D(); save(); });
+function showView(vw){
+  state.view = vw;
+  $("#tab3d").setAttribute("aria-selected", vw === "3d"); $("#tab2d").setAttribute("aria-selected", vw === "2d");
+  $("#v3d").hidden = vw !== "3d"; $("#v2d").hidden = vw !== "2d";
+  if (vw === "2d") render2D(); else resize();
+}
+$("#tab3d").addEventListener("click", () => showView("3d")); $("#tab2d").addEventListener("click", () => showView("2d"));
+
+/* ---------- Copier ---------- */
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 2200); }
+function copy(text, okMsg){
+  const fb = () => { $("#fallback").hidden = false; const ta = $("#fallbackText"); ta.value = text; ta.focus(); ta.select(); };
+  try { navigator.clipboard.writeText(text).then(() => toast(okMsg), fb); } catch (e) { fb(); }
+}
+$("#fallbackClose").addEventListener("click", () => { $("#fallback").hidden = true; });
+$("#copyQuote").addEventListener("click", () => {
+  const q = quote(state.qty), k = kind(), m = state.model, d = state.dims[m];
+  const fmtDims = m === "label" ? `${d.lw} × ${d.lh} mm (${d.shape === "ovale" ? "ovale" : "rectangle"}), pot Ø ${d.d} mm` : `${d.L} × ${d.W} × ${d.H} mm (L × l × H)`;
+  let t = `DEVIS INDICATIF — Label Pack\n${MODELS[m].name} · ${fmtDims}\nSupport : ${MAT[k][state.mat[k]].name}\nImpression : ${PRINT[k][state.print[k]]} · ${LAM[k][state.lam[k]]}`
+    + (state.varnish ? " · vernis sélectif UV" : "") + (state.foil ? " · dorure à chaud" : "") + `\nQuantité : ${fmt0.format(state.qty)} ex.\n\n`;
+  if (q.error) t += q.error + "\n";
+  else {
+    t += q.lines.map(l => `  ${l.label} (${l.detail}) : ${fmt3.format(l.amount)}`).join("\n");
+    t += `\n\nPrix unitaire HT : ${tnd(q.unit)}\nTotal HT : ${tnd(q.ht)}\nTVA ${PRICING.tva} % : ${tnd(q.tva)}\nTotal TTC : ${tnd(q.ttc)}\n`;
+    t += "\nPaliers : " + TIERS.map(n => `${fmt0.format(n)} ex. → ${fmt3.format(quote(n).unit)} HT/u`).join(" ; ");
+  }
+  t += "\n\nEstimation à confirmer après validation du BAT.";
+  copy(t, "Devis copié");
+});
+$("#copySvg").addEventListener("click", () => copy(dielineSVG(true), "Plan SVG copié (calques COUPE, RAINAGE, FOND_PERDU)"));
+
+/* ---------- Démarrage ---------- */
+renderControls();
+showView(state.view === "2d" ? "2d" : "3d");
+resize();
+layout = computeLayout(); artCanvas = drawArt(layout); build3D(); setFold(reduce ? 1 : 0); frame(true);
+render2D(); renderQuote(); dimWarnings();
+if (!reduce) anim = {from:0, to:1, t0:performance.now() + 400, dur:2600};
+requestAnimationFrame(loop);
+if (document.fonts && document.fonts.load) Promise.all(["800 20px Archivo", "500 20px 'IBM Plex Sans'", "500 20px 'IBM Plex Mono'"].map(f => document.fonts.load(f))).then(() => refresh()).catch(() => {});
+</script>
