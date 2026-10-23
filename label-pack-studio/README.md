@@ -3,7 +3,8 @@
 Configurateur d'emballage en une page (`index.html`) pour l'imprimerie Label Pack.
 
 ## Fonctions
-- **Bibliothèque de 8 gabarits** paramétriques : étuis (rabats inversés, rabats droits, fourreau), caisse américaine FEFCO 0201, boîtes (barquette, boîte à couvercle), étiquettes (pot, bouteille). Épaisseur du support compensée, cotes intérieures ou extérieures, fentes de verrouillage, fenêtre PET en option.
+- **Bibliothèque de 15 gabarits** paramétriques : étuis (rabats inversés, rabats droits, à suspente, fourreau), boîtes (caisse américaine FEFCO 0201, hexagonale, barquette, boîte à couvercle), coffrets 2 pièces (couvercle + fond, boîte tiroir), présentoir de comptoir à fronton double, jupe de gobelet (secteur de cône exact), étiquettes (pot, bouteille, couvercle). Épaisseur du support compensée, cotes intérieures ou extérieures, fentes de verrouillage, fenêtre PET en option.
+- **12 modèles types** prêts à l'emploi par secteur (huile, harissa, miel, dattes, pâtisserie, cosmétique, savon, thé, chocolat, café, confiserie, e-commerce), marques fictives d'exemple.
 - **Maquette 3D** pliable / enroulable avec épaisseur du carton, dorure métallique et vernis sélectif réalistes, vues prédéfinies, export PNG haute définition et vidéo WebM de l'animation.
 - **Éditeur d'éléments** : textes (français et arabe), images et formes à glisser sur le plan, dorure / vernis par élément, annuler / rétablir.
 - **Contrôle prépresse** : résolution des images, corps minimum, zone de sécurité de 3 mm, plis, collage, fenêtre, code-barres EAN-13 (clé de contrôle et taille minimale 80 %).

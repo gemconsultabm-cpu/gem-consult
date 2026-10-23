@@ -73,6 +73,13 @@ h2.eyebrow{margin:0;font-weight:500}
 .tpl[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
 .tpl[aria-pressed="true"] svg{color:var(--accent)}
 .model-desc{font-size:12.5px;color:var(--muted);margin:0}
+.presets-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;max-height:430px;overflow:auto}
+.preset{display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;align-items:center;text-align:left;padding:7px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);cursor:pointer;font-size:12.5px;line-height:1.25}
+.preset:hover{border-color:var(--accent)}
+.preset b{font-weight:600;display:block}
+.preset small{color:var(--muted);font-size:11px}
+.pv{width:46px;height:46px;border-radius:5px;display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.pv svg{width:34px;height:30px}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -267,10 +274,20 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
 <main class="app gutter" id="studio">
   <aside class="panel" aria-label="Configuration">
     <section class="sec">
-      <div class="row between"><h2 class="eyebrow">Bibliothèque de gabarits</h2><span class="hint" id="tplCount"></span></div>
-      <div class="cats" id="cats"></div>
-      <input type="search" class="search" id="tplSearch" placeholder="Rechercher un gabarit" aria-label="Rechercher un gabarit">
-      <div class="tpls" id="tpls"></div>
+      <div class="row between"><h2 class="eyebrow">Bibliothèque</h2><span class="hint" id="tplCount"></span></div>
+      <div class="seg" role="tablist" aria-label="Bibliothèque">
+        <button role="tab" id="lib-tpl" aria-selected="true">Gabarits</button>
+        <button role="tab" id="lib-pre" aria-selected="false">Modèles types</button>
+      </div>
+      <div class="ed" id="libTpl">
+        <div class="cats" id="cats"></div>
+        <input type="search" class="search" id="tplSearch" placeholder="Rechercher un gabarit" aria-label="Rechercher un gabarit">
+        <div class="tpls" id="tpls"></div>
+      </div>
+      <div class="ed" id="libPre" hidden>
+        <div class="presets-grid" id="presetGrid"></div>
+        <p class="hint">Projets prêts à l'emploi : gabarit, dimensions, matière et design. Marques fictives d'exemple ; un clic remplace le projet en cours (↶ pour annuler).</p>
+      </div>
       <p class="model-desc" id="modelDesc"></p>
     </section>
 
@@ -564,18 +581,32 @@ const ICONS = {
   mailer:'<path d="M4 16l16-7 16 7-16 7z"/><path d="M4 16v7l16 7 16-7v-7M20 23v7"/><path d="M20 9l-2-7 16 5 2 9"/>',
   pot:'<rect x="11" y="3" width="18" height="5" rx="1"/><path d="M10 9h20v20a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2z"/><rect x="10" y="14" width="20" height="10" fill="currentColor" fill-opacity=".2"/>',
   bottle:'<path d="M17 2h6v6l4 6v16a2 2 0 0 1-2 2H15a2 2 0 0 1-2-2V14l4-6z"/><rect x="13" y="17" width="14" height="10" fill="currentColor" fill-opacity=".2"/>',
+  hang:'<path d="M13 12l8-3 8 3v18l-8 3-8-3z"/><path d="M13 12l8 3 8-3M21 15v18"/><path d="M21 9V2h8v7"/><rect x="23" y="4" width="4" height="1.6" rx=".8"/>',
+  hex:'<path d="M9 9l6-5h12l6 5v18l-6 5H15l-6-5z"/><path d="M9 9l6 5h12l6-5M15 14v18M27 14v18"/>',
+  coffret:'<path d="M5 15l16-6 16 6-16 6z"/><path d="M5 15v4l16 6 16-6v-4"/><path d="M7 21v6l14 5 14-5v-6"/>',
+  drawer:'<path d="M5 13l18-6 14 5v12l-18 6-14-5z"/><path d="M5 13l14 5 18-6M19 18v12"/><path d="M1 20l14 5v6L1 26z"/>',
+  display:'<path d="M8 6h26v22l-8 4H8z"/><path d="M8 20l-4 3v7l22 2v-9"/><rect x="12" y="9" width="18" height="8" fill="currentColor" fill-opacity=".2"/>',
+  cup:'<path d="M10 5h22l-3 26H13z"/><path d="M9 5h24"/><path d="M11.5 13h19l-1.2 10H12.7z" fill="currentColor" fill-opacity=".2"/>',
+  lid:'<ellipse cx="21" cy="8" rx="12" ry="4"/><path d="M9 8v4c0 2 5.4 4 12 4s12-2 12-4V8"/><ellipse cx="21" cy="8" rx="6" ry="2" fill="currentColor" fill-opacity=".25"/><path d="M11 16v14h20V16"/>',
 };
-const CATS = [["all","Tous"],["etui","Étuis"],["boite","Boîtes"],["etiquette","Étiquettes"]];
+const CATS = [["all","Tous"],["etui","Étuis"],["boite","Boîtes"],["coffret","Coffrets"],["plv","Présentoirs"],["alim","Alimentaire"],["etiquette","Étiquettes"]];
 const ALL_BOX = ["gc1","duplex","kraft","micro"], ALL_LABEL = ["couche","ppw","ppt","verge"];
 const TEMPLATES = [
   {id:"rte", cat:"etui", icon:"tuck", name:"Étui rabats inversés", sub:"Patte rentrante haut / bas", kind:"box", window:true, mats:ALL_BOX, desc:"Étui pliant à rabats rentrants opposés, fentes de verrouillage et patte de collage — cosmétique, pharmacie, agroalimentaire.", fold:"Pliage"},
   {id:"ste", cat:"etui", icon:"ste", name:"Étui rabats droits", sub:"Rabats du même côté", kind:"box", window:true, mats:ALL_BOX, desc:"Étui à rabats rentrants du même côté (face arrière) : ouverture nette en vitrine, adapté au remplissage manuel.", fold:"Pliage"},
+  {id:"hang", cat:"etui", icon:"hang", name:"Étui à suspente", sub:"Fente de suspension", kind:"box", window:true, mats:ALL_BOX, desc:"Étui à rabats rentrants dont la face arrière se prolonge en suspente avec fente (32 × 8 mm) pour présentoir à crochets — cosmétique, accessoires, petites pièces.", fold:"Pliage"},
   {id:"sleeve", cat:"etui", icon:"sleeve", name:"Fourreau", sub:"Étui ouvert, sans rabats", kind:"box", window:true, mats:ALL_BOX, desc:"Fourreau ouvert aux deux extrémités, pour habiller une barquette, un coffret ou des savons.", fold:"Pliage"},
   {id:"rsc", cat:"boite", icon:"rsc", name:"Caisse américaine", sub:"FEFCO 0201", kind:"box", mats:["micro","ondB"], desc:"Caisse à rabats standard FEFCO 0201 : rabats de longueur égale qui se rejoignent au centre — expédition, carton de regroupement.", fold:"Pliage"},
-  {id:"tray", cat:"boite", icon:"tray", name:"Barquette", sub:"Coins collés", kind:"box", mats:[...ALL_BOX, "ondB"], desc:"Plateau à bords relevés et pattes d'angle collées — coffrets, pâtisserie, fruits secs, dattes.", fold:"Pliage"},
-  {id:"mailer", cat:"boite", icon:"mailer", name:"Boîte à couvercle", sub:"Charnière, coins collés", kind:"box", mats:[...ALL_BOX, "ondB"], desc:"Boîte à coins collés avec couvercle à charnière, rabats latéraux et languette — coffrets cadeaux et vente en ligne.", fold:"Pliage"},
+  {id:"hex", cat:"boite", icon:"hex", name:"Boîte hexagonale", sub:"6 faces, rabats rentrants", kind:"box", mats:ALL_BOX, desc:"Boîte hexagonale à couvercles rentrants haut et bas — thé, confiserie, bougies, coffrets cadeaux.", fold:"Pliage"},
+  {id:"coffret", cat:"coffret", icon:"coffret", name:"Coffret couvercle + fond", sub:"2 pièces emboîtées", kind:"box", lay:true, mats:[...ALL_BOX, "ondB"], desc:"Coffret en deux pièces : fond et couvercle à coins collés, le couvercle emboîte le fond avec 1 mm de jeu — dattes, chocolats, coffrets cadeaux.", fold:"Montage"},
+  {id:"drawer", cat:"coffret", icon:"drawer", name:"Boîte tiroir", sub:"Fourreau + tiroir", kind:"box", lay:true, mats:[...ALL_BOX], desc:"Boîte tiroir en deux pièces : tiroir à coins collés coulissant dans un fourreau (1 mm de jeu) — chocolats, bijoux, thé.", fold:"Montage"},
+  {id:"display", cat:"plv", icon:"display", name:"Présentoir de comptoir", sub:"Fronton double", kind:"box", lay:true, mats:[...ALL_BOX, "ondB"], desc:"Présentoir de comptoir : plateau à côtés montants et fronton double épaisseur imprimé côté client — confiserie, sachets, échantillons.", fold:"Montage"},
+  {id:"tray", cat:"boite", icon:"tray", name:"Barquette", sub:"Coins collés", kind:"box", lay:true, mats:[...ALL_BOX, "ondB"], desc:"Plateau à bords relevés et pattes d'angle collées — coffrets, pâtisserie, fruits secs, dattes.", fold:"Pliage"},
+  {id:"mailer", cat:"boite", icon:"mailer", name:"Boîte à couvercle", sub:"Charnière, coins collés", kind:"box", lay:true, mats:[...ALL_BOX, "ondB"], desc:"Boîte à coins collés avec couvercle à charnière, rabats latéraux et languette — coffrets cadeaux et vente en ligne.", fold:"Pliage"},
   {id:"labelPot", cat:"etiquette", icon:"pot", name:"Étiquette pot", sub:"Bocal, miel, harissa", kind:"label", container:"pot", mats:ALL_LABEL, desc:"Étiquette adhésive en bobine, posée sur pot ou bocal cylindrique.", fold:"Enroulement"},
   {id:"labelBottle", cat:"etiquette", icon:"bottle", name:"Étiquette bouteille", sub:"Huile, vin, sirop", kind:"label", container:"bouteille", mats:ALL_LABEL, desc:"Étiquette adhésive posée sur le corps cylindrique d'une bouteille.", fold:"Enroulement"},
+  {id:"labelLid", cat:"etiquette", icon:"lid", name:"Étiquette couvercle", sub:"Ronde, dessus de pot", kind:"label", container:"couvercle", mats:ALL_LABEL, desc:"Étiquette ronde posée sur le couvercle d'un pot (miel, confiture, crème).", fold:"Pose"},
+  {id:"cup", cat:"alim", icon:"cup", name:"Gobelet carton", sub:"Jupe imprimée", kind:"cup", mats:["pe"], desc:"Jupe de gobelet développée en secteur de couronne (calcul exact du cône, recouvrement 8 mm) — café, boissons chaudes. Formage par le fabricant de gobelets.", fold:"Enroulement"},
 ];
 const TPL = () => TEMPLATES.find(t => t.id === state.model) || TEMPLATES[0];
 const kind = () => TPL().kind;
@@ -588,6 +619,13 @@ const DIM_FIELDS = {
   mailer:[["L","Longueur",60,400],["W","Largeur",50,300],["H","Hauteur",20,150]],
   labelPot:[["lw","Largeur étiquette",20,320],["lh","Hauteur étiquette",15,250],["d","Diamètre du pot",30,200],["ch","Hauteur du pot",40,300]],
   labelBottle:[["lw","Largeur étiquette",20,320],["lh","Hauteur étiquette",15,250],["d","Diamètre bouteille",40,140],["ch","Hauteur bouteille",120,400]],
+  labelLid:[["lw","Ø étiquette",20,150],["d","Ø du couvercle",30,160],["ch","Hauteur du pot",40,300]],
+  hang:[["L","Longueur",20,200],["W","Profondeur",15,120],["H","Hauteur",30,300],["hh","Hauteur de suspente",25,80]],
+  hex:[["a","Côté",20,150],["H","Hauteur",30,300]],
+  coffret:[["L","Longueur",40,400],["W","Largeur",40,300],["H","Hauteur du fond",15,150],["Hl","Hauteur du couvercle",10,150]],
+  drawer:[["L","Largeur",40,350],["W","Profondeur",40,300],["H","Hauteur",15,150]],
+  display:[["L","Largeur",100,500],["W","Profondeur",80,400],["Hf","Bord avant",20,150],["Hs","Côtés (arrière)",30,300],["Hh","Hauteur du fronton",60,600]],
+  cup:[["D1","Ø haut",50,120],["D2","Ø bas",35,100],["h","Hauteur",50,180]],
 };
 const MAT = {
   box:{
@@ -602,10 +640,11 @@ const MAT = {
     ppw:{name:"Polypropylène blanc", raw:"#ffffff"},
     ppt:{name:"Polypropylène transparent", raw:null},
     verge:{name:"Papier vergé (vins, huiles)", raw:"#efe8d6"},
-  }
+  },
+  cup:{ pe:{name:"Carton gobelet 210 g + PE", raw:"#fbfbf8"} }
 };
-const PRINT = {box:{cmjn:"Offset quadri CMJN", cmjnp:"Quadri + 1 Pantone", noir:"1 couleur (noir)"}, label:{num:"Numérique quadri", numb:"Quadri + blanc de soutien"}};
-const LAM = {box:{none:"Sans pelliculage", mat:"Pelliculage mat", brillant:"Pelliculage brillant", soft:"Soft-touch"}, label:{none:"Sans finition", vernis:"Vernis brillant", lam:"Lamination mate"}};
+const PRINT = {box:{cmjn:"Offset quadri CMJN", cmjnp:"Quadri + 1 Pantone", noir:"1 couleur (noir)"}, label:{num:"Numérique quadri", numb:"Quadri + blanc de soutien"}, cup:{cmjn:"Offset quadri CMJN", cmjnp:"Quadri + 1 Pantone"}};
+const LAM = {box:{none:"Sans pelliculage", mat:"Pelliculage mat", brillant:"Pelliculage brillant", soft:"Soft-touch"}, label:{none:"Sans finition", vernis:"Vernis brillant", lam:"Lamination mate"}, cup:{none:"Sans vernis", vernis:"Vernis acrylique alimentaire"}};
 const ROUGH = {none:.82, mat:.72, brillant:.26, soft:.92, vernis:.3, lam:.68};
 const STATUSES = [["brouillon","Brouillon"],["devis","Devis envoyé"],["bat","BAT envoyé"],["valide","BAT validé"],["production","En production"],["livre","Livré"]];
 const TIERS = [500, 1000, 2500, 5000, 10000];
@@ -622,7 +661,8 @@ const DEFAULT_SETTINGS = {
       lam:{none:0, mat:0.22, brillant:0.20, soft:0.45}, varnishCal:120, varnishSheet:0.10, foilCal:230, foilSheet:0.14,
       dieBase:150, diePerM:45, cutCal:60, cutSheet:0.05, glueCal:50, gluePc:0.025, windowCal:90, windowPc:0.06},
     label:{m2:{couche:2.6, ppw:4.2, ppt:4.8, verge:4.5}, web:330, gap:3, calM:25, printCal:40, printM2:{num:6.5, numb:8.9},
-      fin:{none:0, vernis:0.9, lam:1.6}, toolBase:160, toolOval:40, cutM:0.05, foilCal:120, foilM2:2.5, varnishCal:60, varnishM2:1.1, rollPer:1000, rollCost:0.8}
+      fin:{none:0, vernis:0.9, lam:1.6}, toolBase:160, toolOval:40, cutM:0.05, foilCal:120, foilM2:2.5, varnishCal:60, varnishM2:1.1, rollPer:1000, rollCost:0.8},
+    cup:{sheet:1.35, varnishSheet:0.12}
   }
 };
 let settings = structuredClone(DEFAULT_SETTINGS);
@@ -631,9 +671,10 @@ const P = () => settings.pricing;
 const DEFAULT = {
   model:"rte", dimMode:"int",
   dims:{rte:{L:60,W:40,H:150}, ste:{L:80,W:30,H:120}, sleeve:{L:180,W:30,H:110}, rsc:{L:200,W:150,H:120}, tray:{L:220,W:150,H:45}, mailer:{L:250,W:180,H:80},
-    labelPot:{lw:200,lh:62,d:75,ch:95,shape:"rect",r:4}, labelBottle:{lw:95,lh:105,d:72,ch:270,shape:"rect",r:3}},
+    labelPot:{lw:200,lh:62,d:75,ch:95,shape:"rect",r:4}, labelBottle:{lw:95,lh:105,d:72,ch:270,shape:"rect",r:3}, labelLid:{lw:60,lh:60,d:72,ch:85,shape:"rond",r:0},
+    hang:{L:60,W:30,H:120,hh:40}, hex:{a:40,H:110}, coffret:{L:220,W:120,H:40,Hl:30}, drawer:{L:180,W:120,H:35}, display:{L:300,W:200,Hf:60,Hs:120,Hh:300}, cup:{D1:80,D2:56,h:93}},
   window:{on:false, w:30, h:60, y:5, r:4},
-  mat:{box:"gc1", label:"couche"}, print:{box:"cmjn", label:"num"}, lam:{box:"mat", label:"vernis"},
+  mat:{box:"gc1", label:"couche", cup:"pe"}, print:{box:"cmjn", label:"num", cup:"cmjn"}, lam:{box:"mat", label:"vernis", cup:"none"},
   varnish:false, foil:true, raw:false, inside:{on:false, color:"#e2b25a"},
   design:{bg:"#123c3a", accent:"#e2b25a", brand:"Néroli", product:"Crème mains à la fleur d'oranger", mention:"75 ml · Fabriqué en Tunisie", pattern:"zellige", legal:"", ean:""},
   images:{logo:null, full:null}, faces:{}, fullHide:false, elements:[],
@@ -674,7 +715,7 @@ const caliper = () => kind() === "box" ? (P().box.caliper[state.mat.box] ?? .45)
 function innerDims(){
   const d = state.dims[state.model];
   if (kind() !== "box" || state.dimMode !== "ext") return d;
-  const e = caliper(); return {...d, L:d.L - 2*e, W:d.W - 2*e, H:d.H - 2*e};
+  const e = caliper(), o = {...d}; for (const k of ["L","W","H"]) if (k in o) o[k] = d[k] - 2*e; return o;
 }
 function tuckPoly(L, t, s){ const k = Math.min(t*.35, L*.2); return [[0,0],[L,0],[L-1.5,s*t*.55],[L-1.5-k,s*t],[1.5+k,s*t],[1.5,s*t*.55]]; }
 function dustPoly(W, d, s, slantRight){ const k = d*.35; return slantRight ? [[0,0],[W,0],[W-k,s*d],[2,s*d]] : [[0,0],[W,0],[W-2,s*d],[k,s*d]]; }
@@ -690,7 +731,7 @@ function ring(d, e, hAdd, st){
   ];
   if (state.window.on && TPL().window){
     const w = state.window, ww = Math.min(w.w, L - 4), wh = Math.min(w.h, H - 4), cx = L/2, cy = H/2 + (w.y || 0);
-    parts[0].holes = [roundRectPoly(ww, wh, Math.min(w.r || 0, ww/2, wh/2)).map(([x,y]) => [x + cx - ww/2, y + cy - wh/2])];
+    parts[0].holes = [roundRectPoly(ww, wh, Math.min(w.r || 0, ww/2, wh/2)).map(([x,y]) => [x + cx - ww/2, y + cy - wh/2])]; parts[0].film = true;
   }
   return {parts, L, W, H, e, ei};
 }
@@ -725,19 +766,89 @@ function buildRSC(d, e){
   }
   return [...r.parts, ...flaps.filter(Boolean)];
 }
-function trayParts(d, e, S){
+function trayParts(d, e, S, px = ""){
   const L = d.L + 2*e, W = d.W + 2*e, H = d.H + e, ei = Math.max(e, .45), t = Math.min(18, W*.35, L*.35, H*.9);
+  const id = s => px + s, RL = S.roles || {}, nm = s => (S.label || "") + s, role = (k, def) => k in RL ? RL[k] : def;
   return {L, W, H, ei, parts:[
-    {id:"base", name:"Fond", poly:R(0,0,L,W), role:{type:"base", up:[0,1]}},
-    {id:"fw", name:"Bord avant", parent:"base", anchor:[0,0], axis:"bottom", poly:R(0,-H,L,0), stage:S.fb, role:{type:S.fwRole, up:[0,-1]}},
-    {id:"bw", name:"Bord arrière", parent:"base", anchor:[0,W], axis:"top", poly:R(0,0,L,H), stage:S.fb, role:{type:"back", up:[0,1]}},
-    {id:"rw", name:"Bord droit", parent:"base", anchor:[L,0], axis:"right", poly:R(0,0,H,W), stage:S.sides, role:{type:"side", up:[1,0]}},
-    {id:"lw", name:"Bord gauche", parent:"base", anchor:[0,0], axis:"left", poly:R(-H,0,0,W), stage:S.sides, role:{type:"side", up:[-1,0]}},
-    {id:"fwR", name:"Patte d'angle 1", parent:"fw", anchor:[L,0], axis:"right", inset:[-ei,0,-.2], poly:[[0,0],[t,-3],[t,-H+3],[0,-H]], stage:S.tabs, glue:true},
-    {id:"fwL", name:"Patte d'angle 2", parent:"fw", anchor:[0,0], axis:"left", inset:[ei,0,-.2], poly:[[0,0],[0,-H],[-t,-H+3],[-t,-3]], stage:S.tabs, glue:true},
-    {id:"bwR", name:"Patte d'angle 3", parent:"bw", anchor:[L,0], axis:"right", inset:[-ei,0,-.2], poly:[[0,0],[t,3],[t,H-3],[0,H]], stage:S.tabs, glue:true},
-    {id:"bwL", name:"Patte d'angle 4", parent:"bw", anchor:[0,0], axis:"left", inset:[ei,0,-.2], poly:[[0,0],[0,H],[-t,H-3],[-t,3]], stage:S.tabs, glue:true},
+    {id:id("base"), name:nm("Fond"), poly:R(0,0,L,W), role:role("base", {type:"base", up:[0,1]}), origin:S.origin, assemble:S.assemble},
+    {id:id("fw"), name:nm("Bord avant"), parent:id("base"), anchor:[0,0], axis:"bottom", poly:R(0,-H,L,0), stage:S.fb, role:role("fw", {type:S.fwRole, up:[0,-1]})},
+    {id:id("bw"), name:nm("Bord arrière"), parent:id("base"), anchor:[0,W], axis:"top", poly:R(0,0,L,H), stage:S.fb, role:role("bw", {type:"back", up:[0,1]})},
+    {id:id("rw"), name:nm("Bord droit"), parent:id("base"), anchor:[L,0], axis:"right", poly:R(0,0,H,W), stage:S.sides, role:role("rw", {type:"side", up:[1,0]})},
+    {id:id("lw"), name:nm("Bord gauche"), parent:id("base"), anchor:[0,0], axis:"left", poly:R(-H,0,0,W), stage:S.sides, role:role("lw", {type:"side", up:[-1,0]})},
+    {id:id("fwR"), name:nm("Patte d'angle 1"), parent:id("fw"), anchor:[L,0], axis:"right", inset:[-ei,0,-.2], poly:[[0,0],[t,-3],[t,-H+3],[0,-H]], stage:S.tabs, glue:true},
+    {id:id("fwL"), name:nm("Patte d'angle 2"), parent:id("fw"), anchor:[0,0], axis:"left", inset:[ei,0,-.2], poly:[[0,0],[0,-H],[-t,-H+3],[-t,-3]], stage:S.tabs, glue:true},
+    {id:id("bwR"), name:nm("Patte d'angle 3"), parent:id("bw"), anchor:[L,0], axis:"right", inset:[-ei,0,-.2], poly:[[0,0],[t,3],[t,H-3],[0,H]], stage:S.tabs, glue:true},
+    {id:id("bwL"), name:nm("Patte d'angle 4"), parent:id("bw"), anchor:[0,0], axis:"left", inset:[ei,0,-.2], poly:[[0,0],[0,H],[-t,H-3],[-t,3]], stage:S.tabs, glue:true},
   ]};
+}
+function buildHang(d, e){
+  const r = ring(d, e, 2*e, [.15,.5]), {L, W, H, ei} = r, hh = d.hh, t = clamp(W*.5, 8, Math.min(18, H*.3)), dd = Math.min(W*.85, L*.45), k = Math.min(6, L*.12);
+  const back = r.parts[2], sw = Math.min(32, L - 12), sh = Math.min(8, hh*.4);
+  back.poly = R(0,0,L,H + hh); back.hinge = [0, H]; back.role = {type:"back", up:[0,1], area:[0,0,L,H]}; back.name = "Face arrière + suspente";
+  back.holes = [roundRectPoly(sw, sh, sh/2).map(([x,y]) => [x + L/2 - sw/2, y + H + hh*.55 - sh/2])];
+  const hdr2 = {id:"hdr2", name:"Suspente double (rabattue)", parent:"back", anchor:[0, H + hh], axis:"top", fold:180, inset:[0,0,-2*Math.max(e,.3)], poly:R(0,0,L,hh), stage:[.04,.2], role:{type:"lid", up:[0,-1], area:[0, hh*.62, L, hh]},
+    holes:[roundRectPoly(sw, sh, sh/2).map(([x,y]) => [x + L/2 - sw/2, y + hh*.45 - sh/2])]};
+  return [...r.parts, hdr2,
+    {id:"dT1", name:"Rabat anti-poussière haut 1", parent:"s1", anchor:[0,H], axis:"top", poly:dustPoly(W,dd,1,false), stage:[.6,.75]},
+    {id:"dT2", name:"Rabat anti-poussière haut 2", parent:"s2", anchor:[0,H], axis:"top", poly:dustPoly(W,dd,1,true), stage:[.6,.75]},
+    {id:"lidT", name:"Rabat haut", parent:"front", anchor:[0,H], axis:"top", inset:[0,ei,0], poly:R(0,0,L,W), stage:[.72,.93], role:{type:"lid", up:[0,1]}},
+    {id:"tuckT", name:"Languette haute", parent:"lidT", anchor:[0,W], axis:"top", hinge:[k, L-k], inset:[0,-ei,-.2], poly:tuckPoly(L,t,1), stage:[.82,1]},
+    ...bottomTuck(r, "front")];
+}
+function hexPoly(a, s){ const h = a*Math.sqrt(3)/2; return [[0,0],[a,0],[1.5*a,s*h],[a,s*2*h],[0,s*2*h],[-.5*a,s*h]]; }
+function buildHex(d, e){
+  const a = d.a + e*.58, H = d.H + 2*e, ei = Math.max(e, .45), g = Math.min(15, a*.35), tp = Math.min(g*.4, H*.06), hD = a*Math.sqrt(3), t = Math.min(18, H*.3, a*.45), k = Math.min(5, a*.12);
+  const roles = [{type:"main", up:[0,1]}, {type:"side", up:[-1,0]}, null, {type:"back", up:[0,1]}, null, {type:"side", up:[-1,0]}], parts = [];
+  for (let i = 0; i < 6; i++) parts.push(i ? {id:"h" + i, name:`Face ${i + 1}`, parent:"h" + (i - 1), anchor:[a,0], axis:"right", fold:60, poly:R(0,0,a,H), stage:[.15,.5], role:roles[i]} : {id:"h0", name:"Face 1 (avant)", poly:R(0,0,a,H), role:roles[0]});
+  parts.push({id:"glue", name:"Patte de collage", parent:"h5", anchor:[a,0], axis:"right", fold:60, inset:[-ei,0,-.2], poly:[[0,0],[g,tp],[g,H-tp],[0,H]], stage:[0,.15], glue:true});
+  parts.push({id:"lidT", name:"Couvercle hexagonal haut", parent:"h3", anchor:[0,H], axis:"top", inset:[0,ei,0], poly:hexPoly(a, 1), stage:[.6,.88], role:{type:"lid", up:[0,-1]}});
+  parts.push({id:"tuckT", name:"Languette haute", parent:"lidT", anchor:[0,hD], axis:"top", hinge:[k, a-k], inset:[0,-ei,-.2], poly:tuckPoly(a,t,1), stage:[.75,1]});
+  parts.push({id:"lidB", name:"Couvercle hexagonal bas", parent:"h0", anchor:[0,0], axis:"bottom", inset:[0,-ei,0], poly:hexPoly(a, -1), stage:[.5,.7]});
+  parts.push({id:"tuckB", name:"Languette basse", parent:"lidB", anchor:[0,-hD], axis:"bottom", hinge:[k, a-k], inset:[0,ei,-.2], poly:tuckPoly(a,t,-1), stage:[.58,.75]});
+  return parts;
+}
+function buildCoffret(d, e){
+  const Hl = Math.min(d.Hl, d.H + 2*e);
+  const b = trayParts(d, e, {tabs:[0,.2], sides:[.15,.45], fb:[.4,.72], fwRole:"side", label:"Fond — ", roles:{base:null, fw:null, bw:null, rw:null, lw:null}});
+  const ld = {L:d.L + 2*e + 1, W:d.W + 2*e + 1, H:Hl}, Lb = b.L, Wb = b.W, Hb = b.H, Ll = ld.L + 2*e, Wl = ld.W + 2*e, Hlp = Hl + e;
+  const l = trayParts(ld, e, {tabs:[0,.2], sides:[.15,.45], fb:[.4,.72], label:"Couvercle — ", origin:[Lb + Hb + 20 + Hlp, 0],
+    assemble:{pos:[-(Ll - Lb)/2, (Wb + Wl)/2, -Hb - e - .3], rx:Math.PI, stage:[.78,1]},
+    roles:{base:{type:"main", up:[0,-1]}, fw:{type:"side", up:[0,1]}, bw:{type:"side", up:[0,-1]}, rw:null, lw:null}}, "c_");
+  return [...b.parts, ...l.parts];
+}
+function buildDrawer(d, e){
+  const Lt = d.L + 2*e, Wt = d.W + 2*e, Ht = d.H + e;
+  const r = ring({L:Lt + 1, W:Ht + e + 1, H:Wt}, e, 0, [.2,.55]), Ls = r.L, Ws = r.W;
+  r.parts[0].role = null; r.parts[0].name = "Fourreau — dessous";
+  r.parts[1].name = "Fourreau — côté"; r.parts[3].name = "Fourreau — côté"; r.parts[1].role = {type:"side", up:[1,0]}; r.parts[3].role = {type:"side", up:[-1,0]};
+  r.parts[2].role = {type:"main", up:[0,1]}; r.parts[2].name = "Fourreau — dessus";
+  const g = e >= 1 ? Math.min(35, Ls*.35, Wt*.4) : Math.min(15, Ls*.3);
+  const tr = trayParts(d, e, {tabs:[0,.18], sides:[.12,.38], fb:[.32,.62], label:"Tiroir — ", origin:[2*(Ls + Ws) + g + 20 + Ht, Ht],
+    assemble:{pos:[(Ls - Lt)/2, -.35*Wt, -e - .25], rx:0, stage:[.7,1]},
+    roles:{base:null, fw:{type:"side", up:[0,-1]}, bw:null, rw:null, lw:null}}, "t_");
+  return [...r.parts, ...tr.parts];
+}
+function buildDisplay(d, e){
+  const L = d.L + 2*e, W = d.W + 2*e, Hf = d.Hf + e, Hs = Math.max(d.Hs, d.Hf) + e, Hh = Math.max(d.Hh, d.Hs + 30) + e, ei = Math.max(e, .45), t = Math.min(18, W*.3, Hf*.8), hd = Hh - Hs;
+  return [
+    {id:"base", name:"Fond", poly:R(0,0,L,W), role:null},
+    {id:"fw", name:"Bord avant", parent:"base", anchor:[0,0], axis:"bottom", poly:R(0,-Hf,L,0), stage:[.5,.9], role:{type:"side", up:[0,-1]}},
+    {id:"bw", name:"Dos", parent:"base", anchor:[0,W], axis:"top", poly:R(0,0,L,Hh), stage:[.5,.9], role:null},
+    {id:"hdr", name:"Fronton (face client)", parent:"bw", anchor:[0,Hh], axis:"top", fold:180, inset:[0,0,-2*Math.max(e,.3)], poly:R(0,0,L,hd), stage:[.04,.3], role:{type:"main", up:[0,-1]}},
+    {id:"rw", name:"Côté droit", parent:"base", anchor:[L,0], axis:"right", poly:[[0,0],[Hf,0],[Hs,W],[0,W]], stage:[.2,.55], role:null},
+    {id:"lw", name:"Côté gauche", parent:"base", anchor:[0,0], axis:"left", poly:[[0,0],[0,W],[-Hs,W],[-Hf,0]], stage:[.2,.55], role:null},
+    {id:"fwR", name:"Patte d'angle 1", parent:"fw", anchor:[L,0], axis:"right", inset:[-ei,0,-.2], poly:[[0,0],[t,-2],[t,-Hf+2],[0,-Hf]], stage:[0,.2], glue:true},
+    {id:"fwL", name:"Patte d'angle 2", parent:"fw", anchor:[0,0], axis:"left", inset:[ei,0,-.2], poly:[[0,0],[0,-Hf],[-t,-Hf+2],[-t,-2]], stage:[0,.2], glue:true},
+    {id:"bwR", name:"Patte d'angle 3", parent:"bw", anchor:[L,0], axis:"right", inset:[-ei,0,-.2], poly:[[0,0],[t,2],[t,Hs-2],[0,Hs]], stage:[0,.2], glue:true},
+    {id:"bwL", name:"Patte d'angle 4", parent:"bw", anchor:[0,0], axis:"left", inset:[ei,0,-.2], poly:[[0,0],[0,Hs],[-t,Hs-2],[-t,2]], stage:[0,.2], glue:true},
+  ];
+}
+function buildCup(d){
+  const r1 = d.D1/2, r2 = Math.min(d.D2, d.D1 - 4)/2, h = d.h, s = Math.hypot(h, r1 - r2), Ro = s*r1/(r1 - r2), Ri = Ro - s, ov = 8, th = 2*Math.PI*r1/Ro, thT = th + ov/Ro, N = 120, pts = [];
+  for (let i = 0; i <= N; i++){ const f = -thT/2 + thT*i/N; pts.push([Ro*Math.sin(f), Ro*Math.cos(f)]); }
+  for (let i = N; i >= 0; i--){ const f = -thT/2 + thT*i/N; pts.push([Ri*Math.sin(f), Ri*Math.cos(f)]); }
+  const b = polyBox(pts), poly = pts.map(([x,y]) => [x - b.minX, y - b.minY]);
+  return [{id:"cup", name:"Jupe du gobelet", poly, role:{type:"cup", up:[0,1]}, cup:{apex:[-b.minX, -b.minY], Ro, Ri, s, r1, r2, h, th, thT, ov, w:b.w, hgt:b.h}}];
 }
 function buildTray(d, e){ return trayParts(d, e, {tabs:[0,.25], sides:[.2,.55], fb:[.5,.92], fwRole:"main"}).parts; }
 function buildMailer(d, e){
@@ -756,8 +867,26 @@ function roundRectPoly(w, h, r){
   return pts;
 }
 function ellipsePoly(w, h){ const pts = []; for (let i = 0; i < 72; i++){ const a = i/72*2*Math.PI; pts.push([w/2 + w/2*Math.cos(a), h/2 + h/2*Math.sin(a)]); } return pts; }
-function buildLabel(d){ return [{id:"label", name:"Étiquette", poly: d.shape === "ovale" ? ellipsePoly(d.lw, d.lh) : roundRectPoly(d.lw, d.lh, Math.min(d.r, d.lw/2, d.lh/2)), role:{type:"label", up:[0,1]}}]; }
-const BUILDERS = {rte:buildRTE, ste:buildSTE, sleeve:buildSleeve, rsc:buildRSC, tray:buildTray, mailer:buildMailer, labelPot:buildLabel, labelBottle:buildLabel};
+function buildLabel(d){
+  const lid = TPL().container === "couvercle";
+  return [{id:"label", name:"Étiquette", poly: lid ? ellipsePoly(d.lw, d.lw) : d.shape === "ovale" ? ellipsePoly(d.lw, d.lh) : roundRectPoly(d.lw, d.lh, Math.min(d.r, d.lw/2, d.lh/2)), role:{type:"label", up:[0,1]}}];
+}
+const BUILDERS = {rte:buildRTE, ste:buildSTE, hang:buildHang, sleeve:buildSleeve, rsc:buildRSC, hex:buildHex, coffret:buildCoffret, drawer:buildDrawer, display:buildDisplay, tray:buildTray, mailer:buildMailer, labelPot:buildLabel, labelBottle:buildLabel, labelLid:buildLabel, cup:buildCup};
+function dimsText(d = innerDims()){
+  const t = TPL(), f = v => fmt1.format(v);
+  switch (t.id){
+    case "hex": return `côté ${f(d.a)} × hauteur ${f(d.H)} mm intérieur (${f(d.a*Math.sqrt(3))} mm sur plats)`;
+    case "coffret": return `${f(d.L)} × ${f(d.W)} × ${f(d.H)} mm intérieur, couvercle ${f(Math.min(d.Hl, d.H))} mm`;
+    case "drawer": return `tiroir ${f(d.L)} × ${f(d.W)} × ${f(d.H)} mm intérieur`;
+    case "display": return `${f(d.L)} × ${f(d.W)} mm, bord ${f(d.Hf)}, côtés ${f(Math.max(d.Hs, d.Hf))}, fronton ${f(Math.max(d.Hh, d.Hs + 30))} mm`;
+    case "hang": return `${f(d.L)} × ${f(d.W)} × ${f(d.H)} mm intérieur, suspente ${f(d.hh)} mm`;
+    case "cup": return `Ø ${f(d.D1)} / Ø ${f(Math.min(d.D2, d.D1 - 4))} × ${f(d.h)} mm`;
+    case "labelLid": return `Ø ${f(d.lw)} mm, couvercle Ø ${f(d.d)} mm`;
+  }
+  if (t.kind === "label") return `${d.lw} × ${d.lh} mm (${d.shape === "ovale" ? "ovale" : "rectangle"}), contenant Ø ${d.d} mm`;
+  return `${f(d.L)} × ${f(d.W)} × ${f(d.H)} mm intérieur (L × l × H)`;
+}
+const STD_DIMS = ["rte","ste","sleeve","rsc","tray","mailer","hang"];
 
 function polyBox(pts){ let a=1e9,b=1e9,c=-1e9,d=-1e9; for (const [x,y] of pts){ a=Math.min(a,x); b=Math.min(b,y); c=Math.max(c,x); d=Math.max(d,y);} return {minX:a,minY:b,maxX:c,maxY:d,w:c-a,h:d-b}; }
 function cutPieces(a, b, hinges){
@@ -777,7 +906,8 @@ function computeLayout(){
   for (const p of panels){
     byId[p.id] = p;
     const par = p.parent ? byId[p.parent] : null;
-    p.g = par ? [par.g[0] + p.anchor[0], par.g[1] + p.anchor[1]] : [0,0];
+    p.g = par ? [par.g[0] + p.anchor[0], par.g[1] + p.anchor[1]] : (p.origin || [0,0]);
+    p.root = par ? par.root : p.id;
     p.gpoly = p.poly.map(([x,y]) => [x + p.g[0], y + p.g[1]]);
     p.gholes = (p.holes || []).map(h => h.map(([x,y]) => [x + p.g[0], y + p.g[1]]));
   }
@@ -905,8 +1035,8 @@ function drawArt(L, pxPerMm, mode = "color"){
     const full = getImg(state.images.full);
     if (full){ ctx.setTransform(1,0,0,1,0,0); ctx.drawImage(full, 0, 0, cv.width, cv.height); T(); metrics.imgs.push({label:"Création complète", dpi: full.naturalWidth/(bb.w/25.4), ratio:(full.naturalWidth/full.naturalHeight)/(bb.w/bb.h)}); }
   }
-  const ink = transparentRaw ? "#1b1b1b" : (hexLum(ground) > .42 ? "#1b1d20" : "#fbfaf6");
-  if (!pbr && state.raw && ink === "#fbfaf6" && (k === "label" ? state.print.label !== "numb" : true)) metrics.whiteInk = true;
+  const ink = state.raw ? "#1b1d20" : (hexLum(ground) > .42 ? "#1b1d20" : "#fbfaf6");
+  if (!pbr && state.raw) metrics.whiteInk = state.elements.some(el => el.type !== "image" && !el.foil && hexLum(el.color || "#000000") > .6) && !(k === "label" && state.print.label === "numb");
   for (const p of L.panels){
     const f = state.faces[p.id];
     if (f && !pbr) drawFace(ctx, p, f);
@@ -920,7 +1050,7 @@ function drawArt(L, pxPerMm, mode = "color"){
   return cv;
 }
 function faceFrame(ctx, p, extraRot){
-  const b = polyBox(p.gpoly), up = (p.role && p.role.up) || [0,1], rot = ((extraRot || 0) % 360 + 360) % 360;
+  const A = p.role && p.role.area, b = A ? {minX:p.g[0] + A[0], minY:p.g[1] + A[1], w:A[2] - A[0], h:A[3] - A[1]} : polyBox(p.gpoly), up = (p.role && p.role.up) || [0,1], rot = ((extraRot || 0) % 360 + 360) % 360;
   const vert = (up[0] !== 0) !== (rot === 90 || rot === 270);
   ctx.translate(b.minX + b.w/2, b.minY + b.h/2); ctx.scale(1, -1); ctx.rotate(Math.atan2(up[0], up[1]) + rot*Math.PI/180);
   return {pw: vert ? b.h : b.w, ph: vert ? b.w : b.h};
@@ -949,7 +1079,7 @@ function drawPanel(ctx, p, d, ink, pbr){
   const brand = (x, y, w) => { const st = brandStyle(x - w/2, w); if (st){ ctx.fillStyle = st; ctx.fillText(d.brand, x, y); } };
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   const type = p.role.type, ean = eanValid(d.ean || "") ? d.ean : null;
-  if (type === "main" || type === "label"){
+  if (type === "main" || type === "label" || type === "cup"){
     let codeW = 0;
     if (type === "label" && ean && pw > 2.4*ph){
       const sc = Math.min(1, (ph - 2*m)/EAN_H, pw*.24/EAN_W); codeW = EAN_W*sc;
@@ -1115,7 +1245,7 @@ function build3D(){
     const nodes = {};
     for (const p of layout.panels){
       const grp = new THREE.Group(), ins = p.inset || [0,0,0];
-      if (p.parent){ grp.position.set(p.anchor[0] + ins[0], p.anchor[1] + ins[1], ins[2]); nodes[p.parent].add(grp); } else holder.add(grp);
+      if (p.parent){ grp.position.set(p.anchor[0] + ins[0], p.anchor[1] + ins[1], ins[2]); nodes[p.parent].add(grp); } else { if (p.origin) grp.position.set(p.origin[0], p.origin[1], 0); holder.add(grp); }
       const shape = new THREE.Shape(p.poly.map(([x,y]) => new THREE.Vector2(x,y)));
       (p.holes || []).forEach(h => shape.holes.push(new THREE.Path(h.map(([x,y]) => new THREE.Vector2(x,y)))));
       const geo = new THREE.ShapeGeometry(shape, 6), pos = geo.attributes.position, uv = geo.attributes.uv;
@@ -1126,11 +1256,31 @@ function build3D(){
       const out = new THREE.Mesh(geo, matOut), inn = new THREE.Mesh(ig, matIn), edg = new THREE.Mesh(ex, [hiddenMat, edgeMat]);
       out.castShadow = inn.castShadow = true;
       grp.add(out, inn, edg);
-      for (const h of (p.holes || [])){ const fm = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(h.map(([x,y]) => new THREE.Vector2(x,y)))), film); fm.position.z = -e - .3; fm.renderOrder = 4; grp.add(fm); }
+      if (p.film) for (const h of (p.holes || [])){ const fm = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(h.map(([x,y]) => new THREE.Vector2(x,y)))), film); fm.position.z = -e - .3; fm.renderOrder = 4; grp.add(fm); }
       nodes[p.id] = grp; p.node = grp;
     }
+  } else if (k === "cup"){
+    const p = layout.panels[0], c = p.cup, nF = 144, nV = 8, geo = new THREE.BufferGeometry(), uvs = [], idx = [], flat = [], cone = [], yb = 4;
+    for (let j = 0; j <= nV; j++) for (let i = 0; i <= nF; i++){
+      const v = j/nV, phi = -Math.PI + 2*Math.PI*i/nF, Rr = c.Ri + c.s*v, psi = phi*c.r1/c.Ro, fx = c.apex[0] + Rr*Math.sin(psi), fy = c.apex[1] + Rr*Math.cos(psi), r = c.r2 + (c.r1 - c.r2)*v;
+      uvs.push((fx + p.g[0] - bb.minX)/bb.w, (fy + p.g[1] - bb.minY)/bb.h);
+      cone.push(r*Math.sin(phi), yb + c.h*v, r*Math.cos(phi));
+      flat.push(fx - c.w/2, fy - c.hgt/2 + c.h/2 + yb + 10, c.r1 + 45);
+    }
+    for (let j = 0; j < nV; j++) for (let i = 0; i < nF; i++){ const a = j*(nF + 1) + i, b2 = a + nF + 1; idx.push(a, a + 1, b2, a + 1, b2 + 1, b2); }
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(cone.length), 3));
+    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2)); geo.setIndex(idx);
+    labelMesh = new THREE.Mesh(geo, outMat({side:THREE.DoubleSide})); labelMesh.castShadow = true;
+    labelMesh.userData = {cup:true, flat, cone};
+    const white = new THREE.MeshStandardMaterial({color:0xfbfbf8, roughness:.55, side:THREE.DoubleSide});
+    const inner = new THREE.Mesh(new THREE.CylinderGeometry(c.r1 - .5, c.r2 - .5, c.h, 72, 1, true), white); inner.position.y = yb + c.h/2;
+    const bottom = new THREE.Mesh(new THREE.CircleGeometry(c.r2 - .5, 48), white); bottom.rotation.x = -Math.PI/2; bottom.position.y = yb + 6;
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(c.r1 + .6, 1.5, 12, 72), white); rim.rotation.x = Math.PI/2; rim.position.y = yb + c.h + .8;
+    const foot = new THREE.Mesh(new THREE.CylinderGeometry(c.r2 + .4, c.r2 + .4, yb, 48, 1, true), white); foot.position.y = yb/2;
+    inner.castShadow = rim.castShadow = true;
+    holder.add(inner, bottom, rim, foot, labelMesh);
   } else {
-    const {lw, lh, d, ch} = state.dims[state.model], r0 = d/2, bottle = TPL().container === "bouteille";
+    const {lw, lh, d, ch} = state.dims[state.model], r0 = d/2, bottle = TPL().container === "bouteille", lidLabel = TPL().container === "couvercle";
     const glassMat = new THREE.MeshStandardMaterial({color:lin(bottle ? 0x9fbf9a : 0xdde8e4), transparent:true, opacity:bottle ? .45 : .3, roughness:.05, metalness:0, depthWrite:false});
     const liquid = new THREE.MeshStandardMaterial({color:lin(0xd59a2c), roughness:.3});
     const capMat = new THREE.MeshStandardMaterial({color:lin(0x24272c), roughness:.35, metalness:.6});
@@ -1151,6 +1301,16 @@ function build3D(){
     }
     glass.renderOrder = 3; fillM.castShadow = cap3.castShadow = true;
     holder.add(fillM, glass, cap3);
+    if (lidLabel){
+      const capTop = ch + Math.min(18, ch*.16), lp = layout.panels[0];
+      const geo = new THREE.ShapeGeometry(new THREE.Shape(lp.poly.map(([x,y]) => new THREE.Vector2(x - lw/2, y - lw/2))), 8), pos = geo.attributes.position, uv = geo.attributes.uv;
+      for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) + lw/2 - bb.minX)/bb.w, (pos.getY(i) + lw/2 - bb.minY)/bb.h);
+      uv.needsUpdate = true;
+      labelMesh = new THREE.Mesh(geo, outMat({transparent:true, alphaTest:.04, side:THREE.DoubleSide}));
+      labelMesh.castShadow = true; labelMesh.userData = {lid:true, capTop, r0, lw};
+      holder.add(labelMesh);
+      return;
+    }
     const sx = 96, geo = new THREE.BufferGeometry(), uvs = [], idx = [];
     for (let j = 0; j <= 1; j++) for (let i = 0; i <= sx; i++){ const x = lw*i/sx, y = lh*j; uvs.push((x - bb.minX)/bb.w, (y - bb.minY)/bb.h); }
     for (let i = 0; i < sx; i++){ const a = i, c = i + sx + 1; idx.push(a, a+1, c, a+1, c+1, c); }
@@ -1164,17 +1324,30 @@ function build3D(){
 function applyFold(t){
   if (kind() === "box"){
     for (const p of layout.panels){
-      if (!p.parent) continue;
-      const [s0, s1] = p.stage || [0,1], a = Math.PI/2*ease(clamp((t - s0)/(s1 - s0), 0, 1));
+      if (!p.node) continue;
+      if (!p.parent){
+        if (p.assemble){ const A = p.assemble, kk = ease(clamp((t - A.stage[0])/(A.stage[1] - A.stage[0]), 0, 1)), o = p.origin || [0,0];
+          p.node.position.set(o[0] + (A.pos[0] - o[0])*kk, o[1] + (A.pos[1] - o[1])*kk, A.pos[2]*kk); p.node.rotation.set((A.rx || 0)*kk, 0, 0); }
+        continue;
+      }
+      const [s0, s1] = p.stage || [0,1], a = (p.fold ?? 90)*Math.PI/180*ease(clamp((t - s0)/(s1 - s0), 0, 1));
       p.node.rotation.set(0,0,0);
       if (p.axis === "right") p.node.rotation.y = a; else if (p.axis === "left") p.node.rotation.y = -a;
       else if (p.axis === "top") p.node.rotation.x = -a; else p.node.rotation.x = a;
     }
-    const lay = state.model === "tray" || state.model === "mailer";
+    const lay = !!TPL().lay;
     holder.rotation.x = lay ? Math.PI/2*ease(t) : 0; holder.rotation.y = lay ? Math.PI*ease(t) : 0;
     holder.position.set(0,0,0); holder.updateMatrixWorld(true);
     box3.setFromObject(holder); box3.getCenter(v);
     holder.position.set(-v.x, -box3.min.y, -v.z);
+  } else if (labelMesh && labelMesh.userData.cup){
+    const {flat, cone} = labelMesh.userData, e = ease(t), arr = labelMesh.geometry.attributes.position.array;
+    for (let i = 0; i < arr.length; i++) arr[i] = flat[i]*(1 - e) + cone[i]*e;
+    labelMesh.geometry.attributes.position.needsUpdate = true; labelMesh.geometry.computeVertexNormals(); labelMesh.geometry.computeBoundingSphere();
+  } else if (labelMesh && labelMesh.userData.lid){
+    const {capTop, r0, lw} = labelMesh.userData, e = ease(t);
+    labelMesh.rotation.set(-Math.PI/2*e, 0, 0);
+    labelMesh.position.set(0, (capTop + lw/2 + 25)*(1 - e) + (capTop + .4)*e, (r0 + 40)*(1 - e));
   } else if (labelMesh){
     const {sx, lw, lh, R: rr, yc} = labelMesh.userData, e = ease(t), pos = labelMesh.geometry.attributes.position;
     for (let j = 0; j <= 1; j++) for (let i = 0; i <= sx; i++){
@@ -1208,6 +1381,10 @@ function resize(){ if (recState) return; const w = v3d.clientWidth, h = v3d.clie
 new ResizeObserver(resize).observe(v3d);
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 function loop(now){
+  try { frameStep(now); } catch (err) { console.warn(err); }
+  requestAnimationFrame(loop);
+}
+function frameStep(now){
   if (recState){
     const t = (now - recState.t0)/1000;
     setFold(t < .4 ? 0 : t < 3.4 ? (t - .4)/3 : 1);
@@ -1221,7 +1398,6 @@ function loop(now){
   if (autoFrame) frame(false);
   if (!recState) controls.update(); else camera.lookAt(controls.target);
   renderer.render(scene, camera);
-  requestAnimationFrame(loop);
 }
 function setFold(t){ state.fold = t; applyFold(t); $("#fold").value = Math.round(t*100); $("#foldOut").textContent = Math.round(t*100) + " %"; }
 function setBg(mode){
@@ -1352,7 +1528,11 @@ function quote(qty){
   if (k === "box"){
     const B = Pr.box, cb = layout.cbb, pw = cb.w + B.gap, ph = cb.h + B.gap, SW = B.sheetW - 2*B.grip, SH = B.sheetH - 2*B.grip, e = layout.e, d = layout.inner;
     const poses = Math.max(Math.floor(SW/pw)*Math.floor(SH/ph), Math.floor(SW/ph)*Math.floor(SH/pw));
-    tech.push(["Cotes intérieures", `${fmt1.format(d.L)} × ${fmt1.format(d.W)} × ${fmt1.format(d.H)} mm`], ["Cotes extérieures (≈)", `${fmt1.format(d.L + 2*e)} × ${fmt1.format(d.W + 2*e)} × ${fmt1.format(d.H + 2*e)} mm`], ["Épaisseur du support", `${fmt2.format(e)} mm`], ["Développé à plat", `${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm`], ["Format feuille", `${B.sheetH/10} × ${B.sheetW/10} cm`]);
+    const roots = layout.panels.filter(p => !p.parent).length;
+    tech.push(["Cotes", dimsText(d)]);
+    if (STD_DIMS.includes(state.model)) tech.push(["Cotes extérieures (≈)", `${fmt1.format(d.L + 2*e)} × ${fmt1.format(d.W + 2*e)} × ${fmt1.format(d.H + 2*e)} mm`]);
+    if (roots > 1) tech.push(["Pièces par boîte", `${roots} (imposées ensemble)`]);
+    tech.push(["Épaisseur du support", `${fmt2.format(e)} mm`], ["Développé à plat", `${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm`], ["Format feuille", `${B.sheetH/10} × ${B.sheetW/10} cm`]);
     if (poses < 1) return {error:`Le développé (${fmt0.format(cb.w)} × ${fmt0.format(cb.h)} mm) dépasse la feuille ${B.sheetH/10} × ${B.sheetW/10} cm : réduisez le format ou changez de format de feuille dans les paramètres.`, tech};
     const sheets = Math.ceil(Math.ceil(qty/poses)*(1 + Pr.gache/100)) + B.sheetsCal;
     const pr = state.print.box, lam = state.lam.box, cutM = layout.cutLen/1000;
@@ -1365,9 +1545,24 @@ function quote(qty){
     if (state.foil || state.elements.some(x => x.foil)) add("Dorure à chaud", "cliché, calage + passages", B.foilCal + sheets*B.foilSheet);
     add("Forme de découpe", `${poses} pose(s) × ${fmt1.format(cutM)} m de filet`, B.dieBase + poses*cutM*B.diePerM);
     add("Découpe & rainage", `calage + ${fmt0.format(sheets)} feuilles`, B.cutCal + sheets*B.cutSheet);
-    if (layout.panels.some(p => p.holes && p.holes.length)) add("Fenêtre (film PET + pose)", `${fmt0.format(qty)} pièces`, B.windowCal + qty*B.windowPc);
-    if (layout.panels.some(p => p.glue)) add("Collage", `${fmt0.format(qty)} pièces`, B.glueCal + qty*B.gluePc);
+    if (layout.panels.some(p => p.film)) add("Fenêtre (film PET + pose)", `${fmt0.format(qty)} pièces`, B.windowCal + qty*B.windowPc);
+    const nGlue = new Set(layout.panels.filter(p => p.glue).map(p => p.root)).size;
+    if (nGlue) add("Collage", `${fmt0.format(qty)} boîtes${nGlue > 1 ? ` × ${nGlue} pièces` : ""}`, B.glueCal + qty*nGlue*B.gluePc);
     tech.push(["Poses par feuille (imposition rectangulaire)", poses], ["Feuilles (gâche incluse)", fmt0.format(sheets)], ["Longueur de coupe", `${fmt2.format(cutM)} m / pose`], ["Longueur de rainage", `${fmt2.format(layout.creaseLen/1000)} m / pose`], ["Fond perdu", `${layout.bleed} mm`]);
+  } else if (k === "cup"){
+    const B = Pr.box, cb = layout.cbb, pw = cb.w + B.gap, ph = cb.h + B.gap, SW = B.sheetW - 2*B.grip, SH = B.sheetH - 2*B.grip, c = layout.panels[0].cup;
+    const poses = Math.max(Math.floor(SW/pw)*Math.floor(SH/ph), Math.floor(SW/ph)*Math.floor(SH/pw));
+    tech.push(["Gobelet", dimsText()], ["Rayons du développé", `${fmt1.format(c.Ri)} / ${fmt1.format(c.Ro)} mm`], ["Angle du secteur", `${fmt1.format(c.thT*180/Math.PI)}° (dont recouvrement ${c.ov} mm)`], ["Développé à plat", `${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm`]);
+    if (poses < 1) return {error:"La jupe dépasse la feuille : réduisez le gobelet ou changez de format de feuille.", tech};
+    const sheets = Math.ceil(Math.ceil(qty/poses)*(1 + Pr.gache/100)) + B.sheetsCal, pr = state.print.cup, cutM = layout.cutLen/1000;
+    add("Support", `${fmt0.format(sheets)} feuilles × ${fmt3.format(Pr.cup.sheet)}`, sheets*Pr.cup.sheet);
+    add("Plaques offset", `${B.plates[pr]} plaque(s) × ${fmt0.format(B.platePrice)}`, B.plates[pr]*B.platePrice);
+    add("Impression", `calage + ${fmt0.format(sheets)} passages`, B.printCal[pr] + sheets*B.printSheet[pr]);
+    if (state.lam.cup === "vernis") add("Vernis acrylique", `${fmt0.format(sheets)} feuilles`, sheets*Pr.cup.varnishSheet);
+    if (state.foil || state.elements.some(x => x.foil)) add("Dorure à chaud", "cliché, calage + passages", B.foilCal + sheets*B.foilSheet);
+    add("Forme de découpe", `${poses} pose(s) × ${fmt1.format(cutM)} m de filet`, B.dieBase + poses*cutM*B.diePerM);
+    add("Découpe", `calage + ${fmt0.format(sheets)} feuilles`, B.cutCal + sheets*B.cutSheet);
+    tech.push(["Poses par feuille", poses], ["Feuilles (gâche incluse)", fmt0.format(sheets)], ["Formage", "par le fabricant de gobelets (non inclus)"]);
   } else {
     const Lb = Pr.label, {lw, lh, shape} = state.dims[state.model], across = Math.floor((Lb.web - 10)/(lw + Lb.gap));
     tech.push(["Format étiquette", `${fmt1.format(lw)} × ${fmt1.format(lh)} mm`], ["Laize machine", `${Lb.web} mm`]);
@@ -1451,15 +1646,24 @@ function preflight(q){
       if (q4.some(c => inPoly(c, hole)) || hole.some(c => inPoly(c, q4))) add("warn", `${el.type === "text" ? `Texte « ${String(el.text).slice(0, 20)} »` : el.type === "image" ? "Image ajoutée" : "Forme"} : chevauche la fenêtre, cette partie ne sera pas imprimée.`);
     }
   }
-  if (t.kind === "label"){
+  if (t.id === "labelLid"){
+    const dd = state.dims.labelLid;
+    if (dd.lw > dd.d*1.03 - 2) add("error", `L'étiquette (Ø ${dd.lw} mm) dépasse le couvercle (Ø ${fmt1.format(dd.d*1.03)} mm).`);
+  } else if (t.kind === "label"){
     const dd = state.dims[state.model], circ = Math.PI*dd.d;
     if (dd.lw > circ - 2) add("error", `L'étiquette (${dd.lw} mm) dépasse la circonférence du contenant (${fmt1.format(circ)} mm).`);
     const zone = t.container === "bouteille" ? dd.ch*.62 - 6 : dd.ch*.9;
     if (dd.lh > zone) add("warn", `Étiquette plus haute que la zone cylindrique (${fmt0.format(zone)} mm).`);
+  } else if (t.kind === "cup"){
+    const dd = state.dims.cup;
+    if (dd.D2 > dd.D1 - 4) add("warn", `Ø bas ramené à ${fmt0.format(dd.D1 - 4)} mm : un gobelet doit être conique (Ø bas < Ø haut).`);
+    add("info", "Formage, scellage et bord roulé réalisés par le fabricant de gobelets : faites valider le développé avec son outillage.");
   } else {
     const dd = L.inner;
-    if ((state.model === "rte" || state.model === "ste") && dd.W > dd.L*1.6) add("warn", "Profondeur très supérieure à la longueur : vérifiez le sens des rabats.");
-    if (dd.L < 15 || dd.W < 10 || dd.H < 10) add("error", "Cotes intérieures trop petites après déduction de l'épaisseur du support.");
+    if ((state.model === "rte" || state.model === "ste" || state.model === "hang") && dd.W > dd.L*1.6) add("warn", "Profondeur très supérieure à la longueur : vérifiez le sens des rabats.");
+    if (dd.L !== undefined && (dd.L < 15 || dd.W < 10 || dd.H < 10)) add("error", "Cotes intérieures trop petites après déduction de l'épaisseur du support.");
+    if (state.model === "coffret" && dd.Hl > dd.H) add("warn", `Couvercle ramené à la hauteur du fond (${fmt0.format(dd.H)} mm) pour qu'il ne touche pas la table.`);
+    if (state.model === "display" && (dd.Hs < dd.Hf || dd.Hh < dd.Hs + 30)) add("warn", "Cotes du présentoir ajustées : côtés ≥ bord avant, fronton ≥ côtés + 30 mm.");
     if (state.mat.box === "ondB" && state.print.box !== "noir") add("warn", "Cannelure B : l'offset quadri direct n'est pas possible, prévoir un contre-collage (litho) ou la flexographie.");
   }
   if (!out.some(x => x.level === "error" || x.level === "warn")) add("ok", "Aucun problème bloquant détecté.");
@@ -1470,11 +1674,60 @@ function renderPreflight(q){
   const nE = pfItems.filter(x => x.level === "error").length, nW = pfItems.filter(x => x.level === "warn").length;
   $("#pfList").innerHTML = pfItems.map(x => `<li class="${x.level}">${esc(x.msg)}</li>`).join("");
   const cb = layout.cbb, c = [`<span>à plat ${fmt0.format(cb.w)} × ${fmt0.format(cb.h)} mm</span>`];
-  if (kind() === "box") c.push(`<span>e = ${fmt2.format(layout.e)} mm</span>`); else c.push(`<span>Ø ${state.dims[state.model].d} mm</span>`);
+  if (kind() === "box") c.push(`<span>e = ${fmt2.format(layout.e)} mm</span>`); else if (kind() === "cup") c.push(`<span>Ø ${state.dims.cup.D1} mm</span>`); else c.push(`<span>Ø ${state.dims[state.model].d} mm</span>`);
   c.push(`<button type="button" id="pfChip" class="${nE ? "pf-err" : nW ? "pf-warn" : "pf-ok"}">${nE ? nE + " erreur" + (nE > 1 ? "s" : "") : nW ? nW + " alerte" + (nW > 1 ? "s" : "") : "Prépresse OK"}</button>`);
   $("#chips").innerHTML = c.join("");
   $("#pfChip").onclick = () => { $("#pfSec details").open = true; $("#pfSec").scrollIntoView({behavior:reduce ? "auto" : "smooth", block:"center"}); };
 }
+
+/* ================= Modèles types (marques fictives d'exemple) ================= */
+const PRESETS = [
+  {id:"huile", sector:"Huilerie", tpl:"labelBottle", name:"Huile d'olive extra vierge", dims:{lw:95, lh:110, d:72, ch:290, shape:"rect", r:3}, mat:"verge", print:"num", lam:"vernis", foil:true,
+    design:{bg:"#22381c", accent:"#d9b44a", brand:"Sahel Gold", product:"Huile d'olive extra vierge", mention:"75 cl · Première pression à froid", pattern:"lines"}},
+  {id:"harissa", sector:"Conserverie", tpl:"labelPot", name:"Harissa traditionnelle", dims:{lw:205, lh:55, d:70, ch:85, shape:"rect", r:3}, mat:"couche", print:"num", lam:"vernis", foil:false,
+    design:{bg:"#a3161a", accent:"#f2c14e", brand:"Dar Felfel", product:"Harissa traditionnelle", mention:"190 g · Piment séché au soleil", pattern:"zellige"}},
+  {id:"miel", sector:"Apiculture", tpl:"labelLid", name:"Miel de thym (couvercle)", dims:{lw:60, lh:60, d:72, ch:85}, mat:"couche", print:"num", lam:"vernis", foil:true,
+    design:{bg:"#f2b632", accent:"#5a3a12", brand:"Ruche du Cap", product:"Miel de thym", mention:"250 g", pattern:"dots"}},
+  {id:"dattes", sector:"Dattes", tpl:"coffret", name:"Coffret Deglet Nour", dims:{L:220, W:120, H:40, Hl:30}, mat:"gc1", print:"cmjn", lam:"soft", foil:true,
+    design:{bg:"#3b2416", accent:"#d4a64a", brand:"Oasis du Jérid", product:"Dattes Deglet Nour", mention:"500 g · Récolte de l'année", pattern:"zellige"}},
+  {id:"patisserie", sector:"Pâtisserie", tpl:"tray", name:"Barquette pâtisseries", dims:{L:260, W:180, H:50}, mat:"gc1", print:"cmjn", lam:"brillant", foil:false,
+    design:{bg:"#f4e9d8", accent:"#9c2f46", brand:"Kairouan Délices", product:"Makroudh & baklawa", mention:"1 kg · Fait maison", pattern:"dots"}},
+  {id:"cosmetique", sector:"Cosmétique", tpl:"rte", name:"Étui crème visage", dims:{L:55, W:55, H:120}, mat:"gc1", print:"cmjn", lam:"soft", foil:true,
+    design:{bg:"#f3ede6", accent:"#a8714f", brand:"Néroli", product:"Crème visage à la fleur d'oranger", mention:"50 ml · Fabriqué en Tunisie", pattern:"none"}},
+  {id:"savon", sector:"Savonnerie", tpl:"hang", name:"Savon artisanal à suspendre", dims:{L:70, W:30, H:95, hh:40}, mat:"kraft", print:"cmjn", lam:"none", foil:false, raw:true,
+    design:{bg:"#b78b58", accent:"#2f4a2a", brand:"Savonnerie de l'île", product:"Savon à l'huile d'olive", mention:"100 g · Saponifié à froid", pattern:"none"}},
+  {id:"the", sector:"Thé & épices", tpl:"hex", name:"Thé à la menthe", dims:{a:40, H:110}, mat:"gc1", print:"cmjn", lam:"mat", foil:true,
+    design:{bg:"#0f4c4a", accent:"#d8c27a", brand:"Menthe & Pignons", product:"Thé vert à la menthe", mention:"100 g · Gunpowder", pattern:"zellige"}},
+  {id:"chocolat", sector:"Chocolaterie", tpl:"drawer", name:"Boîte tiroir pralinés", dims:{L:180, W:120, H:35}, mat:"gc1", print:"cmjn", lam:"soft", foil:true,
+    design:{bg:"#3a1f1a", accent:"#e8c39e", brand:"Maison Carthage", product:"Pralinés assortis", mention:"16 pièces · 200 g", pattern:"lines"}},
+  {id:"cafe", sector:"Café", tpl:"cup", name:"Gobelet café 8 oz", dims:{D1:80, D2:56, h:93}, mat:"pe", print:"cmjn", lam:"none", foil:false,
+    design:{bg:"#2b1d16", accent:"#e0a96d", brand:"Café Médina", product:"Espresso & café turc", mention:"240 ml · Boisson chaude", pattern:"lines"}},
+  {id:"plv", sector:"Confiserie", tpl:"display", name:"Présentoir comptoir", dims:{L:300, W:200, Hf:60, Hs:120, Hh:300}, mat:"micro", print:"cmjn", lam:"brillant", foil:false,
+    design:{bg:"#d7263d", accent:"#ffd166", brand:"Halwa Bey", product:"Confiserie à partager", mention:"Présentoir 24 sachets", pattern:"dots"}},
+  {id:"ecommerce", sector:"E-commerce", tpl:"rsc", name:"Carton d'expédition", dims:{L:250, W:180, H:120}, mat:"ondB", print:"noir", lam:"none", foil:false, raw:true,
+    design:{bg:"#b98e5b", accent:"#1b1d20", brand:"Souk en ligne", product:"Fragile — manipuler avec soin", mention:"Expédié depuis Tunis", pattern:"none"}},
+];
+let libTab = "tpl";
+function renderPresets(){
+  $("#presetGrid").innerHTML = PRESETS.map(p => { const t = TEMPLATES.find(x => x.id === p.tpl); return `<button type="button" class="preset" data-preset="${p.id}"><span class="pv" style="background:${p.design.bg};color:${p.design.accent}"><svg viewBox="0 0 42 34" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">${ICONS[t.icon]}</svg></span><span><b>${esc(p.name)}</b><small>${esc(p.sector)} · ${esc(t.name)}</small></span></button>`; }).join("");
+}
+function applyPreset(p){
+  state.model = p.tpl; state.dimMode = "int";
+  state.dims[p.tpl] = merge(DEFAULT.dims[p.tpl], p.dims);
+  state.design = merge(DEFAULT.design, p.design); state.design.legal = ""; state.design.ean = "";
+  state.faces = {}; state.elements = []; state.images.full = null; state.fullHide = false; state.window.on = false; state.inside.on = false;
+  const k = TPL().kind;
+  state.foil = !!p.foil; state.varnish = !!p.varnish; state.raw = !!p.raw;
+  if (p.mat) state.mat[k] = p.mat; if (p.print) state.print[k] = p.print; if (p.lam) state.lam[k] = p.lam;
+  fixMat(); selEl = null;
+  renderControls(); changed("geo"); refresh("geo", true);
+  if (!reduce){ anim = {from:0, to:1, t0:performance.now() + 150, dur:2600}; setFold(0); }
+  toast(`Modèle « ${p.name} » chargé`);
+}
+function setLibTab(tab){ libTab = tab; $("#lib-tpl").setAttribute("aria-selected", tab === "tpl"); $("#lib-pre").setAttribute("aria-selected", tab === "pre"); $("#libTpl").hidden = tab !== "tpl"; $("#libPre").hidden = tab !== "pre"; $("#tplCount").textContent = tab === "pre" ? `${PRESETS.length} modèles` : $("#tplCount").dataset.n || ""; }
+$("#lib-tpl").addEventListener("click", () => setLibTab("tpl")); $("#lib-pre").addEventListener("click", () => setLibTab("pre"));
+$("#presetGrid").addEventListener("click", e => { const b = e.target.closest("[data-preset]"); if (b) applyPreset(PRESETS.find(p => p.id === b.dataset.preset)); });
+renderPresets();
 
 /* ================= Formulaire ================= */
 function opts(sel, map, val, only){ sel.innerHTML = Object.entries(map).filter(([k]) => !only || only.includes(k)).map(([k, o]) => `<option value="${k}"${k === val ? " selected" : ""}>${esc(typeof o === "string" ? o : o.name)}</option>`).join(""); }
@@ -1483,20 +1736,20 @@ function renderLibrary(){
   const q = $("#tplSearch").value.trim().toLowerCase();
   const list = TEMPLATES.filter(t => (cat === "all" || t.cat === cat) && (!q || (t.name + " " + t.sub + " " + t.desc).toLowerCase().includes(q)));
   $("#tpls").innerHTML = list.map(t => `<button type="button" class="tpl" data-tpl="${t.id}" aria-pressed="${t.id === state.model}"><svg viewBox="0 0 42 34" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">${ICONS[t.icon]}</svg><span>${esc(t.name)}<small>${esc(t.sub)}</small></span></button>`).join("") || `<p class="hint">Aucun gabarit ne correspond.</p>`;
-  $("#tplCount").textContent = `${list.length} / ${TEMPLATES.length}`;
+  $("#tplCount").dataset.n = `${list.length} / ${TEMPLATES.length} gabarits`; if (typeof libTab === "undefined" || libTab === "tpl") $("#tplCount").textContent = $("#tplCount").dataset.n;
 }
 function renderControls(){
   const t = TPL(), k = kind(), dims = state.dims[state.model];
   renderLibrary();
   $("#modelDesc").textContent = t.desc; $("#foldLbl").textContent = t.fold;
-  $("#dimMode").hidden = k !== "box"; $("#dimMode").value = state.dimMode;
+  $("#dimMode").hidden = !STD_DIMS.includes(state.model); $("#dimMode").value = state.dimMode;
   let h = DIM_FIELDS[state.model].map(([key, lbl, mn, mx]) => `<div class="field"><label for="dim-${key}">${lbl}</label><div class="unit" data-unit="mm"><input type="number" id="dim-${key}" data-k="${key}" min="${mn}" max="${mx}" step="0.5" value="${dims[key]}"></div></div>`).join("");
-  if (k === "label") h += `<div class="field"><label for="dim-shape">Forme</label><select id="dim-shape" data-k="shape"><option value="rect"${dims.shape === "rect" ? " selected" : ""}>Rectangle</option><option value="ovale"${dims.shape === "ovale" ? " selected" : ""}>Ovale</option></select></div>
+  if (k === "label" && t.container !== "couvercle") h += `<div class="field"><label for="dim-shape">Forme</label><select id="dim-shape" data-k="shape"><option value="rect"${dims.shape === "rect" ? " selected" : ""}>Rectangle</option><option value="ovale"${dims.shape === "ovale" ? " selected" : ""}>Ovale</option></select></div>
     <div class="field"><label for="dim-r">Rayon des coins</label><div class="unit" data-unit="mm"><input type="number" id="dim-r" data-k="r" min="0" max="20" step="0.5" value="${dims.r}"${dims.shape === "ovale" ? " disabled" : ""}></div></div>`;
   $("#dims").innerHTML = h;
   $("#winBox").hidden = !t.window; $("#winOn").checked = state.window.on; $("#winFields").hidden = !state.window.on;
   $("#winW").value = state.window.w; $("#winH").value = state.window.h; $("#winY").value = state.window.y;
-  $("#dimNote").textContent = k === "box" ? `Épaisseur prise en compte dans le plan : ${fmt2.format(caliper())} mm (${MAT.box[state.mat.box].name}).` : "Cotes de l'étiquette finie ; fond perdu de 2 mm ajouté automatiquement.";
+  $("#dimNote").textContent = k === "box" ? `Épaisseur prise en compte dans le plan : ${fmt2.format(caliper())} mm (${MAT.box[state.mat.box].name}).` : k === "cup" ? "Cotes du gobelet fini ; la jupe est développée en secteur de couronne avec 8 mm de recouvrement." : "Cotes de l'étiquette finie ; fond perdu de 2 mm ajouté automatiquement.";
   opts($("#mat"), MAT[k], state.mat[k], t.mats); opts($("#print"), PRINT[k], state.print[k]); opts($("#lam"), LAM[k], state.lam[k]);
   $("#insideRow").hidden = k !== "box"; $("#insideOn").checked = state.inside.on; $("#insideColor").value = state.inside.color;
   const d = state.design;
@@ -1593,11 +1846,12 @@ $("#dims").addEventListener("change", e => {
   const dims = state.dims[state.model];
   if (k === "shape"){ dims.shape = e.target.value; renderControls(); }
   else { const f = DIM_FIELDS[state.model].find(x => x[0] === k), n = parseFloat(e.target.value); dims[k] = Number.isFinite(n) ? +clamp(n, f ? f[2] : 0, f ? f[3] : 20).toFixed(1) : dims[k]; e.target.value = dims[k]; }
+  if (state.model === "labelLid") dims.lh = dims.lw;
   changed("geo"); refresh("geo", true);
 });
 $("#dimMode").addEventListener("change", e => {
   const e2 = 2*caliper(), s = e.target.value === "ext" ? 1 : -1;
-  if (e.target.value !== state.dimMode){ for (const t of TEMPLATES) if (t.kind === "box"){ const dims = state.dims[t.id]; for (const k of ["L","W","H"]) dims[k] = +(dims[k] + s*e2).toFixed(1); } state.dimMode = e.target.value; }
+  if (e.target.value !== state.dimMode){ for (const id of STD_DIMS){ const dims = state.dims[id]; for (const k of ["L","W","H"]) dims[k] = +(dims[k] + s*e2).toFixed(1); } state.dimMode = e.target.value; }
   renderControls(); changed("geo");
 });
 $("#winOn").addEventListener("change", e => { state.window.on = e.target.checked; $("#winFields").hidden = !e.target.checked; changed("geo"); });
@@ -1696,7 +1950,7 @@ function subscribeProjects(){
 function configForSave(){ return JSON.parse(snap()); }
 function summary(q){
   const t = TPL(), d = state.dims[state.model];
-  return {template:t.name, dims: t.kind === "label" ? `${d.lw} × ${d.lh} mm` : `${d.L} × ${d.W} × ${d.H} mm`, qty:state.qty, ht:q.error ? null : Math.round(q.ht*1000)/1000, unit:q.error ? null : Math.round(q.unit*1000)/1000};
+  return {template:t.name, dims: dimsText(), qty:state.qty, ht:q.error ? null : Math.round(q.ht*1000)/1000, unit:q.error ? null : Math.round(q.unit*1000)/1000};
 }
 function stripHeavy(body){
   let dropped = false;
@@ -1784,7 +2038,7 @@ const SETTINGS_FIELDS = [
   ["Société (en-tête des devis)", [["company.name","Raison sociale"],["company.mf","Matricule fiscal"],["company.address","Adresse"],["company.phone","Téléphone"],["company.email","E-mail"],["company.whatsapp","WhatsApp (ex. 21698000000)"]]],
   ["Général", [["pricing.marge","Marge","%"],["pricing.gache","Gâche","%"],["pricing.tva","TVA","%"]]],
   ["Épaisseur des supports (compensation des plis)", [["pricing.box.caliper.gc1","GC1 300 g","mm"],["pricing.box.caliper.duplex","Duplex 350 g","mm"],["pricing.box.caliper.kraft","Kraft 350 g","mm"],["pricing.box.caliper.micro","Micro-cannelure E","mm"],["pricing.box.caliper.ondB","Cannelure B","mm"]]],
-  ["Boîtes — feuille & support", [["pricing.box.sheetW","Feuille, grand côté","mm"],["pricing.box.sheetH","Feuille, petit côté","mm"],["pricing.box.grip","Prise de pince","mm"],["pricing.box.gap","Écart entre poses","mm"],["pricing.box.sheet.gc1","GC1 300 g / feuille","TND"],["pricing.box.sheet.duplex","Duplex 350 g / feuille","TND"],["pricing.box.sheet.kraft","Kraft 350 g / feuille","TND"],["pricing.box.sheet.micro","Micro-cannelure / feuille","TND"],["pricing.box.sheet.ondB","Cannelure B / feuille","TND"],["pricing.box.sheetsCal","Feuilles de calage","f."]]],
+  ["Boîtes — feuille & support", [["pricing.box.sheetW","Feuille, grand côté","mm"],["pricing.box.sheetH","Feuille, petit côté","mm"],["pricing.box.grip","Prise de pince","mm"],["pricing.box.gap","Écart entre poses","mm"],["pricing.box.sheet.gc1","GC1 300 g / feuille","TND"],["pricing.box.sheet.duplex","Duplex 350 g / feuille","TND"],["pricing.box.sheet.kraft","Kraft 350 g / feuille","TND"],["pricing.box.sheet.micro","Micro-cannelure / feuille","TND"],["pricing.box.sheet.ondB","Cannelure B / feuille","TND"],["pricing.cup.sheet","Carton gobelet PE / feuille","TND"],["pricing.box.sheetsCal","Feuilles de calage","f."]]],
   ["Boîtes — impression & finitions", [["pricing.box.platePrice","Plaque offset","TND"],["pricing.box.printCal.cmjn","Calage quadri","TND"],["pricing.box.printSheet.cmjn","Passage quadri / feuille","TND"],["pricing.box.printCal.cmjnp","Calage quadri + Pantone","TND"],["pricing.box.printSheet.cmjnp","Passage quadri + P. / feuille","TND"],["pricing.box.insideCal","Impression intérieure, calage","TND"],["pricing.box.insideSheet","Impression intérieure / feuille","TND"],["pricing.box.lam.mat","Pelliculage mat / feuille","TND"],["pricing.box.lam.brillant","Pelliculage brillant / feuille","TND"],["pricing.box.lam.soft","Soft-touch / feuille","TND"],["pricing.box.varnishCal","Vernis UV, calage","TND"],["pricing.box.varnishSheet","Vernis UV / feuille","TND"],["pricing.box.foilCal","Dorure, cliché + calage","TND"],["pricing.box.foilSheet","Dorure / feuille","TND"]]],
   ["Boîtes — façonnage", [["pricing.box.dieBase","Forme de découpe, base","TND"],["pricing.box.diePerM","Forme, filet au mètre","TND"],["pricing.box.cutCal","Découpe, calage","TND"],["pricing.box.cutSheet","Découpe / feuille","TND"],["pricing.box.windowCal","Fenêtre, calage","TND"],["pricing.box.windowPc","Fenêtre / pièce","TND"],["pricing.box.glueCal","Collage, calage","TND"],["pricing.box.gluePc","Collage / pièce","TND"]]],
   ["Étiquettes", [["pricing.label.web","Laize machine","mm"],["pricing.label.m2.couche","Couché adhésif / m²","TND"],["pricing.label.m2.ppw","PP blanc / m²","TND"],["pricing.label.m2.ppt","PP transparent / m²","TND"],["pricing.label.m2.verge","Vergé / m²","TND"],["pricing.label.printCal","Impression, calage","TND"],["pricing.label.printM2.num","Quadri / m²","TND"],["pricing.label.printM2.numb","Quadri + blanc / m²","TND"],["pricing.label.fin.vernis","Vernis / m²","TND"],["pricing.label.fin.lam","Lamination / m²","TND"],["pricing.label.toolBase","Outil de découpe","TND"],["pricing.label.cutM","Découpe / m","TND"],["pricing.label.rollPer","Étiquettes par bobine","ex."],["pricing.label.rollCost","Rebobinage / bobine","TND"]]],
@@ -1862,7 +2116,7 @@ async function saveFile(filename, data){
 function specRows(){
   const t = TPL(), k = kind(), d = state.dims[state.model], cb = layout.cbb;
   const fin = [LAM[k][state.lam[k]], state.varnish ? "vernis sélectif UV" : "", state.foil || state.elements.some(x => x.foil) ? "dorure à chaud" : "", state.inside.on && k === "box" ? "impression intérieure" : "", state.window.on && t.window ? "fenêtre PET" : ""].filter(Boolean).join(", ");
-  const fmtD = k === "label" ? `${d.lw} × ${d.lh} mm (${d.shape === "ovale" ? "ovale" : "rectangle"}), contenant Ø ${d.d} mm` : `${fmt1.format(layout.inner.L)} × ${fmt1.format(layout.inner.W)} × ${fmt1.format(layout.inner.H)} mm intérieur (L × l × H)`;
+  const fmtD = dimsText(layout.inner);
   return [["Modèle", t.name], ["Format", fmtD], ["Développé à plat", `${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm`], ["Support", MAT[k][state.mat[k]].name + (k === "box" ? ` (e = ${fmt2.format(layout.e)} mm)` : "")], ["Impression", PRINT[k][state.print[k]]], ["Finitions", fin]];
 }
 function dielineDXF(){
