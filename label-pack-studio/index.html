@@ -240,6 +240,10 @@ details > :not(summary){margin-top:8px}
 .cbody .price{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 .cbody .row{margin-top:auto;padding-top:6px}
 .catbar{display:flex;gap:6px;flex-wrap:wrap}
+.scene-tools{top:auto!important;bottom:10px;align-items:center;background:color-mix(in srgb,var(--surface) 85%,transparent);border:1px solid var(--line);border-radius:6px;padding:4px 8px;flex-wrap:wrap;max-width:calc(100% - 20px)}
+.scene-tools select{padding:3px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font-size:12px}
+.scene-tools input[type=range]{width:80px}
+.client .scene-tools{display:flex}
 
 .overlay{position:fixed;inset:0;z-index:30;background:rgba(10,12,15,.45);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding-block:calc(24px + env(safe-area-inset-top,0px)) 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .dialog{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);width:min(780px,100%);display:flex;flex-direction:column}
@@ -331,6 +335,10 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <div class="checks">
         <label class="check"><input type="checkbox" id="varnish"> Vernis sélectif UV (motif, logo, éléments cochés)</label>
         <label class="check"><input type="checkbox" id="foil"> Dorure à chaud sur la marque</label>
+        <div class="grid2">
+          <div class="field"><label for="foilColor">Couleur de dorure</label><select id="foilColor"></select></div>
+          <div class="field"><label for="relief">Relief de la marque</label><select id="relief"></select></div>
+        </div>
         <label class="check" id="insideRow"><input type="checkbox" id="insideOn"> Impression intérieure <input type="color" id="insideColor" aria-label="Couleur intérieure"></label>
       </div>
     </section>
@@ -397,6 +405,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <div class="row">
             <label class="check"><input type="checkbox" id="elFoil"> Dorure</label>
             <label class="check"><input type="checkbox" id="elVarnish"> Vernis UV</label>
+            <select id="elRelief" aria-label="Relief de l'élément" style="padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)"></select>
           </div>
           <div class="row">
             <button type="button" class="btn small" id="elUp" title="Monter d'un plan">Monter</button>
@@ -468,7 +477,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <button class="exp" data-exp="video" type="button"><b>Animation de pliage</b><small>Vidéo 1280 × 720, pliage puis rotation</small><span>.webm</span></button>
       <button class="exp" data-exp="flat" type="button"><b>Visuel à plat avec traits</b><small>Création + traits de coupe, pour contrôle</small><span>.png</span></button>
       <div class="row"><label class="lbl" for="expBg">Fond des maquettes</label>
-        <select id="expBg" style="padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)"><option value="white">Blanc</option><option value="transparent">Transparent (PNG)</option><option value="color">Couleur</option></select>
+        <select id="expBg" style="padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)"><option value="scene">Scène affichée</option><option value="white">Blanc</option><option value="transparent">Transparent (PNG)</option><option value="color">Couleur</option></select>
         <input type="color" id="expBgColor" value="#e8e4dc" aria-label="Couleur de fond"></div>
       <p class="hint" id="expNote"></p>
     </div>
@@ -480,6 +489,11 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <button class="btn small" data-cam="top" type="button">Dessus</button>
           <button class="btn small" data-cam="back" type="button">Dos</button>
           <button class="btn small" id="reframe" type="button">Recadrer</button>
+        </div>
+        <div class="view-tools scene-tools">
+          <select id="sceneSel" aria-label="Scène de présentation"></select>
+          <label class="lbl" for="lightAz">Lumière</label><input type="range" id="lightAz" min="0" max="359" aria-label="Orientation de la lumière">
+          <input type="range" id="lightPow" min="40" max="180" aria-label="Intensité de la lumière">
         </div>
         <span class="rec" id="recTag" hidden>● Enregistrement</span>
       </div>
@@ -596,7 +610,22 @@ const FONTS = {
   naskh:{label:"Noto Naskh Arabic — arabe texte", css:'"Noto Naskh Arabic",Georgia,serif', bold:700},
 };
 const DISPLAY = FONTS.archivo.css, BODY = FONTS.plex.css;
-const FOIL = "rgb(0,62,255)", VARN = "rgb(0,20,0)"; // carte PBR : vert = rugosité, bleu = métal
+const FOIL = "rgb(128,62,255)", VARN = "rgb(128,20,0)"; // carte PBR : rouge = relief (128 = plat), vert = rugosité, bleu = métal
+let pbrBaseG = 204;
+// Couleur PBR d'un élément selon ses finitions ; null = rien à marquer.
+function finPBR(foil, varnish, relief){
+  if (!foil && !varnish && (!relief || relief === "none")) return null;
+  const r = relief === "emboss" ? 255 : relief === "deboss" ? 0 : 128;
+  return `rgb(${r},${foil ? 62 : varnish ? 20 : pbrBaseG},${foil ? 255 : 0})`;
+}
+const FOILS = {
+  or:{name:"Or", stops:["#9a7328","#f6dc8c","#b88a33","#f3d27a","#8e6a22"]},
+  argent:{name:"Argent", stops:["#7f848a","#f4f6f8","#a3a8ae","#e9ecef","#767b81"]},
+  cuivre:{name:"Cuivre", stops:["#7c4220","#f0b089","#a65c32","#e9a27a","#6f3a1c"]},
+  rose:{name:"Or rose", stops:["#9a635d","#f7d3c6","#c08a80","#f1c4b6","#8d5a54"]},
+  holo:{name:"Holographique", stops:["#b9a4ff","#9fe6ff","#c4ffd6","#fff1a1","#ffb9e1"]},
+};
+const RELIEFS = {none:"Sans relief", emboss:"Gaufrage en relief", deboss:"Gaufrage en creux"};
 
 /* ================= Catalogue de gabarits ================= */
 const ICONS = {
@@ -699,10 +728,10 @@ const DEFAULT_SETTINGS = {
       sheet:{gc1:1.10, duplex:0.85, kraft:0.95, micro:1.60, ondB:2.20, kraftp:0.55, whitep:0.62}, sheetsCal:80, bagPc:0.30, handlePc:0.12,
       plates:{cmjn:4, cmjnp:5, noir:1}, platePrice:45, printCal:{cmjn:180, cmjnp:240, noir:70}, printSheet:{cmjn:0.07, cmjnp:0.09, noir:0.03},
       insideCal:110, insideSheet:0.04,
-      lam:{none:0, mat:0.22, brillant:0.20, soft:0.45}, varnishCal:120, varnishSheet:0.10, foilCal:230, foilSheet:0.14,
+      lam:{none:0, mat:0.22, brillant:0.20, soft:0.45}, varnishCal:120, varnishSheet:0.10, foilCal:230, foilSheet:0.14, embossCal:180, embossSheet:0.06,
       dieBase:150, diePerM:45, cutCal:60, cutSheet:0.05, glueCal:50, gluePc:0.025, windowCal:90, windowPc:0.06},
     label:{m2:{couche:2.6, ppw:4.2, ppt:4.8, verge:4.5}, web:330, gap:3, calM:25, printCal:40, printM2:{num:6.5, numb:8.9},
-      fin:{none:0, vernis:0.9, lam:1.6}, toolBase:160, toolOval:40, cutM:0.05, foilCal:120, foilM2:2.5, varnishCal:60, varnishM2:1.1, rollPer:1000, rollCost:0.8},
+      fin:{none:0, vernis:0.9, lam:1.6}, toolBase:160, toolOval:40, cutM:0.05, foilCal:120, foilM2:2.5, embossCal:110, embossM2:1.8, varnishCal:60, varnishM2:1.1, rollPer:1000, rollCost:0.8},
     cup:{sheet:1.35, varnishSheet:0.12}
   }
 };
@@ -716,7 +745,8 @@ const DEFAULT = {
     hang:{L:60,W:30,H:120,hh:40}, pillow:{W:90,L:150,D:30}, pyramid:{b:80,h:90}, gable:{L:160,W:110,H:90,r:45,hh:50}, bag:{L:240,G:100,H:300}, hex:{a:40,H:110}, coffret:{L:220,W:120,H:40,Hl:30}, drawer:{L:180,W:120,H:35}, display:{L:300,W:200,Hf:60,Hs:120,Hh:300}, cup:{D1:80,D2:56,h:93}},
   window:{on:false, w:30, h:60, y:5, r:4},
   mat:{box:"gc1", label:"couche", cup:"pe"}, print:{box:"cmjn", label:"num", cup:"cmjn"}, lam:{box:"mat", label:"vernis", cup:"none"},
-  varnish:false, foil:true, raw:false, inside:{on:false, color:"#e2b25a"},
+  varnish:false, foil:true, foilColor:"or", relief:"none", raw:false, inside:{on:false, color:"#e2b25a"},
+  scene:"studio", lightAz:35, lightPow:100,
   design:{bg:"#123c3a", accent:"#e2b25a", brand:"Néroli", product:"Crème mains à la fleur d'oranger", mention:"75 ml · Fabriqué en Tunisie", pattern:"zellige", legal:"", ean:""},
   images:{logo:null, full:null}, faces:{}, fullHide:false, elements:[],
   qty:2500, fold:1, showArt:true, showSafe:true
@@ -1153,8 +1183,8 @@ function drawPattern(ctx, bb, name, color, alpha){
 const pathPoly = (ctx, pts) => { ctx.beginPath(); pts.forEach(([x,y], i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y)); ctx.closePath(); };
 let metrics = {imgs:[], texts:[], ean:null, legalCut:false, whiteInk:false};
 function foilGrad(ctx, x, w){
-  const g = ctx.createLinearGradient(x, 0, x + w, 0);
-  g.addColorStop(0, "#9a7328"); g.addColorStop(.35, "#f6dc8c"); g.addColorStop(.55, "#b88a33"); g.addColorStop(.8, "#f3d27a"); g.addColorStop(1, "#8e6a22");
+  const g = ctx.createLinearGradient(x, 0, x + w, 0), st = (FOILS[state.foilColor] || FOILS.or).stops;
+  [0, .35, .55, .8, 1].forEach((o, i) => g.addColorStop(o, st[i]));
   return g;
 }
 function maskImage(im, color){ const c = document.createElement("canvas"); c.width = im.naturalWidth; c.height = im.naturalHeight; const x = c.getContext("2d"); x.drawImage(im, 0, 0); x.globalCompositeOperation = "source-in"; x.fillStyle = color; x.fillRect(0, 0, c.width, c.height); return c; }
@@ -1170,7 +1200,7 @@ function drawArt(L, pxPerMm, mode = "color"){
   if (!pbr) metrics = {imgs:[], texts:[], ean:null, legalCut:false, whiteInk:false, scale:s};
   const rawColor = MAT[k][state.mat[k]].raw, transparentRaw = state.raw && rawColor === null;
   const ground = state.raw ? (rawColor || "#ffffff") : d.bg;
-  if (pbr){ ctx.fillStyle = `rgb(0,${Math.round((ROUGH[state.lam[k]] ?? .8)*255)},0)`; ctx.fillRect(bb.minX, bb.minY, bb.w, bb.h); if (state.varnish && !state.raw) drawPattern(ctx, bb, d.pattern, VARN, 1); }
+  if (pbr){ pbrBaseG = Math.round((ROUGH[state.lam[k]] ?? .8)*255); ctx.fillStyle = `rgb(128,${pbrBaseG},0)`; ctx.fillRect(bb.minX, bb.minY, bb.w, bb.h); if (state.varnish && !state.raw) drawPattern(ctx, bb, d.pattern, VARN, 1); }
   else {
     if (!transparentRaw){ ctx.fillStyle = ground; ctx.fillRect(bb.minX, bb.minY, bb.w, bb.h); }
     if (!state.raw) drawPattern(ctx, bb, d.pattern, d.accent, .22);
@@ -1215,7 +1245,7 @@ function drawPanel(ctx, p, d, ink, pbr){
   ctx.save();
   const {pw, ph} = faceFrame(ctx, p, 0);
   const m = Math.max(3, Math.min(pw, ph)*.09), iw = pw - 2*m, top = -ph/2 + m, bottom = ph/2 - m, logo = getImg(state.images.logo);
-  const brandStyle = (x, w) => pbr ? (state.foil ? FOIL : null) : (state.foil ? foilGrad(ctx, x, w) : ink);
+  const brandStyle = (x, w) => pbr ? finPBR(state.foil, false, state.relief) : (state.foil ? foilGrad(ctx, x, w) : ink);
   const txt = fn => { if (!pbr){ ctx.fillStyle = ink; fn(); } };
   const drawLogo = (x, y, w, h) => { if (!logo) return; if (!pbr){ ctx.drawImage(logo, x, y, w, h); metrics.imgs.push({label:"Logo", dpi: logo.naturalWidth/(w/25.4)}); } else if (state.varnish) ctx.drawImage(maskImage(logo, VARN), x, y, w, h); };
   const brand = (x, y, w) => { const st = brandStyle(x - w/2, w); if (st){ ctx.fillStyle = st; ctx.fillText(d.brand, x, y); } };
@@ -1280,7 +1310,7 @@ function drawElements(ctx, mode){
   for (const el of state.elements){
     ctx.save(); ctx.translate(el.x, el.y); ctx.scale(1, -1); ctx.rotate((el.rot || 0)*Math.PI/180);
     if (!pbr) ctx.globalAlpha = (el.opacity ?? 100)/100;
-    const pf = pbr ? (el.foil ? FOIL : el.varnish ? VARN : null) : null;
+    const pf = pbr ? finPBR(el.foil, el.varnish, el.relief) : null;
     if (el.type === "text"){
       const f = FONTS[el.font] || FONTS.plex, fz = el.size*PT;
       ctx.font = `${el.bold ? f.bold : 400} ${fz}px ${f.css}`;
@@ -1362,7 +1392,52 @@ let layout = null, artCanvas = null, pbrCanvas = null, texture = null, pbrTex = 
 const box3 = new THREE.Box3(), v = new THREE.Vector3();
 const lin = c => new THREE.Color(c).convertSRGBToLinear();
 function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#e1e4de"; }
-function applyTheme(){ scene.background = new THREE.Color(cssVar("--stage")); }
+const SCENES = {
+  studio:{name:"Studio", bg:null},
+  blanc:{name:"Fond blanc", bg:"#ffffff", ground:null},
+  bois:{name:"Table en bois", bg:"#e9e1d4", ground:"bois"},
+  marbre:{name:"Marbre", bg:"#eceae6", ground:"marbre"},
+  lin:{name:"Nappe en lin", bg:"#e7e2d8", ground:"lin"},
+  beton:{name:"Béton", bg:"#d8d8d5", ground:"beton"},
+  nuit:{name:"Vitrine sombre", bg:"#1d2024", ground:"nuit"},
+};
+const groundTex = {};
+function makeGroundTex(kindG){
+  if (groundTex[kindG]) return groundTex[kindG];
+  const c = document.createElement("canvas"); c.width = c.height = 1024; const x = c.getContext("2d");
+  let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647)/2147483647;
+  if (kindG === "bois"){
+    for (let i = 0; i < 6; i++){ const y0 = i*1024/6, base = [196, 160, 118].map(v => v + (rnd() - .5)*22);
+      x.fillStyle = `rgb(${base.map(Math.round)})`; x.fillRect(0, y0, 1024, 1024/6);
+      for (let k = 0; k < 70; k++){ x.strokeStyle = `rgba(110,72,40,${.05 + rnd()*.12})`; x.lineWidth = .6 + rnd()*1.8; x.beginPath(); const yy = y0 + rnd()*170; x.moveTo(0, yy); for (let X = 0; X <= 1024; X += 64) x.lineTo(X, yy + Math.sin(X/140 + k)*3 + (rnd() - .5)*2); x.stroke(); }
+      x.fillStyle = "rgba(70,45,25,.35)"; x.fillRect(0, y0, 1024, 2); }
+  } else if (kindG === "marbre"){
+    x.fillStyle = "#f1efeb"; x.fillRect(0, 0, 1024, 1024);
+    for (let k = 0; k < 26; k++){ x.strokeStyle = `rgba(120,118,115,${.06 + rnd()*.18})`; x.lineWidth = .5 + rnd()*2.5; x.beginPath(); let px = rnd()*1024, py = 0; x.moveTo(px, py); while (py < 1024){ px += (rnd() - .45)*60; py += 20 + rnd()*40; x.lineTo(px, py); } x.stroke(); }
+  } else if (kindG === "lin"){
+    x.fillStyle = "#e4ddd0"; x.fillRect(0, 0, 1024, 1024);
+    for (let i = 0; i < 1024; i += 3){ x.fillStyle = `rgba(150,138,118,${rnd()*.14})`; x.fillRect(0, i, 1024, 1); x.fillStyle = `rgba(255,255,255,${rnd()*.12})`; x.fillRect(i, 0, 1, 1024); }
+  } else {
+    const dark = kindG === "nuit"; x.fillStyle = dark ? "#25282d" : "#c9c9c5"; x.fillRect(0, 0, 1024, 1024);
+    for (let k = 0; k < 9000; k++){ const g = dark ? 20 + rnd()*40 : 150 + rnd()*80; x.fillStyle = `rgba(${g},${g},${g},${.15 + rnd()*.25})`; x.fillRect(rnd()*1024, rnd()*1024, 1 + rnd()*3, 1 + rnd()*3); }
+  }
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 10); t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return groundTex[kindG] = t;
+}
+const shadowMat = ground.material;
+const floorMat = new THREE.MeshStandardMaterial({roughness:.75, metalness:0});
+function applyScene(){
+  const sc = SCENES[state.scene] || SCENES.studio;
+  if (sc.ground){ floorMat.map = makeGroundTex(sc.ground); floorMat.roughness = sc.ground === "marbre" ? .35 : sc.ground === "nuit" ? .5 : .8; floorMat.needsUpdate = true; ground.material = floorMat; }
+  else ground.material = shadowMat;
+  const bg = sc.bg || cssVar("--stage");
+  scene.background = new THREE.Color(bg);
+  scene.fog = sc.ground ? new THREE.Fog(new THREE.Color(bg), 1, 1e6) : null;
+  const az = (state.lightAz ?? 35)*Math.PI/180, pw = (state.lightPow ?? 100)/100;
+  key.position.set(Math.sin(az)*610, 700, Math.cos(az)*610); key.intensity = .9*pw;
+  renderer.toneMappingExposure = sc.ground === "nuit" ? 1.15 : 1;
+}
+function applyTheme(){ applyScene(); }
 applyTheme();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { applyTheme(); render2D(); });
 new MutationObserver(() => { applyTheme(); render2D(); }).observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]});
@@ -1377,7 +1452,8 @@ function makeTextures(){
 function build3D(){
   disposeHolder(); makeTextures();
   const k = kind(), bb = layout.bb;
-  const outMat = extra => new THREE.MeshStandardMaterial(Object.assign({map:texture, roughnessMap:pbrTex, metalnessMap:pbrTex, roughness:1, metalness:1}, extra));
+  const relief = state.relief !== "none" || state.elements.some(x => x.relief && x.relief !== "none");
+  const outMat = extra => new THREE.MeshStandardMaterial(Object.assign({map:texture, roughnessMap:pbrTex, metalnessMap:pbrTex, roughness:1, metalness:1}, relief ? {bumpMap:pbrTex, bumpScale:2} : {}, extra));
   extras3d = [];
   if (TPL().special === "pillow"){ buildPillow3D(outMat); return; }
   if (k === "box"){
@@ -1521,6 +1597,7 @@ function frame(snap){
   camera.position.copy(controls.target).addScaledVector(dir, cur + (dist - cur)*k);
   const sh = Math.max(size.x, size.z, size.y)*1.3;
   Object.assign(key.shadow.camera, {left:-sh, right:sh, top:sh, bottom:-sh, near:10, far:3000}); key.shadow.camera.updateProjectionMatrix();
+  if (scene.fog){ scene.fog.near = dist*1.6; scene.fog.far = dist*5; }
 }
 const CAMS = {front:[0,.1,1], three:[.62,.5,1], top:[.02,1,.18], back:[-.55,.35,-1]};
 document.querySelectorAll("[data-cam]").forEach(b => b.addEventListener("click", () => {
@@ -1555,6 +1632,9 @@ function frameStep(now){
 }
 function setFold(t){ state.fold = t; applyFold(t); $("#fold").value = Math.round(t*100); $("#foldOut").textContent = Math.round(t*100) + " %"; }
 function setBg(mode){
+  if (mode === "scene"){ applyScene(); return; }
+  if (mode !== "transparent" && mode !== "white" && mode !== "color") return;
+  ground.material = shadowMat; scene.fog = null;
   if (mode === "transparent"){ scene.background = null; renderer.setClearColor(0x000000, 0); }
   else if (mode === "white") scene.background = new THREE.Color(0xffffff);
   else if (mode === "color") scene.background = new THREE.Color($("#expBgColor").value);
@@ -1697,6 +1777,7 @@ function quote(qty){
     add(LAM.box[lam], `${fmt0.format(sheets)} feuilles`, sheets*B.lam[lam]);
     if (state.varnish) add("Vernis sélectif UV", "calage + passages", B.varnishCal + sheets*B.varnishSheet);
     if (state.foil || state.elements.some(x => x.foil)) add("Dorure à chaud", "cliché, calage + passages", B.foilCal + sheets*B.foilSheet);
+    if (hasRelief()) add("Gaufrage", "cliché mâle/femelle, calage + passages", B.embossCal + sheets*B.embossSheet);
     add("Forme de découpe", `${poses} pose(s) × ${fmt1.format(cutM)} m de filet`, B.dieBase + poses*cutM*B.diePerM);
     add("Découpe & rainage", `calage + ${fmt0.format(sheets)} feuilles`, B.cutCal + sheets*B.cutSheet);
     if (layout.panels.some(p => p.film)) add("Fenêtre (film PET + pose)", `${fmt0.format(qty)} pièces`, B.windowCal + qty*B.windowPc);
@@ -1715,6 +1796,7 @@ function quote(qty){
     add("Impression", `calage + ${fmt0.format(sheets)} passages`, B.printCal[pr] + sheets*B.printSheet[pr]);
     if (state.lam.cup === "vernis") add("Vernis acrylique", `${fmt0.format(sheets)} feuilles`, sheets*Pr.cup.varnishSheet);
     if (state.foil || state.elements.some(x => x.foil)) add("Dorure à chaud", "cliché, calage + passages", B.foilCal + sheets*B.foilSheet);
+    if (hasRelief()) add("Gaufrage", "cliché mâle/femelle, calage + passages", B.embossCal + sheets*B.embossSheet);
     add("Forme de découpe", `${poses} pose(s) × ${fmt1.format(cutM)} m de filet`, B.dieBase + poses*cutM*B.diePerM);
     add("Découpe", `calage + ${fmt0.format(sheets)} feuilles`, B.cutCal + sheets*B.cutSheet);
     tech.push(["Poses par feuille", poses], ["Feuilles (gâche incluse)", fmt0.format(sheets)], ["Formage", "par le fabricant de gobelets (non inclus)"]);
@@ -1729,6 +1811,7 @@ function quote(qty){
     add(LAM.label[fin], `${fmt1.format(m2)} m²`, m2*Lb.fin[fin]);
     if (state.varnish) add("Vernis sélectif UV", "calage + m²", Lb.varnishCal + m2*Lb.varnishM2);
     if (state.foil || state.elements.some(x => x.foil)) add("Dorure à chaud", "cliché + m²", Lb.foilCal + m2*Lb.foilM2);
+    if (hasRelief()) add("Gaufrage", "cliché + m²", Lb.embossCal + m2*Lb.embossM2);
     add("Outil de découpe", shape === "ovale" ? "outil magnétique, forme ovale" : "outil magnétique", Lb.toolBase + (shape === "ovale" ? Lb.toolOval : 0));
     add("Découpe & échenillage", `${fmt0.format(m)} m linéaires`, m*Lb.cutM);
     const rolls = Math.ceil(qty/Lb.rollPer);
@@ -1762,9 +1845,16 @@ function inPoly(pt, poly){ let c = false; for (let i = 0, j = poly.length - 1; i
 function elCorners(el){ const {w, h} = elBox(el), r = (el.rot || 0)*Math.PI/180, c = Math.cos(r), s = Math.sin(r); return [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([u, vv]) => [el.x + u*c - vv*s, el.y - (u*s + vv*c)]); }
 function segRectDist(a, b, q){ for (let i = 0; i < 4; i++) if (segX(a, b, q[i], q[(i+1)%4])) return 0; if (inPoly(a, q) || inPoly(b, q)) return 0; return Math.min(...q.map(p => distPtSeg(p, a, b)), ...[a, b].flatMap(p => q.map((c, i) => distPtSeg(p, c, q[(i+1)%4])))); }
 let pfItems = [];
+const hasRelief = () => state.relief !== "none" || state.elements.some(x => x.relief && x.relief !== "none");
 function preflight(q){
   const out = [], add = (level, msg) => out.push({level, msg}), t = TPL(), d = state.design, L = layout;
   if (q && q.error) add("error", q.error);
+  if (hasRelief()){
+    if (["micro","ondB"].includes(state.mat.box) && t.kind === "box") add("warn", "Gaufrage déconseillé sur carton ondulé : le relief écrase les cannelures. Préférez un carton compact.");
+    else if (t.kind === "cup") add("warn", "Gaufrage non réalisable sur la jupe de gobelet après formage : à valider avec l'atelier.");
+    else add("info", `Gaufrage : prévoir un cliché mâle / femelle ; tracé du relief à fournir en calque séparé (formes pleines, traits ≥ 0,5 mm).`);
+  }
+  if ((state.foil || state.elements.some(x => x.foil)) && state.foilColor === "holo") add("info", "Dorure holographique : film à motif arc-en-ciel, rendu variable selon l'angle de lumière.");
   if (d.ean){
     if (!eanValid(d.ean)) add("error", `Code EAN-13 « ${d.ean} » invalide : ${/^\d{13}$/.test(d.ean) ? `clé de contrôle attendue ${eanCheck(d.ean.slice(0,12))}` : "13 chiffres requis"}.`);
     else if (!metrics.ean) add("error", "Le code-barres n'a pas pu être placé : la face prévue est trop petite.");
@@ -1922,6 +2012,8 @@ function renderControls(){
   $("#insideRow").hidden = k !== "box"; $("#insideOn").checked = state.inside.on; $("#insideColor").value = state.inside.color;
   const d = state.design;
   for (const id of ["brand","product","mention","legal","ean","bg","accent","pattern"]) $("#" + id).value = d[id] ?? "";
+  $("#sceneSel").value = state.scene in SCENES ? state.scene : "studio"; $("#lightAz").value = state.lightAz ?? 35; $("#lightPow").value = state.lightPow ?? 100; applyScene();
+  $("#foilColor").value = state.foilColor in FOILS ? state.foilColor : "or"; $("#relief").value = state.relief in RELIEFS ? state.relief : "none";
   $("#varnish").checked = state.varnish; $("#foil").checked = state.foil; $("#raw").checked = state.raw; $("#fullHide").checked = state.fullHide;
   $("#qty").value = state.qty; $("#showArt").checked = state.showArt; $("#showSafe").checked = state.showSafe;
   for (const [id, ref] of [["logo", state.images.logo], ["full", state.images.full]]){ $(`#${id}Thumb`).hidden = !ref; if (ref) $(`#${id}Thumb`).src = ref.src; $(`#${id}Clear`).hidden = !ref; }
@@ -1960,7 +2052,7 @@ function renderElEditor(){
   const set = (id, val) => { const n = $("#" + id); if (document.activeElement !== n) n.value = val; };
   set("elText", el.text || ""); set("elFont", el.font || "plex"); set("elSize", el.size || 12); set("elAlign", el.align || "center"); set("elShape", el.shape || "rect");
   set("elColor", el.color || "#000000"); set("elX", el.x); set("elY", el.y); set("elW", el.w || 20); set("elH", el.h || 10); set("elRot", el.rot || 0); set("elOpacity", el.opacity ?? 100);
-  $("#elBold").checked = !!el.bold; $("#elFoil").checked = !!el.foil; $("#elVarnish").checked = !!el.varnish;
+  $("#elBold").checked = !!el.bold; $("#elFoil").checked = !!el.foil; $("#elVarnish").checked = !!el.varnish; $("#elRelief").value = el.relief || "none";
 }
 function setEdTab(tab){
   edTab = tab;
@@ -2028,6 +2120,16 @@ $("#mat").addEventListener("change", e => { state.mat[kind()] = e.target.value; 
 $("#print").addEventListener("change", e => { state.print[kind()] = e.target.value; changed("art"); });
 $("#lam").addEventListener("change", e => { state.lam[kind()] = e.target.value; changed("art"); });
 ["varnish","foil","raw","fullHide"].forEach(id => $("#" + id).addEventListener("change", e => { state[id] = e.target.checked; changed("art"); }));
+$("#foilColor").innerHTML = Object.entries(FOILS).map(([k, f]) => `<option value="${k}">${f.name}</option>`).join("");
+$("#relief").innerHTML = $("#elRelief").innerHTML = Object.entries(RELIEFS).map(([k, l]) => `<option value="${k}">${l}</option>`).join("");
+$("#sceneSel").innerHTML = Object.entries(SCENES).map(([k, v]) => `<option value="${k}">${v.name}</option>`).join("");
+$("#sceneSel").addEventListener("change", e => { state.scene = e.target.value; applyScene(); if (!clientMode){ dirty = true; renderSaveState(); saveDraft(); } });
+$("#lightAz").addEventListener("input", e => { state.lightAz = +e.target.value; applyScene(); });
+$("#lightPow").addEventListener("input", e => { state.lightPow = +e.target.value; applyScene(); });
+["lightAz","lightPow"].forEach(id => $("#" + id).addEventListener("change", () => { if (!clientMode){ dirty = true; renderSaveState(); saveDraft(); } }));
+$("#foilColor").addEventListener("change", e => { state.foilColor = e.target.value; changed("art"); });
+$("#relief").addEventListener("change", e => { state.relief = e.target.value; changed("geo"); });
+$("#elRelief").addEventListener("change", e => { const el = curEl(); if (!el) return; el.relief = e.target.value; changed("geo"); });
 $("#insideOn").addEventListener("change", e => { state.inside.on = e.target.checked; changed("geo"); });
 $("#insideColor").addEventListener("input", e => { state.inside.color = e.target.value; state.inside.on = true; $("#insideOn").checked = true; changed("geo"); });
 ["brand","product","mention","legal","bg","accent","pattern"].forEach(id => $("#" + id).addEventListener("input", e => { state.design[id] = e.target.value; changed("art"); }));
@@ -2207,7 +2309,7 @@ const SETTINGS_FIELDS = [
   ["Général", [["pricing.marge","Marge","%"],["pricing.gache","Gâche","%"],["pricing.tva","TVA","%"]]],
   ["Épaisseur des supports (compensation des plis)", [["pricing.box.caliper.gc1","GC1 300 g","mm"],["pricing.box.caliper.duplex","Duplex 350 g","mm"],["pricing.box.caliper.kraft","Kraft 350 g","mm"],["pricing.box.caliper.micro","Micro-cannelure E","mm"],["pricing.box.caliper.ondB","Cannelure B","mm"],["pricing.box.caliper.kraftp","Papier kraft 120 g","mm"]]],
   ["Boîtes — feuille & support", [["pricing.box.sheetW","Feuille, grand côté","mm"],["pricing.box.sheetH","Feuille, petit côté","mm"],["pricing.box.grip","Prise de pince","mm"],["pricing.box.gap","Écart entre poses","mm"],["pricing.box.sheet.gc1","GC1 300 g / feuille","TND"],["pricing.box.sheet.duplex","Duplex 350 g / feuille","TND"],["pricing.box.sheet.kraft","Kraft 350 g / feuille","TND"],["pricing.box.sheet.micro","Micro-cannelure / feuille","TND"],["pricing.box.sheet.ondB","Cannelure B / feuille","TND"],["pricing.cup.sheet","Carton gobelet PE / feuille","TND"],["pricing.box.sheetsCal","Feuilles de calage","f."]]],
-  ["Boîtes — impression & finitions", [["pricing.box.platePrice","Plaque offset","TND"],["pricing.box.printCal.cmjn","Calage quadri","TND"],["pricing.box.printSheet.cmjn","Passage quadri / feuille","TND"],["pricing.box.printCal.cmjnp","Calage quadri + Pantone","TND"],["pricing.box.printSheet.cmjnp","Passage quadri + P. / feuille","TND"],["pricing.box.insideCal","Impression intérieure, calage","TND"],["pricing.box.insideSheet","Impression intérieure / feuille","TND"],["pricing.box.lam.mat","Pelliculage mat / feuille","TND"],["pricing.box.lam.brillant","Pelliculage brillant / feuille","TND"],["pricing.box.lam.soft","Soft-touch / feuille","TND"],["pricing.box.varnishCal","Vernis UV, calage","TND"],["pricing.box.varnishSheet","Vernis UV / feuille","TND"],["pricing.box.foilCal","Dorure, cliché + calage","TND"],["pricing.box.foilSheet","Dorure / feuille","TND"]]],
+  ["Boîtes — impression & finitions", [["pricing.box.platePrice","Plaque offset","TND"],["pricing.box.printCal.cmjn","Calage quadri","TND"],["pricing.box.printSheet.cmjn","Passage quadri / feuille","TND"],["pricing.box.printCal.cmjnp","Calage quadri + Pantone","TND"],["pricing.box.printSheet.cmjnp","Passage quadri + P. / feuille","TND"],["pricing.box.insideCal","Impression intérieure, calage","TND"],["pricing.box.insideSheet","Impression intérieure / feuille","TND"],["pricing.box.lam.mat","Pelliculage mat / feuille","TND"],["pricing.box.lam.brillant","Pelliculage brillant / feuille","TND"],["pricing.box.lam.soft","Soft-touch / feuille","TND"],["pricing.box.varnishCal","Vernis UV, calage","TND"],["pricing.box.varnishSheet","Vernis UV / feuille","TND"],["pricing.box.foilCal","Dorure, cliché + calage","TND"],["pricing.box.foilSheet","Dorure / feuille","TND"],["pricing.box.embossCal","Gaufrage, cliché + calage","TND"],["pricing.box.embossSheet","Gaufrage / feuille","TND"]]],
   ["Boîtes — façonnage", [["pricing.box.dieBase","Forme de découpe, base","TND"],["pricing.box.diePerM","Forme, filet au mètre","TND"],["pricing.box.cutCal","Découpe, calage","TND"],["pricing.box.cutSheet","Découpe / feuille","TND"],["pricing.box.windowCal","Fenêtre, calage","TND"],["pricing.box.windowPc","Fenêtre / pièce","TND"],["pricing.box.glueCal","Collage, calage","TND"],["pricing.box.bagPc","Façonnage sac / pièce","TND"],["pricing.box.handlePc","Poignées / paire","TND"],["pricing.box.sheet.kraftp","Papier kraft brun / feuille","TND"],["pricing.box.sheet.whitep","Papier kraft blanc / feuille","TND"],["pricing.box.gluePc","Collage / pièce","TND"]]],
   ["Étiquettes", [["pricing.label.web","Laize machine","mm"],["pricing.label.m2.couche","Couché adhésif / m²","TND"],["pricing.label.m2.ppw","PP blanc / m²","TND"],["pricing.label.m2.ppt","PP transparent / m²","TND"],["pricing.label.m2.verge","Vergé / m²","TND"],["pricing.label.printCal","Impression, calage","TND"],["pricing.label.printM2.num","Quadri / m²","TND"],["pricing.label.printM2.numb","Quadri + blanc / m²","TND"],["pricing.label.fin.vernis","Vernis / m²","TND"],["pricing.label.fin.lam","Lamination / m²","TND"],["pricing.label.toolBase","Outil de découpe","TND"],["pricing.label.cutM","Découpe / m","TND"],["pricing.label.rollPer","Étiquettes par bobine","ex."],["pricing.label.rollCost","Rebobinage / bobine","TND"]]],
 ];
@@ -2283,7 +2385,7 @@ async function saveFile(filename, data){
 }
 function specRows(){
   const t = TPL(), k = kind(), d = state.dims[state.model], cb = layout.cbb;
-  const fin = [LAM[k][state.lam[k]], state.varnish ? "vernis sélectif UV" : "", state.foil || state.elements.some(x => x.foil) ? "dorure à chaud" : "", state.inside.on && k === "box" ? "impression intérieure" : "", state.window.on && t.window ? "fenêtre PET" : ""].filter(Boolean).join(", ");
+  const fin = [LAM[k][state.lam[k]], state.varnish ? "vernis sélectif UV" : "", state.foil || state.elements.some(x => x.foil) ? `dorure à chaud ${(FOILS[state.foilColor] || FOILS.or).name.toLowerCase()}` : "", hasRelief() ? "gaufrage" : "", state.inside.on && k === "box" ? "impression intérieure" : "", state.window.on && t.window ? "fenêtre PET" : ""].filter(Boolean).join(", ");
   const fmtD = dimsText(layout.inner);
   return [["Modèle", t.name], ["Format", fmtD], ["Développé à plat", `${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm`], ["Support", MAT[k][state.mat[k]].name + (k === "box" ? ` (e = ${fmt2.format(layout.e)} mm)` : "")], ["Impression", PRINT[k][state.print[k]]], ["Finitions", fin]];
 }
@@ -2438,7 +2540,7 @@ $("#aiBtn").addEventListener("click", async e => {
   btn.disabled = true; btn.textContent = "Recherche d'idées…";
   try {
     const res = await cap.sample.json(`Tu es directeur artistique packaging pour une imprimerie tunisienne. Propose 3 directions de design distinctes pour ce produit.
-Marque : ${d.brand}. Produit : ${d.product}. Mention : ${d.mention}. Emballage : ${t.name}. Support : ${MAT[k][state.mat[k]].name}. Dorure : ${state.foil ? "oui" : "non"}.
+Marque : ${d.brand}. Produit : ${d.product}. Mention : ${d.mention}. Emballage : ${t.name}. Support : ${MAT[k][state.mat[k]].name}. Dorure : ${state.foil ? (FOILS[state.foilColor] || FOILS.or).name : "non"}. Relief : ${RELIEFS[state.relief] || "aucun"}.
 Réponds uniquement avec un tableau JSON de 3 objets : {"nom": "2 à 3 mots", "fond": "#RRGGBB", "accent": "#RRGGBB", "motif": "none|zellige|lines|dots", "produit": "40 caractères max", "mention": "45 caractères max", "pourquoi": "une phrase"}.
 Contraste fort entre fond et accent. Ne change pas le nom de la marque. Garde les informations factuelles de la mention (contenance, origine).`, {modelTier:"quick"});
     const ok = Array.isArray(res) ? res.filter(x => x && /^#[0-9a-f]{6}$/i.test(x.fond) && /^#[0-9a-f]{6}$/i.test(x.accent)).slice(0, 3) : [];
@@ -2544,7 +2646,7 @@ function renderShot(t){
     const img = captureMockup(720, 540, "white", true);
     const flat = proofCanvas(900).toDataURL("image/jpeg", .85), q = quote(5000);
     thumbs[t.id] = {img, flat, unit: q.error ? null : q.unit, dims: dimsText(layout.inner)};
-  } finally { state = keep; camera.position.copy(pos); controls.target.copy(tgt); }
+  } finally { state = keep; camera.position.copy(pos); controls.target.copy(tgt); applyScene(); }
 }
 let thumbJob = Promise.resolve(); const thumbTried = new Set();
 function ensureThumbs(list){ thumbJob = thumbJob.then(() => runThumbs(list)).catch(e => console.warn(e)); return thumbJob; }
@@ -2629,7 +2731,7 @@ function catalogPDF(){
     doc.setTextColor(20); doc.setFont("helvetica", "bold"); doc.setFontSize(15); doc.text(pdfTxt(t.name), x, y0 + 13);
     doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(70);
     let y = y0 + 21; const dl = doc.splitTextToSize(pdfTxt(t.desc), w); doc.text(dl, x, y); y += dl.length*4.2 + 3;
-    const rows = [["Dimensions", rangeText(t)], ["Matières", t.mats.map(m => (MAT[t.kind][m] || {}).name).join(", ")], ["Finitions", t.kind === "label" ? "vernis, lamination, dorure, vernis sélectif" : t.kind === "cup" ? "vernis acrylique alimentaire, dorure" : "pelliculage mat / brillant / soft-touch, vernis sélectif UV, dorure à chaud" + (t.window ? ", fenêtre PET" : "")], ["Exemple", th ? th.dims : ""], ["Prix indicatif", priceOf(t) ? `dès ${fmt3.format(priceOf(t).unit)} TND HT l'unité (5 000 ex.)` : "sur devis"]];
+    const rows = [["Dimensions", rangeText(t)], ["Matières", t.mats.map(m => (MAT[t.kind][m] || {}).name).join(", ")], ["Finitions", t.kind === "label" ? "vernis, lamination, dorure, vernis sélectif" : t.kind === "cup" ? "vernis acrylique alimentaire, dorure" : "pelliculage mat / brillant / soft-touch, vernis sélectif UV, dorure à chaud (or, argent, cuivre, or rose, holographique), gaufrage" + (t.window ? ", fenêtre PET" : "")], ["Exemple", th ? th.dims : ""], ["Prix indicatif", priceOf(t) ? `dès ${fmt3.format(priceOf(t).unit)} TND HT l'unité (5 000 ex.)` : "sur devis"]];
     for (const [a, b] of rows){ doc.setFontSize(7.5); doc.setTextColor(120); doc.text(pdfTxt(a.toUpperCase()), x, y); y += 3.8; doc.setFontSize(9); doc.setTextColor(25); const ls = doc.splitTextToSize(pdfTxt(b), w); doc.text(ls, x, y); y += ls.length*4.1 + 2.2; }
     slot++;
   }
