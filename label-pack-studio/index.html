@@ -318,6 +318,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
         <input type="search" class="search" id="tplSearch" placeholder="Rechercher un gabarit" aria-label="Rechercher un gabarit">
         <div class="row">
           <label class="btn small file-btn">Importer un plan (SVG, DXF)<input type="file" id="dieImport" accept=".svg,.dxf,image/svg+xml,application/dxf"></label>
+          <button type="button" class="btn small" id="aiImport" hidden>Importer le document Illustrator</button>
           <button type="button" class="btn small" id="aiStructBtn" hidden aria-expanded="false">Structure par IA</button>
         </div>
         <div id="aiStruct" class="field" hidden>
@@ -508,6 +509,8 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
     <div class="pop" id="expPop" hidden>
       <div class="row between"><b>Exporter</b><button class="btn small ghost" id="expClose" type="button">Fermer</button></div>
       <button class="exp" data-exp="zip" type="button"><b>Pack fabrication</b><small>PDF d'impression, plan PDF/SVG/DXF, visuel, maquette, BAT, devis</small><span>.zip</span></button>
+      <button class="exp" data-exp="ai-send" type="button" hidden><b>Envoyer vers Illustrator</b><small>Nouveau document : calques Visuel, Fond perdu, Rainage, Coupe (tons directs CutContour et Rainage)</small><span>AI</span></button>
+      <button class="exp" data-exp="aijsx" type="button"><b>Script Illustrator</b><small>Recrée le gabarit dans Illustrator avec calques et tons directs (Fichier › Scripts › Autre script)</small><span>.zip</span></button>
       <button class="exp" data-exp="printpdf" type="button"><b>PDF d'impression</b><small>300 dpi, fond perdu, traits de coupe ; forme de découpe et calques de finition sur pages séparées</small><span>.pdf</span></button>
       <button class="exp" data-exp="diepdf" type="button"><b>Plan de découpe</b><small>Échelle 1:1, coupe / rainage, cartouche</small><span>.pdf</span></button>
       <button class="exp" data-exp="tplsvg" type="button"><b>Gabarit graphiste</b><small>Calques COUPE, RAINAGE, FOND_PERDU, SECURITE</small><span>.svg</span></button>
@@ -612,7 +615,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
   <div class="dialog">
     <header><h2 id="settingsTitle">Paramètres de l'imprimerie</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
     <div class="body" id="settingsBody"></div>
-    <footer><span class="hint" id="settingsNote" style="margin-right:auto"></span><button class="btn" type="button" id="settingsReset">Valeurs d'exemple</button><button class="btn primary" type="button" id="settingsSave">Enregistrer les paramètres</button></footer>
+    <footer><span class="hint" id="settingsNote" style="margin-right:auto"></span><button class="btn" type="button" id="dataBackup">Sauvegarder les données</button><label class="btn file-btn" id="dataRestoreLbl">Restaurer<input type="file" id="dataRestore" accept=".json,application/json"></label><button class="btn" type="button" id="settingsReset">Valeurs d'exemple</button><button class="btn primary" type="button" id="settingsSave">Enregistrer les paramètres</button></footer>
   </div>
 </div>
 <div class="overlay" id="mailDlg" hidden role="dialog" aria-modal="true" aria-labelledby="mailTitle">
@@ -856,6 +859,7 @@ const DEFAULT = {
 };
 const NEW_META = () => ({id:null, draftId:null, name:"", client:"", status:"brouillon", createdAt:null, createdBy:null, history:[]});
 let state = structuredClone(DEFAULT), meta = NEW_META(), dirty = false, savedAt = null;
+const CEP = !!(window.__adobe_cep__ && window.cep && window.cep.fs);
 let compoT = 0;
 let view = "3d", edTab = "auto", faceSel = "front", selEl = null, cat = "all", clientMode = false, shareDoc = null;
 try {
@@ -1829,6 +1833,97 @@ function renderGamut(){
 }
 $("#softProof").addEventListener("change", e => { state.softProof = e.target.checked; changed("art"); });
 $("#gamutFix").addEventListener("click", () => { const g = gamutIssues(); g.forEach(x => x.set(x.fix)); renderControls(); changed("art"); toast(`${g.length} couleur(s) remplacée(s) par une teinte imprimable`); });
+
+/* ================= Illustrator : script de gabarit et panneau intégré ================= */
+function chainSegs(segs){
+  const key = q => q[0].toFixed(2) + "," + q[1].toFixed(2), adj = new Map(), used = new Set(), out = [];
+  segs.forEach((sg, i) => { for (const e of [0, 1]){ const k = key(sg[e]); if (!adj.has(k)) adj.set(k, []); adj.get(k).push(i); } });
+  for (let i = 0; i < segs.length; i++){
+    if (used.has(i)) continue; used.add(i); const pts = [segs[i][0], segs[i][1]];
+    const grow = atEnd => { for (let g = 0; g < 100000; g++){ const end = atEnd ? pts[pts.length - 1] : pts[0], j = (adj.get(key(end)) || []).find(x => !used.has(x)); if (j === undefined) return; used.add(j); const sg = segs[j], other = key(sg[0]) === key(end) ? sg[1] : sg[0]; if (atEnd) pts.push(other); else pts.unshift(other); } };
+    grow(true); grow(false);
+    const closed = pts.length > 3 && key(pts[0]) === key(pts[pts.length - 1]); if (closed) pts.pop();
+    out.push({p:pts.map(q => [+q[0].toFixed(3), +q[1].toFixed(3)]), c:closed});
+  }
+  return out;
+}
+// Visuel imprimable (fond perdu inclus, blanc hors gabarit), au même cadrage que le PDF d'impression.
+function printArtCanvas(L, s){
+  const bb = L.bb, art = drawArt(L, s), c = document.createElement("canvas"); c.width = Math.ceil(bb.w*s); c.height = Math.ceil(bb.h*s);
+  const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+  const m = document.createElement("canvas"); m.width = c.width; m.height = c.height; const mx = m.getContext("2d");
+  mx.setTransform(s, 0, 0, -s, -bb.minX*s, bb.maxY*s); mx.fillStyle = mx.strokeStyle = "#000"; mx.lineJoin = "round"; mx.lineWidth = L.bleed*2;
+  for (const p of L.panels){ mx.beginPath(); p.gpoly.forEach(([a, b], i) => i ? mx.lineTo(a, b) : mx.moveTo(a, b)); mx.closePath(); mx.fill(); mx.stroke(); }
+  mx.setTransform(1, 0, 0, 1, 0, 0); mx.globalCompositeOperation = "source-in"; mx.drawImage(art, 0, 0); x.drawImage(m, 0, 0);
+  return c;
+}
+const jsxAscii = str => str.replace(/[\u007f-￿]/g, c => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+function illustratorJSX(img, abs){
+  const L = computeLayout(), bb = L.bb, cb = L.cbb, t = TPL();
+  const D = {W:+(bb.w + 20).toFixed(3), H:+(bb.h + 26).toFixed(3), M:10, minX:+bb.minX.toFixed(3), maxY:+bb.maxY.toFixed(3), bw:+bb.w.toFixed(3), bh:+bb.h.toFixed(3), bleed:L.bleed,
+    cuts:chainSegs(L.cuts), creases:chainSegs(L.creases), panels:L.panels.map(p => p.gpoly.map(q => [+q[0].toFixed(3), +q[1].toFixed(3)])), img:img || "", abs:!!abs,
+    info:pdfTxt(`Label Pack Studio · ${quoteNo()} · ${meta.client || ""} ${meta.name ? "· " + meta.name : ""} · ${t.name} · ${dimsText()} · format ${fmt1.format(cb.w)} x ${fmt1.format(cb.h)} mm + fond perdu ${L.bleed} mm · ${kind() === "box" ? "e = " + fmt2.format(L.e) + " mm" : ""}`)};
+  return jsxAscii(`#target illustrator
+// Label Pack Studio : gabarit ${pdfTxt(t.name).normalize("NFD").replace(/[\u0300-\u036f]/g, "")} (${quoteNo()}). Fichier > Scripts > Autre script... ; garder ce script a cote du visuel PNG.
+(function () {
+  var D = ${JSON.stringify(D)};
+  var MM = 72 / 25.4;
+  var doc = app.documents.add(DocumentColorSpace.CMYK, D.W * MM, D.H * MM);
+  var ab = doc.artboards[0].artboardRect;
+  function X(x) { return ab[0] + (x - D.minX + D.M) * MM; }
+  function Y(y) { return ab[1] - (D.maxY - y + D.M) * MM; }
+  function cmyk(c, m, y, k) { var col = new CMYKColor(); col.cyan = c; col.magenta = m; col.yellow = y; col.black = k; return col; }
+  function spot(name, col) { var s; try { s = doc.spots.getByName(name); return s; } catch (e) {} s = doc.spots.add(); s.name = name; s.color = col; s.colorType = ColorModel.SPOT; return s; }
+  function tint(s) { var c = new SpotColor(); c.spot = s; c.tint = 100; return c; }
+  var spCut = spot("CutContour", cmyk(0, 100, 0, 0)), spCrease = spot("Rainage", cmyk(100, 0, 0, 0));
+  var lArt = doc.layers[0]; lArt.name = "Visuel";
+  function layer(n) { var l = doc.layers.add(); l.name = n; return l; }
+  var lBleed = layer("Fond perdu"), lCrease = layer("Rainage"), lCut = layer("Coupe"), lInfo = layer("Infos");
+  function path(l, pts, closed) { var a = [], i, p = l.pathItems.add(); for (i = 0; i < pts.length; i++) a.push([X(pts[i][0]), Y(pts[i][1])]); p.setEntirePath(a); p.closed = !!closed; p.filled = false; p.stroked = true; return p; }
+  var i, p;
+  for (i = 0; i < D.panels.length; i++) { p = path(lBleed, D.panels[i], true); p.filled = true; p.fillColor = cmyk(35, 0, 0, 0); p.strokeColor = cmyk(35, 0, 0, 0); p.strokeWidth = D.bleed * 2 * MM; p.strokeJoin = StrokeJoin.ROUNDENDJOIN; p.opacity = 30; }
+  for (i = 0; i < D.creases.length; i++) { p = path(lCrease, D.creases[i].p, D.creases[i].c); p.strokeColor = tint(spCrease); p.strokeWidth = 0.25 * MM; p.strokeDashes = [2 * MM, 1.2 * MM]; p.strokeOverprint = true; }
+  for (i = 0; i < D.cuts.length; i++) { p = path(lCut, D.cuts[i].p, D.cuts[i].c); p.strokeColor = tint(spCut); p.strokeWidth = 0.25 * MM; p.strokeOverprint = true; }
+  if (D.img) {
+    var f = D.abs ? new File(D.img) : new File(File($.fileName).parent.fsName + "/" + D.img);
+    if (f.exists) { var pl = lArt.placedItems.add(); pl.file = f; pl.width = D.bw * MM; pl.height = D.bh * MM; pl.position = [X(D.minX), Y(D.maxY)]; try { pl.embed(); } catch (e) {} }
+  }
+  var tf = lInfo.textFrames.add(); tf.contents = D.info; tf.textRange.characterAttributes.size = 6; tf.position = [ab[0] + D.M * MM, ab[3] + 5 * MM];
+  lBleed.printable = false; lCrease.printable = false; lCut.printable = false; lInfo.printable = false; lBleed.locked = true;
+  doc.rulerUnits = RulerUnits.Millimeters;
+  return "ok";
+})();
+`);
+}
+async function exportIllustratorZip(base){
+  if (!window.JSZip){ toast("Bibliothèque ZIP indisponible : rechargez la page."); return; }
+  const L = computeLayout(), s = Math.min(300/25.4, Math.sqrt(40e6/(L.bb.w*L.bb.h))), png = `${base}_visuel.png`, zip = new JSZip();
+  zip.file(png, await new Promise(r => printArtCanvas(L, s).toBlob(r, "image/png")));
+  zip.file(`${base}_gabarit-illustrator.jsx`, illustratorJSX(png, false));
+  zip.file("LISEZ-MOI.txt", `Gabarit Illustrator — ${quoteNo()}\r\n\r\n1. Décompressez ce dossier (le script et le visuel doivent rester ensemble).\r\n2. Dans Illustrator : Fichier > Scripts > Autre script... puis choisissez « ${base}_gabarit-illustrator.jsx ».\r\n3. Un document CMJN est créé avec les calques : Visuel (image incorporée, ${Math.round(s*25.4)} dpi), Fond perdu, Rainage (ton direct « Rainage »), Coupe (ton direct « CutContour »), Infos.\r\nLes calques de découpe sont non imprimables. Après retouche, exportez en SVG ou DXF : Label Pack Studio réimporte le gabarit (calques Coupe / Rainage reconnus).\r\n`);
+  await saveFile(`${base}_illustrator.zip`, await zip.generateAsync({type:"blob"}));
+}
+async function sendToIllustrator(){
+  if (!CEP) return;
+  toast("Préparation du document Illustrator…");
+  const tmp = (await cepEval("Folder.temp.fsName")) || "", L = computeLayout(), s = Math.min(300/25.4, Math.sqrt(40e6/(L.bb.w*L.bb.h)));
+  const path = tmp.replace(/\\/g, "/") + "/labelpack-visuel-" + Date.now() + ".png";
+  const w = window.cep.fs.writeFile(path, await blobB64(await new Promise(r => printArtCanvas(L, s).toBlob(r, "image/png"))), window.cep.encoding.Base64);
+  const res = await cepEval(illustratorJSX(w && !w.err ? path : "", true));
+  toast(res === "ok" ? "Document créé dans Illustrator" : "Illustrator n'a pas pu créer le document : " + String(res).slice(0, 80));
+}
+async function importFromIllustrator(){
+  const res = await cepEval(`(function(){ if (!app.documents.length) return "ERR:Aucun document ouvert dans Illustrator."; var d = app.activeDocument, f = new File(Folder.temp + "/labelpack-import-" + new Date().getTime() + ".svg"), o = new ExportOptionsSVG(); o.embedRasterImages = false; o.fontType = SVGFontType.OUTLINEFONT; d.exportFile(f, ExportType.SVG, o); return f.fsName + "|" + d.name; })()`);
+  if (!res || /^ERR:/.test(res) || res === "EvalScript error."){ toast(String(res || "").replace(/^ERR:/, "") || "Export depuis Illustrator impossible."); return; }
+  const [fp, name] = res.split("|"), r = window.cep.fs.readFile(fp);
+  if (!r || r.err){ toast("Lecture du fichier exporté impossible."); return; }
+  await importDieline(new File([r.data], (name || "illustrator").replace(/\.[^.]+$/, "") + ".svg"));
+}
+if (CEP){
+  document.querySelector('[data-exp="ai-send"]').hidden = false; $("#aiImport").hidden = false;
+  $("#aiImport").addEventListener("click", importFromIllustrator);
+  document.addEventListener("click", e => { const a = e.target.closest("a[href^='http']"); if (a && window.cep.util){ e.preventDefault(); window.cep.util.openURLInDefaultBrowser(a.href); } }, true);
+}
 
 /* ================= PDF d'impression ================= */
 // Page 1 : visuel 300 dpi (fond perdu, repères de coupe) ; page 2 : forme de découpe vectorielle ; pages suivantes : masques de finition.
@@ -2933,6 +3028,31 @@ function openSettings(from){
   if ($("#settingsDlg").hidden) openDlg("#settingsDlg");
 }
 $("#settingsBody").addEventListener("input", e => { const p = e.target.dataset.p; if (!p) return; const old = getPath(draftSettings, p); setPath(draftSettings, p, typeof old === "number" ? (parseFloat(e.target.value) || 0) : e.target.value); });
+$("#dataBackup").addEventListener("click", async () => {
+  const read = k => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
+  const data = {app:"Label Pack Studio", format:1, date:new Date().toISOString(), settings, projects, brands:brandKits, draft:{state:JSON.parse(snap()), meta}, local:{projects:read("lp-projects-v2"), brands:read("lp-brands")}};
+  await saveFile(`Sauvegarde-Label-Pack-Studio-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(data)], {type:"application/json"}));
+});
+$("#dataRestore").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
+  let d; try { d = JSON.parse(await f.text()); } catch (err) { toast("Fichier de sauvegarde illisible."); return; }
+  if (!d || d.app !== "Label Pack Studio"){ toast("Ce fichier n'est pas une sauvegarde Label Pack Studio."); return; }
+  const projs = Array.isArray(d.projects) ? d.projects : [], kits = Array.isArray(d.brands) ? d.brands : [];
+  if (cloud()){
+    let n = 0; for (const pr of projs){ if (!pr || !pr.id || !pr.config) continue; const {id, ...body} = pr; try { await cap.db.doc("projects/" + id).set(body); n++; } catch (err) {} }
+    for (const k of kits){ if (!k || !k.id) continue; const {id, ...body} = k; try { await cap.db.doc("brands/" + id).set(body); } catch (err) {} }
+    if (d.settings && isObj(d.settings)){ try { await cap.db.doc("settings/main").set(merge(DEFAULT_SETTINGS, d.settings)); } catch (err) {} }
+    toast(`${n} projet(s) restauré(s)`);
+  } else {
+    try {
+      localStorage.setItem("lp-projects-v2", JSON.stringify(projs));
+      localStorage.setItem("lp-brands", JSON.stringify(kits));
+      if (d.settings && isObj(d.settings)) localStorage.setItem("lp-settings-v2", JSON.stringify(merge(DEFAULT_SETTINGS, d.settings)));
+      if (d.draft && d.draft.state) localStorage.setItem("lp-studio-v3", JSON.stringify(d.draft));
+    } catch (err) { toast("Espace de stockage du navigateur insuffisant pour cette sauvegarde."); return; }
+    toast(`Sauvegarde restaurée : ${projs.length} projet(s). Rechargement…`); setTimeout(() => location.reload(), 900);
+  }
+});
 $("#settingsReset").addEventListener("click", () => { openSettings(merge(draftSettings, {pricing:DEFAULT_SETTINGS.pricing})); toast("Tarifs d'exemple rechargés : enregistrez pour les appliquer"); });
 $("#settingsSave").addEventListener("click", async () => {
   draftSettings.pricing.example = JSON.stringify({...draftSettings.pricing, example:true}) === JSON.stringify(DEFAULT_SETTINGS.pricing);
@@ -2978,7 +3098,16 @@ function slug(){ return ((meta.name || TPL().name) + (meta.client ? "-" + meta.c
 let quoteSuffix = "";
 function quoteNo(){ if (!meta.id && !meta.draftId){ meta.draftId = newId(); saveDraft(); } const d = new Date(); return `LP-${String(d.getFullYear()).slice(2)}${String(d.getMonth()+1).padStart(2,"0")}-${(meta.id || meta.draftId).slice(-4).toUpperCase()}${quoteSuffix ? "-" + quoteSuffix : ""}`; }
 function dataURLtoBlob(u){ const [h, b] = u.split(","), bin = atob(b), arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return new Blob([arr], {type:h.slice(5).split(";")[0]}); }
+const blobB64 = blob => new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] || ""); r.onerror = ko; r.readAsDataURL(blob); });
+const cepEval = code => new Promise(r => window.__adobe_cep__.evalScript(code, r));
 async function saveFile(filename, data){
+  if (CEP){
+    const ext = (filename.split(".").pop() || "").toLowerCase(), r = window.cep.fs.showSaveDialogEx("Enregistrer", "", [ext], filename);
+    if (!r || r.err || !r.data) return false;
+    const blob = data instanceof Blob ? data : new Blob([data]), w = window.cep.fs.writeFile(r.data, await blobB64(blob), window.cep.encoding.Base64);
+    if (w && w.err){ toast("Écriture du fichier impossible."); return false; }
+    toast("Fichier enregistré"); return true;
+  }
   if (cap.downloads){
     try { await cap.downloads.save({filename, data}); toast("Fichier enregistré"); return true; }
     catch (e) { if (e && e.code === "declined") return false; if (e && e.code === "rate_limited"){ toast("Un téléchargement est déjà en attente."); return false; } }
@@ -3102,6 +3231,8 @@ async function runExport(kindName){
     else if (kindName === "multiview") await exportMultiView(base);
     else if (kindName === "range") await exportRange(base, bg);
     else if (kindName === "allbat") await exportAllBat(base);
+    else if (kindName === "aijsx") await exportIllustratorZip(base);
+    else if (kindName === "ai-send") await sendToIllustrator();
     else if (kindName === "printpdf"){ toast("Calcul du fichier d'impression…"); await new Promise(r => setTimeout(r, 30)); await saveFile(`${base}_impression.pdf`, printPDF()); }
     else if (kindName === "flat") await saveFile(`${base}_visuel-a-plat.png`, await new Promise(r => proofCanvas(4000).toBlob(r, "image/png")));
     else if (kindName === "tplsvg") await saveFile(`${base}_gabarit.svg`, dielineSVG(true));

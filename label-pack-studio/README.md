@@ -28,6 +28,15 @@ Configurateur d'emballage en une page (`index.html`) pour l'imprimerie Label Pac
 - **Devis instantané en TND** (imposition feuille ou laize, coûts détaillés, paliers, TVA) ; **devis PDF**, **BAT PDF** avec case « bon pour accord », **mail client**.
 - **Projets** en colonnes de statut (brouillon → livré), **paramètres tarifaires** de l'imprimerie, **lien client 3D** en lecture seule.
 
+## Version installable (hors ligne) et panneau Illustrator
+Le fichier `dist/LabelPackStudio.zip` contient l'application complète, sans serveur ni connexion Internet :
+- **Windows** : extraire le ZIP, double-cliquer sur « 1 - Installer sur ce PC (Windows).bat » (raccourcis Bureau et menu Démarrer, aucun droit administrateur) ou « 2 - Ouvrir sans installer ».
+- **Mac** : « Ouvrir Label Pack Studio (Mac).command ».
+- **Illustrator 2018+** : dossier `Illustrator`, « Installer le panneau Illustrator » puis Fenêtre › Extensions › Label Pack Studio. Le panneau envoie le gabarit dans un document Illustrator (calques Visuel, Fond perdu, Rainage, Coupe ; tons directs CutContour et Rainage) et réimporte un gabarit retouché. Sans le panneau : Exporter › « Script Illustrator ».
+- Données locales au poste : Paramètres › « Sauvegarder les données » / « Restaurer ».
+
+Reconstruire le paquet après une modification de `index.html` : `cd tools && npm install && npm run build`.
+
 ## Modes de fonctionnement
 - **Publié sur claude.ai** : projets, tarifs et liens clients partagés par l'équipe ; assistant IA (propositions de design, rédaction du mail).
 - **Ouvert ailleurs** (fichier local, hébergement web) : tout fonctionne dans le navigateur, projets et tarifs enregistrés localement, sans IA ni lien client.
