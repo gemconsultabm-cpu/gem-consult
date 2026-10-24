@@ -244,6 +244,10 @@ details > :not(summary){margin-top:8px}
 .scene-tools select{padding:3px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font-size:12px}
 .scene-tools input[type=range]{width:80px}
 .client #compoBtn{display:none}
+.bg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px;margin:6px 0 10px}
+.bg-grid button{display:flex;flex-direction:column;gap:4px;padding:4px;border:1px solid var(--line);border-radius:5px;background:var(--surface);cursor:pointer;font:inherit;font-size:12px;color:var(--ink);text-align:left}
+.bg-grid button:hover,.bg-grid button:focus-visible{border-color:var(--accent)}
+.bg-grid img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:3px;display:block;background:#eee}
 .var-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) 34px 34px auto;gap:6px;align-items:center;margin:6px 0}
 .var-row input[type=text]{min-width:0;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font:inherit;font-size:13px}
 .var-row input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:4px}
@@ -643,6 +647,14 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <p class="hint">Importez une photo (comptoir, étagère, main, vitrine…) : l'emballage est posé dessus avec son ombre. Tournez la vue et la lumière pour l'accorder à la photo.</p>
       <div class="row"><label class="btn small file-btn">Importer une photo de fond<input type="file" id="bgPhoto" accept="image/png,image/jpeg,image/webp"></label><img class="thumb" id="bgThumb" alt="Photo de fond" hidden><button type="button" class="btn small" id="bgClear" hidden>Retirer</button></div>
       <div class="field"><label for="bgBlur">Flou d'arrière-plan</label><input type="range" id="bgBlur" min="0" max="20" step="1"></div>
+      <h3 class="eyebrow">Fond illustré</h3>
+      <p class="hint">Fonds créés aux couleurs du design (fond et accent). Un nouveau clic sur le même fond donne une variante.</p>
+      <div class="bg-grid" id="bgPresets"></div>
+      <div id="bgAiBox" hidden>
+        <div class="field"><label for="bgAiTxt">Fond sur mesure par l'IA : décrivez l'ambiance</label><input type="text" id="bgAiTxt" maxlength="200" placeholder="Ex. : fête de l'Aïd, tons or et vert ; pâtisserie fine sur marbre rose ; plage de Djerba au coucher du soleil"></div>
+        <div class="row"><button type="button" class="btn small primary" id="bgAiGo">Proposer 3 fonds</button></div>
+        <div class="bg-grid" id="bgAiOut"></div>
+      </div>
       <h3 class="eyebrow">Rayon de magasin</h3>
       <p class="hint">Visualisez l'impact en linéaire : l'emballage est répété en façades sur des étagères.</p>
       <div class="grid2">
@@ -3380,7 +3392,7 @@ function buildShelf(){
   }
   applyFold(f); autoFrame = true;
 }
-$("#shootBtn").addEventListener("click", () => { $("#focalSel").innerHTML = FOCALS.map(([v, l]) => `<option value="${v}">${l}</option>`).join(""); renderControls(); openDlg("#shootDlg"); });
+$("#shootBtn").addEventListener("click", () => { $("#focalSel").innerHTML = FOCALS.map(([v, l]) => `<option value="${v}">${l}</option>`).join(""); renderControls(); renderBgPresets(); openDlg("#shootDlg"); });
 const shootSaved = () => { if (!clientMode){ dirty = true; renderSaveState(); saveDraft(); } };
 $("#focalSel").addEventListener("change", e => { state.focal = +e.target.value; applyScene(); shootSaved(); });
 $("#bgBlur").addEventListener("input", e => { state.bgBlur = +e.target.value; applyScene(); });
@@ -3390,6 +3402,103 @@ $("#bgClear").addEventListener("click", () => { state.images.bg = null; if (stat
 for (const id of ["shelfCols","shelfRows"]) $("#" + id).addEventListener("change", e => { state.shelf[id === "shelfCols" ? "cols" : "rows"] = clamp(Math.round(+e.target.value) || 1, 1, id === "shelfCols" ? 8 : 4); e.target.value = state.shelf[id === "shelfCols" ? "cols" : "rows"]; syncShelf(); shootSaved(); });
 $("#shelfShow").addEventListener("click", () => { state.scene = "rayon"; if (state.compo.on){ state.compo.on = false; compoChanged(); } $("#sceneSel").value = "rayon"; applyScene(); const d = new THREE.Vector3(...CAMS.front).normalize(), dist = camera.position.distanceTo(controls.target); camera.position.copy(controls.target).addScaledVector(d, dist); autoFrame = true; shootSaved(); closeDlg("#shootDlg"); });
 $("#shelfOff").addEventListener("click", () => { state.scene = "studio"; $("#sceneSel").value = "studio"; applyScene(); shootSaved(); });
+
+/* ================= Fonds illustrés (procéduraux et par l'IA) ================= */
+const hexRgb = h => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ""); const n = m ? parseInt(m[1], 16) : 0x888888; return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const mixC = (a, b, t) => { const A = hexRgb(a), B = hexRgb(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v)*t).toString(16).padStart(2, "0")).join(""); };
+const rgba = (h, a) => `rgba(${hexRgb(h).join(",")},${a})`;
+const BG_STYLES = {
+  degrade:"Dégradé studio", bokeh:"Bokeh lumineux", arche:"Arche et podium", formes:"Formes douces",
+  zellige:"Zellige", vagues:"Vagues", soleil:"Rayons festifs", nature:"Feuillage",
+};
+const bgSeeds = {};
+// Dessine un fond 16:10 aux couleurs du design ; le tiers inférieur reste une surface où pose l'emballage.
+function drawIllustrated(style, W, H, seed){
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  const d = state.design, base = d.bg || "#123c3a", acc = d.accent || "#e2b25a", light = mixC(base, "#ffffff", .55), pale = mixC(base, "#ffffff", .82), dark = mixC(base, "#000000", .35);
+  let sd = (seed || 1)*9301 + 49297; const rnd = () => (sd = (sd*16807) % 2147483647)/2147483647;
+  const floorY = H*.66, floor = (top, bottom) => { const g = x.createLinearGradient(0, floorY, 0, H); g.addColorStop(0, top); g.addColorStop(1, bottom); x.fillStyle = g; x.fillRect(0, floorY, W, H - floorY); x.fillStyle = "rgba(255,255,255,.18)"; x.fillRect(0, floorY, W, Math.max(1, H*.004)); };
+  const wall = (c1, c2) => { const g = x.createRadialGradient(W*.5, H*.42, H*.05, W*.5, H*.45, W*.75); g.addColorStop(0, c1); g.addColorStop(1, c2); x.fillStyle = g; x.fillRect(0, 0, W, H); };
+  if (style === "degrade"){ wall(pale, light); floor(mixC(light, "#ffffff", .2), mixC(base, "#ffffff", .4)); }
+  else if (style === "bokeh"){
+    wall(mixC(base, "#ffffff", .25), dark); x.save(); x.filter = `blur(${H*.012}px)`;
+    for (let i = 0; i < 70; i++){ const r = H*(.015 + rnd()*.07); x.fillStyle = rnd() < .5 ? rgba(acc, .12 + rnd()*.3) : `rgba(255,255,255,${.06 + rnd()*.2})`; x.beginPath(); x.arc(rnd()*W, rnd()*floorY, r, 0, 7); x.fill(); }
+    x.restore(); floor(mixC(dark, "#000000", .1), mixC(dark, "#000000", .45));
+  } else if (style === "arche"){
+    wall(pale, light); const aw = W*(.3 + rnd()*.08), ax = W*(.5 + (rnd() - .5)*.08) - aw/2, ah = H*.62;
+    x.fillStyle = mixC(base, "#ffffff", .65); x.beginPath(); x.moveTo(ax, floorY); x.lineTo(ax, floorY - ah + aw/2); x.arc(ax + aw/2, floorY - ah + aw/2, aw/2, Math.PI, 0); x.lineTo(ax + aw, floorY); x.closePath(); x.fill();
+    x.fillStyle = rgba(acc, .5); x.beginPath(); x.arc(W*(.15 + rnd()*.1), H*.3, H*.08, 0, 7); x.fill();
+    floor(mixC(light, "#ffffff", .1), mixC(base, "#ffffff", .35));
+  } else if (style === "formes"){
+    wall(pale, mixC(base, "#ffffff", .68));
+    for (let i = 0; i < 7; i++){ const r = H*(.12 + rnd()*.25), cx = rnd()*W, cy = rnd()*floorY; x.fillStyle = [rgba(acc, .35), rgba(base, .18), `rgba(255,255,255,.5)`][i % 3]; x.beginPath(); if (i % 2) x.arc(cx, cy, r, 0, 7); else { x.save(); x.translate(cx, cy); x.rotate(rnd()*Math.PI); x.roundRect ? x.roundRect(-r, -r*.6, r*2, r*1.2, r*.3) : x.rect(-r, -r*.6, r*2, r*1.2); x.restore(); } x.fill(); }
+    floor(mixC(base, "#ffffff", .6), mixC(base, "#ffffff", .4));
+  } else if (style === "zellige"){
+    wall(mixC(base, "#ffffff", .1), dark); x.strokeStyle = rgba(acc, .35); x.lineWidth = Math.max(1, H*.003); const s = H*(.09 + rnd()*.04);
+    for (let yy = s/2; yy < floorY + s; yy += s) for (let xx = (Math.round(yy/s) % 2)*s/2; xx < W + s; xx += s){ x.beginPath(); for (let k = 0; k < 16; k++){ const a = k*Math.PI/8, rr = k % 2 ? s*.22 : s*.4; x.lineTo(xx + rr*Math.cos(a), yy + rr*Math.sin(a)); } x.closePath(); x.stroke(); }
+    floor(mixC(acc, base, .55), mixC(base, "#000000", .3));
+  } else if (style === "vagues"){
+    wall(pale, light);
+    for (let k = 0; k < 5; k++){ const y0 = H*(.18 + k*.11), amp = H*(.03 + rnd()*.04), f = 1.5 + rnd()*2, ph = rnd()*6; x.fillStyle = k % 2 ? rgba(acc, .22) : rgba(base, .14 + k*.04); x.beginPath(); x.moveTo(0, H); for (let X = 0; X <= W; X += 16) x.lineTo(X, y0 + Math.sin(X/W*Math.PI*f + ph)*amp); x.lineTo(W, H); x.closePath(); x.fill(); }
+    floor(mixC(base, "#ffffff", .5), mixC(base, "#ffffff", .3));
+  } else if (style === "soleil"){
+    x.fillStyle = mixC(base, "#ffffff", .15); x.fillRect(0, 0, W, H); const n = 24 + Math.round(rnd()*12), cx = W*.5, cy = H*.6;
+    for (let i = 0; i < n; i++){ const a0 = i/n*Math.PI*2, a1 = (i + .5)/n*Math.PI*2; x.fillStyle = i % 2 ? rgba(acc, .35) : "rgba(255,255,255,.08)"; x.beginPath(); x.moveTo(cx, cy); x.arc(cx, cy, W, a0, a1); x.closePath(); x.fill(); }
+    const g = x.createRadialGradient(cx, cy, 0, cx, cy, H*.5); g.addColorStop(0, "rgba(255,255,255,.55)"); g.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    floor(mixC(base, "#000000", .1), mixC(base, "#000000", .4));
+  } else {
+    wall(mixC(base, "#ffffff", .7), mixC(base, "#ffffff", .45));
+    for (let i = 0; i < 26; i++){ const lx = rnd() < .5 ? rnd()*W*.3 : W - rnd()*W*.3, ly = rnd()*floorY*.9, L = H*(.12 + rnd()*.18), a = rnd()*Math.PI*2;
+      x.save(); x.translate(lx, ly); x.rotate(a); x.fillStyle = [mixC(base, "#2f6b3a", .6), mixC(base, "#4f8a4f", .5), rgba(acc, .6)][i % 3]; x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(L*.5, -L*.28, L, 0); x.quadraticCurveTo(L*.5, L*.28, 0, 0); x.fill(); x.restore(); }
+    floor(mixC(base, "#ffffff", .55), mixC(base, "#ffffff", .32));
+  }
+  const v = x.createRadialGradient(W/2, H/2, H*.4, W/2, H/2, W*.7); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.18)"); x.fillStyle = v; x.fillRect(0, 0, W, H);
+  return c;
+}
+async function useCanvasBg(cv, label){
+  const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", .9));
+  const ref = await ingestImage(new File([blob], "fond.jpg", {type:"image/jpeg"}), 2400, false);
+  state.images.bg = ref; state.scene = "photo"; state.bgBlur = 0; photoKey = "";
+  renderControls(); changed("art"); applyScene(); toast(`Fond « ${label} » appliqué`);
+}
+function renderBgPresets(){
+  $("#bgPresets").innerHTML = Object.entries(BG_STYLES).map(([k, l]) => `<button type="button" data-bgp="${k}"><img alt="" src="${drawIllustrated(k, 240, 150, bgSeeds[k] || 1).toDataURL("image/jpeg", .8)}"><span>${l}</span></button>`).join("");
+  $("#bgAiBox").hidden = !cap.sample;
+}
+$("#bgPresets").addEventListener("click", e => { const b = e.target.closest("[data-bgp]"); if (!b) return; const k = b.dataset.bgp; bgSeeds[k] = (bgSeeds[k] || 0) + 1; useCanvasBg(drawIllustrated(k, 1920, 1200, bgSeeds[k]), BG_STYLES[k]).then(renderBgPresets); });
+// SVG produit par l'IA : nettoyé (aucun script, lien, image ou texte) puis rastérisé.
+function safeSVG(src){
+  const doc = new DOMParser().parseFromString(String(src || ""), "image/svg+xml"), svg = doc.documentElement;
+  if (!svg || svg.nodeName.toLowerCase() !== "svg" || doc.querySelector("parsererror")) return null;
+  svg.querySelectorAll("script,foreignObject,image,use,a,text,iframe,style,animate,set,animateTransform").forEach(n => n.remove());
+  svg.querySelectorAll("*").forEach(n => { for (const at of [...n.attributes]) if (/^on/i.test(at.name) || (/href$/i.test(at.name) && !/^#/.test(at.value)) || /url\((?!\s*['"]?#)/i.test(at.value)) n.removeAttribute(at.name); });
+  for (const at of [...svg.attributes]) if (/^on/i.test(at.name)) svg.removeAttribute(at.name);
+  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg"); if (!svg.getAttribute("viewBox")) svg.setAttribute("viewBox", "0 0 1600 1000");
+  svg.setAttribute("width", "1600"); svg.setAttribute("height", "1000"); svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
+  return new XMLSerializer().serializeToString(svg);
+}
+const svgUrl = sv => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(sv);
+async function svgCanvas(sv, W, H){ const img = await loadImage(svgUrl(sv)), c = document.createElement("canvas"); c.width = W; c.height = H; c.getContext("2d").drawImage(img, 0, 0, W, H); return c; }
+let aiBgs = [];
+$("#bgAiGo").addEventListener("click", async e => {
+  const txt = $("#bgAiTxt").value.trim(); if (txt.length < 3){ toast("Décrivez l'ambiance en quelques mots."); return; }
+  const btn = e.currentTarget, d = state.design; btn.disabled = true; btn.textContent = "Création des fonds…";
+  try {
+    const res = await cap.sample.json(`Tu es illustrateur pour une imprimerie d'emballages en Tunisie. Crée 3 fonds illustrés vectoriels (SVG) pour présenter un emballage en 3D posé au premier plan, au centre.
+Ambiance demandée : « ${txt} ». Marque : ${d.brand}. Couleurs de la marque : fond ${d.bg}, accent ${d.accent}.
+Contraintes : viewBox="0 0 1600 1000" ; le tiers inférieur (y > 660) est une surface ou un sol uni ou légèrement dégradé où l'emballage est posé ; le centre (x 500 à 1100, y 250 à 900) reste calme, sans motif chargé ; décor sur les côtés et en arrière-plan ; utilise linearGradient, radialGradient, cercles, chemins, filtres feGaussianBlur ; style élégant et professionnel.
+Interdit : texte, image, lien, script, police.
+Réponds uniquement avec un tableau JSON de 3 objets : {"nom": "2 à 4 mots", "svg": "<svg ...>...</svg>"} ; chaque svg fait moins de 5000 caractères.`, {modelTier:"default"});
+    const list = (Array.isArray(res) ? res : []).map(r => ({nom:String(r && r.nom || "Fond IA").slice(0, 40), svg:safeSVG(r && r.svg)})).filter(r => r.svg).slice(0, 3);
+    const ok = [];
+    for (const r of list){ try { await loadImage(svgUrl(r.svg)); ok.push(r); } catch (err) {} }
+    if (!ok.length) throw {code:"invalid"};
+    aiBgs = ok;
+    $("#bgAiOut").innerHTML = ok.map((r, i) => `<button type="button" data-bgai="${i}"><img alt="" src="${svgUrl(r.svg)}"><span>${esc(r.nom)}</span></button>`).join("");
+  } catch (err) { toast(err && err.code === "rate_limited" ? "Trop de demandes, réessayez dans un instant." : err && err.code === "not_granted" ? "L'assistant IA n'est pas autorisé pour cette page." : "Pas de fond exploitable, reformulez la description."); }
+  btn.disabled = false; btn.textContent = "Proposer 3 fonds";
+});
+$("#bgAiOut").addEventListener("click", async e => { const b = e.target.closest("[data-bgai]"); if (!b) return; const r = aiBgs[+b.dataset.bgai]; try { await useCanvasBg(await svgCanvas(r.svg, 1920, 1200), r.nom); } catch (err) { toast("Ce fond n'a pas pu être appliqué."); } });
 
 /* ================= Déclinaisons de gamme ================= */
 function renderVariants(){

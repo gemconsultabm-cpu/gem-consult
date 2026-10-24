@@ -11,6 +11,7 @@ Configurateur d'emballage en une page (`index.html`) pour l'imprimerie Label Pac
 - **Import d'un plan de découpe (SVG, DXF)** comme l'outil « Dieline to 3D » de Pacdora : faces reconstituées à partir des coupes et rainages (calques, couleurs ou pointillés), pliage 3D automatique, angle global ou par volet, devis et exports comme un gabarit natif.
 - **Structure par IA** : décrivez le produit, l'assistant propose jusqu'à 3 structures du catalogue avec des cotes adaptées.
 - **Prise de vue** (inspirée d'Esko Studio, Boxshot, Mockey.ai, Unblast et Mockupworld) : **rayon de magasin** avec façades et étagères, **mise en situation sur votre photo** avec flou d'arrière-plan, choix de l'**objectif** (24 à 135 mm).
+- **Fonds illustrés** : 8 fonds prêts à l'emploi générés aux couleurs du design (dégradé studio, bokeh, arche, formes, zellige, vagues, rayons, feuillage), variantes à chaque clic, et **fonds sur mesure par l'IA** (illustrations vectorielles décrites en une phrase, nettoyées avant usage).
 - **Déclinaisons de gamme** (parfums, variétés) : affichage de la gamme en 3D et **rendu en série** (une maquette et un visuel à plat par déclinaison).
 - **BAT et devis de tous les produits** : un BAT et un devis détaillé par produit (projet, déclinaisons, composition), références numérotées, et un **devis récapitulatif** de la gamme.
 - **Pack e-commerce multi-vues** : 5 angles en 2000 × 2000 px, fond transparent et fond blanc.
