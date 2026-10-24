@@ -31,6 +31,13 @@ Configurateur d'emballage en une page (`index.html`) pour l'imprimerie Label Pac
 ## Guide de l'infographiste
 Bouton **Guide** : 10 chapitres (démarrer, cotes et matière, visuel, vérification, 3D, exports, validation client, projets, Illustrator, check-list prépresse), recherche, bouton « Me montrer » qui met en évidence l'élément réel de l'interface, visite guidée par chapitre ou complète (41 étapes, clavier ← → Échap), suivi de progression. Proposé automatiquement au premier lancement.
 
+## Confort d'utilisation
+- Barre **Étapes** (Structure → Format → Matière → Visuel → Vérifier → Exporter) avec accès direct et état prépresse.
+- Aide contextuelle « ? » sur chaque section, info-bulles sur toutes les commandes.
+- Maquette 3D/plan et devis toujours visibles pendant le réglage (ordinateur).
+- Enregistrement automatique après le premier enregistrement, Ctrl+S, alerte avant de quitter ou de remplacer un projet non enregistré.
+- Filet de sécurité : une erreur inattendue est signalée sans perte du travail en cours.
+
 ## Version installable (hors ligne) et panneau Illustrator
 Le fichier `dist/LabelPackStudio.zip` contient l'application complète, sans serveur ni connexion Internet :
 - **Windows** : extraire le ZIP, double-cliquer sur « 1 - Installer sur ce PC (Windows).bat » (raccourcis Bureau et menu Démarrer, aucun droit administrateur) ou « 2 - Ouvrir sans installer ».

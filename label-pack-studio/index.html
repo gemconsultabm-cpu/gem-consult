@@ -44,6 +44,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .mode.cloud{border-color:var(--ok);color:var(--ok)}
 .projectbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
 .projectbar input,.projectbar select{padding:6px 9px;border:1px solid var(--line);border-radius:5px;background:var(--surface-2);min-width:0}
+.projectbar input{width:clamp(120px,11vw,190px)}
+.save-state{max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+@media (max-width:1500px){.brand .mode{display:none}.top-actions .btn{padding-inline:10px}}
 #pName{width:190px;font-weight:600} #pClient{width:150px}
 .save-state{font-size:12px;color:var(--muted);white-space:nowrap}
 .save-state.dirty{color:var(--warn)}
@@ -53,6 +56,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .app{display:grid;gap:16px;grid-template-columns:310px minmax(0,1fr) 330px;align-items:start;padding-block:16px 32px}
 @media (max-width:1240px){.app{grid-template-columns:300px minmax(0,1fr)}.quote{grid-column:1 / -1}}
 @media (max-width:780px){.app{grid-template-columns:minmax(0,1fr)}.stage{order:-1}}
+@media (min-width:781px){.app > .stage{position:sticky;top:10px;z-index:2}}
+@media (min-width:1241px){.app > .quote{position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;overscroll-behavior:contain}}
 .panel,.quote,.stage,.col{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0}
 .panel,.quote{display:flex;flex-direction:column}
 .sec{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -244,7 +249,17 @@ details > :not(summary){margin-top:8px}
 .scene-tools select{padding:3px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font-size:12px}
 .scene-tools input[type=range]{width:80px}
 .client #compoBtn{display:none}
-.client #guideBtn,.client .guide-hello{display:none}
+.client #guideBtn,.client .guide-hello,.client .flow,.client .qhelp{display:none!important}
+.panel .sec{scroll-margin-top:86px}
+.flow{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:8px;background:var(--surface);border-bottom:1px solid var(--line);border-radius:var(--r) var(--r) 0 0}
+.flow button{display:flex;align-items:center;gap:5px;padding:5px 6px;border:1px solid var(--line);border-radius:5px;background:var(--surface-2);font:inherit;font-size:12px;color:var(--ink);cursor:pointer;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flow button i{font-style:normal;flex:none;width:17px;height:17px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-size:10.5px;font-family:var(--f-mono)}
+.flow button[aria-current="true"]{border-color:var(--accent);color:var(--accent)}
+.flow button[aria-current="true"] i{background:var(--accent);color:var(--on-accent)}
+.flow button.ok i{background:var(--ok);color:#fff}
+.flow button.warn i{background:var(--warn);color:#fff}
+.qhelp{display:inline-grid;place-items:center;width:17px;height:17px;margin-left:4px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);font:600 10.5px var(--f-body);cursor:pointer;vertical-align:1px;padding:0;letter-spacing:0}
+.qhelp:hover,.qhelp:focus-visible{border-color:var(--accent);color:var(--accent)}
 .guide{width:min(1040px,100%)}
 .dialog.guide .body{display:grid;grid-template-columns:240px minmax(0,1fr);gap:18px;padding:0}
 .gnav{border-right:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:4px;max-height:72vh;overflow:auto}
@@ -340,8 +355,16 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
 
 <main class="app gutter" id="studio">
   <aside class="panel" aria-label="Configuration">
-    <section class="sec">
-      <div class="row between"><h2 class="eyebrow">Bibliothèque</h2><span class="hint" id="tplCount"></span></div>
+    <nav class="flow" aria-label="Étapes du projet">
+      <button type="button" data-flow="secLib"><i>1</i>Structure</button>
+      <button type="button" data-flow="secFmt"><i>2</i>Format</button>
+      <button type="button" data-flow="secMat"><i>3</i>Matière</button>
+      <button type="button" data-flow="secVis"><i>4</i>Visuel</button>
+      <button type="button" data-flow="check"><i>5</i>Vérifier</button>
+      <button type="button" data-flow="export"><i>6</i>Exporter</button>
+    </nav>
+    <section class="sec" id="secLib">
+      <div class="row between"><h2 class="eyebrow">Bibliothèque <button type="button" class="qhelp" data-help="start" aria-label="Aide : démarrer un projet">?</button></h2><span class="hint" id="tplCount"></span></div>
       <div class="seg" role="tablist" aria-label="Bibliothèque">
         <button role="tab" id="lib-tpl" aria-selected="true">Gabarits</button>
         <button role="tab" id="lib-pre" aria-selected="false">Modèles types</button>
@@ -369,8 +392,8 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <p class="model-desc" id="modelDesc"></p>
     </section>
 
-    <section class="sec">
-      <div class="row between"><h2 class="eyebrow">Format (mm)</h2>
+    <section class="sec" id="secFmt">
+      <div class="row between"><h2 class="eyebrow">Format (mm) <button type="button" class="qhelp" data-help="dims" aria-label="Aide : cotes et matière">?</button></h2>
         <select id="dimMode" aria-label="Type de cotes" style="padding:3px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font-size:12px"><option value="int">Cotes intérieures</option><option value="ext">Cotes extérieures</option></select></div>
       <div class="grid2" id="dims"></div>
       <div id="winBox" class="ed" hidden>
@@ -384,8 +407,8 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <p class="hint" id="dimNote"></p>
     </section>
 
-    <section class="sec">
-      <h2 class="eyebrow">Matière &amp; impression</h2>
+    <section class="sec" id="secMat">
+      <h2 class="eyebrow">Matière &amp; impression <button type="button" class="qhelp" data-help="dims" aria-label="Aide : matière et finitions">?</button></h2>
       <div class="field"><label for="mat">Support</label><select id="mat"></select></div>
       <div class="grid2">
         <div class="field"><label for="print">Impression</label><select id="print"></select></div>
@@ -406,8 +429,8 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       </div>
     </section>
 
-    <section class="sec">
-      <h2 class="eyebrow">Visuel</h2>
+    <section class="sec" id="secVis">
+      <h2 class="eyebrow">Visuel <button type="button" class="qhelp" data-help="visuel" aria-label="Aide : créer le visuel">?</button></h2>
       <div class="seg" role="tablist" aria-label="Mode d'édition">
         <button role="tab" id="et-auto" aria-selected="true">Décor</button>
         <button role="tab" id="et-els" aria-selected="false">Éléments</button>
@@ -540,7 +563,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       </div>
     </div>
     <div class="pop" id="expPop" hidden>
-      <div class="row between"><b>Exporter</b><button class="btn small ghost" id="expClose" type="button">Fermer</button></div>
+      <div class="row between"><b>Exporter <button type="button" class="qhelp" data-help="export" aria-label="Aide : exporter">?</button></b><button class="btn small ghost" id="expClose" type="button">Fermer</button></div>
       <button class="exp" data-exp="zip" type="button"><b>Pack fabrication</b><small>PDF d'impression, plan PDF/SVG/DXF, visuel, maquette, BAT, devis</small><span>.zip</span></button>
       <button class="exp" data-exp="ai-send" type="button" hidden><b>Envoyer vers Illustrator</b><small>Nouveau document : calques Visuel, Fond perdu, Rainage, Coupe (tons directs CutContour et Rainage)</small><span>AI</span></button>
       <button class="exp" data-exp="aijsx" type="button"><b>Script Illustrator</b><small>Recrée le gabarit dans Illustrator avec calques et tons directs (Fichier › Scripts › Autre script)</small><span>.zip</span></button>
@@ -2646,6 +2669,7 @@ function renderPreflight(q){
   if (kind() === "box") c.push(`<span>e = ${fmt2.format(layout.e)} mm</span>`); else if (kind() === "cup") c.push(`<span>Ø ${state.dims.cup.D1} mm</span>`); else if (TPL().special === "pouch") c.push(`<span>fond ${state.dims.pouch.G} mm</span>`); else c.push(`<span>Ø ${state.dims[state.model].d} mm</span>`);
   c.push(`<button type="button" id="pfChip" class="${nE ? "pf-err" : nW ? "pf-warn" : "pf-ok"}">${nE ? nE + " erreur" + (nE > 1 ? "s" : "") : nW ? nW + " alerte" + (nW > 1 ? "s" : "") : "Prépresse OK"}</button>`);
   $("#chips").innerHTML = c.join("");
+  if (typeof renderFlow === "function") setTimeout(renderFlow, 0);
   $("#pfChip").onclick = () => { $("#pfSec details").open = true; $("#pfSec").scrollIntoView({behavior:reduce ? "auto" : "smooth", block:"center"}); };
 }
 
@@ -2753,7 +2777,7 @@ function renderControls(){
   $("#focalSel").value = state.focal || 42; $("#bgBlur").value = state.bgBlur || 0; $("#shelfCols").value = state.shelf.cols; $("#shelfRows").value = state.shelf.rows;
   const bgi = state.images.bg; $("#bgThumb").hidden = !bgi; if (bgi) $("#bgThumb").src = bgi.src; $("#bgClear").hidden = !bgi; renderVariants();
   $("#sceneSel").value = state.scene in SCENES ? state.scene : "studio"; $("#lightAz").value = state.lightAz ?? 35; $("#lightPow").value = state.lightPow ?? 100; applyScene();
-  $("#softProof").checked = !!state.softProof; renderGamut();
+  $("#softProof").checked = !!state.softProof; renderGamut(); setTimeout(renderFlow, 50);
   $("#foilColor").value = state.foilColor in FOILS ? state.foilColor : "or"; $("#relief").value = state.relief in RELIEFS ? state.relief : "none";
   $("#varnish").checked = state.varnish; $("#foil").checked = state.foil; $("#raw").checked = state.raw; $("#fullHide").checked = state.fullHide;
   $("#qty").value = state.qty; $("#showArt").checked = state.showArt; $("#showSafe").checked = state.showSafe;
@@ -2768,7 +2792,7 @@ function renderMeta(){
 function renderSaveState(){
   const el = $("#saveState");
   el.classList.toggle("dirty", dirty);
-  el.textContent = dirty ? "Modifications non enregistrées" : savedAt ? `Enregistré à ${savedAt.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"})}` : meta.id ? "Projet ouvert" : "";
+  el.textContent = dirty ? (meta.id ? "Enregistrement auto…" : "Non enregistré") : savedAt ? `Enregistré à ${savedAt.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"})}` : meta.id ? "Projet ouvert" : "";
   $("#undoBtn").disabled = hIndex <= 0; $("#redoBtn").disabled = hIndex >= hist.length - 1;
 }
 function renderFaceEditor(){
@@ -2832,7 +2856,7 @@ function restore(i){ if (i < 0 || i >= hist.length) return; hIndex = i; const f 
 function undo(){ if (hTimer) pushHistory(); restore(hIndex - 1); }
 function redo(){ restore(hIndex + 1); }
 $("#undoBtn").addEventListener("click", undo); $("#redoBtn").addEventListener("click", redo);
-function changed(level = "art", noHistory){ if (clientMode) return; dirty = true; renderSaveState(); refresh(level); if (!noHistory) schedHistory();
+function changed(level = "art", noHistory){ if (clientMode) return; dirty = true; renderSaveState(); refresh(level); if (!noHistory) schedHistory(); autoSave();
   if (state.compo && state.compo.on && state.compo.items.some(i => i.live)){ clearTimeout(compoT); compoT = setTimeout(() => { compoKey = ""; syncCompo(); }, 900); } }
 
 /* ================= Événements ================= */
@@ -2976,8 +3000,8 @@ function stripHeavy(body){
   body.config.elements = (body.config.elements || []).filter(el => el.type !== "image" || (el.img = strip(el.img)));
   return dropped;
 }
-async function saveProject(){
-  if (clientMode) return;
+async function saveProject(silent){
+  if (clientMode) return; if (silent !== true) silent = false;
   if (!meta.name.trim()) meta.name = `${TPL().name} ${meta.client || ""}`.trim();
   const now = new Date().toISOString(), q = quote(state.qty);
   if (!meta.id){ meta.id = meta.draftId || newId(); meta.createdAt = now; meta.createdBy = cap.uid || null; if (!meta.history.length) meta.history = [{status:meta.status, at:now, by:cap.uid || null}]; }
@@ -2987,7 +3011,7 @@ async function saveProject(){
     if (cloud()) await cap.db.collection("projects").doc(meta.id).set(body);
     else { const list = localProjects().filter(p => p.id !== meta.id); list.unshift({id:meta.id, ...body}); if (!writeLocalProjects(list)){ toast("Stockage du navigateur plein : retirez des images ou supprimez d'anciens projets."); return; } projects = list; renderBoard(); }
     dirty = false; savedAt = new Date(); renderMeta(); saveDraft();
-    toast(dropped ? "Projet enregistré (images trop lourdes non partagées)" : "Projet enregistré");
+    if (!silent || dropped) toast(dropped ? "Projet enregistré (images trop lourdes non partagées)" : "Projet enregistré");
   } catch (e) { toast(e && e.code === "quota_exceeded" ? "Espace de stockage plein : supprimez d'anciens projets." : "Échec de l'enregistrement, réessayez."); }
 }
 function openProject(p){
@@ -3038,7 +3062,7 @@ async function renderBoard(){
   }).join("");
 }
 $("#board").addEventListener("click", e => {
-  const o = e.target.closest("[data-open]"); if (o){ const p = projects.find(x => x.id === o.dataset.open); if (p) openProject(p); return; }
+  const o = e.target.closest("[data-open]"); if (o){ const p = projects.find(x => x.id === o.dataset.open); if (p) guardDirty("open" + p.id, () => openProject(p)); return; }
   const d = e.target.closest("[data-del]"); if (d){ if (armedDelete === d.dataset.del){ armedDelete = null; deleteProject(d.dataset.del); } else { armedDelete = d.dataset.del; renderBoard(); } }
 });
 $("#board").addEventListener("change", e => { const s = e.target.closest("[data-status]"); if (s) setProjectStatus(s.dataset.status, s.value); });
@@ -3046,8 +3070,8 @@ $("#boardSearch").addEventListener("input", renderBoard);
 function showBoard(){ $("#studio").hidden = true; $("#catalogView").hidden = true; $("#boardView").hidden = false; renderBoard(); }
 function showStudio(){ $("#boardView").hidden = true; $("#catalogView").hidden = true; $("#studio").hidden = false; resize(); }
 $("#boardBtn").addEventListener("click", showBoard); $("#boardBack").addEventListener("click", showStudio);
-$("#boardNew").addEventListener("click", newProject); $("#newBtn").addEventListener("click", newProject);
-$("#saveBtn").addEventListener("click", saveProject);
+$("#boardNew").addEventListener("click", () => guardDirty("new", newProject)); $("#newBtn").addEventListener("click", () => guardDirty("new", newProject));
+$("#saveBtn").addEventListener("click", () => saveProject());
 
 /* ================= Paramètres ================= */
 const SETTINGS_FIELDS = [
@@ -4030,6 +4054,15 @@ const GUIDE = [
     {t:"Importer le plan du client", d:"Un plan SVG ou DXF (Illustrator, ArtiosCAD, table de découpe) est reconstruit en faces et plié en 3D. Coupes : traits pleins ou calque COUPE/CUT ; rainages : pointillés, bleu ou calque RAINAGE/CREASE.", el:gup("#dieImport", "label"), prep:G.lib("tpl")},
     {t:"Nommer le projet", d:"Nom du projet et client apparaissent sur le BAT, le devis, le PDF d'impression et les noms de fichiers. Choisissez aussi le statut (brouillon → livré).", el:gup("#pName", ".proj, .top > div"), prep:G.studio},
   ]},
+  {id:"keys", title:"Raccourcis et confort", intro:"Pour aller plus vite au quotidien.", check:[
+    "Barre « Étapes » en haut du panneau de gauche : 1 Structure → 6 Exporter, accès direct à chaque étape ; l'étape 5 passe au vert quand la prépresse est OK.",
+    "Bouton « ? » à côté de chaque titre de section : ouvre l'aide du chapitre correspondant.",
+    "Ctrl+S : enregistrer. Ctrl+Z / Ctrl+Y : annuler / rétablir (aussi les flèches ↶ ↷ au-dessus de la vue).",
+    "Éléments libres : flèches du clavier pour déplacer l'élément sélectionné, Suppr pour l'effacer.",
+    "Enregistrement automatique : dès qu'un projet a été enregistré une fois, chaque modification est sauvegardée.",
+    "Nouveau projet ou ouverture d'un autre projet avec des modifications non enregistrées : un second clic est demandé pour éviter toute perte.",
+    "Survolez une commande pour afficher son rôle.",
+  ]},
   {id:"dims", title:"Cotes et matière", intro:"Réglez les dimensions du produit et le support : le plan compense automatiquement l'épaisseur du carton.", steps:[
     {t:"Cotes du gabarit", d:"Saisissez les cotes en millimètres. Pour les étuis et boîtes, choisissez cotes intérieures (produit) ou extérieures (encombrement).", el:gq("#dims"), prep:G.studio},
     {t:"Support, impression, finition", d:"Le support fixe l'épaisseur prise en compte dans le plan (affichée dans « e = … mm »). L'impression et la finition (pelliculage, vernis) modifient le devis et le rendu 3D.", el:gup("#mat", ".sec"), prep:G.studio},
@@ -4075,7 +4108,7 @@ const GUIDE = [
     {t:"BAT et devis de toute la gamme", d:"Un BAT et un devis par produit (projet, déclinaisons, composition) et un devis récapitulatif.", el:gq('[data-exp="allbat"]'), prep:G.pop},
   ]},
   {id:"data", title:"Projets et données", intro:"Retrouvez vos dossiers, suivez leur avancement et protégez vos données.", steps:[
-    {t:"Enregistrer", d:"Enregistre le projet (gabarit, cotes, visuel, quantité). Raccourci : Ctrl+S. Annuler / rétablir : Ctrl+Z / Ctrl+Y.", el:gq("#saveBtn"), prep:G.studio},
+    {t:"Enregistrer", d:"Enregistre le projet (gabarit, cotes, visuel, quantité). Ensuite, chaque modification est enregistrée automatiquement. Raccourci : Ctrl+S. Annuler / rétablir : Ctrl+Z / Ctrl+Y.", el:gq("#saveBtn"), prep:G.studio},
     {t:"Projets", d:"Tableau par statut (brouillon, BAT envoyé, validé, en production, livré), recherche par client.", el:gq("#boardBtn"), prep:G.studio},
     {t:"Catalogue", d:"Toutes les structures avec visuels et prix indicatifs ; catalogue PDF à envoyer aux prospects.", el:gq("#catBtn"), prep:G.studio},
     {t:"Paramètres et sauvegarde", d:"Tarifs de l'imprimerie, coordonnées, conditions. Pensez à « Sauvegarder les données » régulièrement (fichier .json) ; « Restaurer » sur un autre poste.", el:gq("#settingsBtn"), prep:G.studio},
@@ -4167,10 +4200,49 @@ $("#tourNext").addEventListener("click", () => { if (!tour) return; if (tour.sin
 $("#tourPrev").addEventListener("click", () => { if (tour && tour.i > 0){ tour.i--; showTourStep(); } });
 $("#tourQuit").addEventListener("click", () => endTour(false));
 addEventListener("resize", () => tour && placeTour()); addEventListener("scroll", () => tour && placeTour(), true);
-addEventListener("keydown", e => { if (!tour) return; if (e.key === "Escape"){ e.preventDefault(); endTour(false); } else if (e.key === "ArrowRight") $("#tourNext").click(); else if (e.key === "ArrowLeft" && !$("#tourPrev").hidden) $("#tourPrev").click(); }, true);
+addEventListener("keydown", e => { if (!tour) return; if (/^Arrow|Escape/.test(e.key)) e.stopPropagation(); if (e.key === "Escape"){ e.preventDefault(); endTour(false); } else if (e.key === "ArrowRight") $("#tourNext").click(); else if (e.key === "ArrowLeft" && !$("#tourPrev").hidden) $("#tourPrev").click(); }, true);
 $("#helloGo").addEventListener("click", () => { $("#guideHello").hidden = true; try { localStorage.setItem("lp-guide-seen", "1"); } catch (e) {} $("#guideTourAll").click(); });
 $("#helloLater").addEventListener("click", () => { $("#guideHello").hidden = true; try { localStorage.setItem("lp-guide-seen", "1"); } catch (e) {} toast("Le guide reste disponible via le bouton « Guide »"); });
 function maybeHello(){ let seen = null; try { seen = localStorage.getItem("lp-guide-seen"); } catch (e) {} if (!seen && !clientMode && !catalogMode()) setTimeout(() => { if (!clientMode && !tour) $("#guideHello").hidden = false; }, 2500); }
+
+/* ================= Confort d'utilisation ================= */
+// Parcours : accès direct à chaque étape, étape courante suivie au défilement, état prépresse.
+document.querySelector(".flow").addEventListener("click", e => {
+  const b = e.target.closest("[data-flow]"); if (!b) return; const k = b.dataset.flow; showStudio(); togglePop(false);
+  if (k === "check"){ const t = $("#tab2d"); if (t.getAttribute("aria-selected") !== "true") t.click(); $("#pfSec details").open = true; $("#stage").scrollIntoView({behavior:reduce ? "auto" : "smooth", block:"start"}); }
+  else if (k === "export"){ $("#stage").scrollIntoView({behavior:reduce ? "auto" : "smooth", block:"start"}); togglePop(true); }
+  else { const sec = $("#" + k); sec.scrollIntoView({behavior:reduce ? "auto" : "smooth", block:"start"}); }
+  setFlow(k); flowLock = performance.now() + 1200;
+});
+function setFlow(k){ document.querySelectorAll(".flow [data-flow]").forEach(b => b.setAttribute("aria-current", b.dataset.flow === k)); }
+let flowRaf = 0, flowLock = 0;
+addEventListener("scroll", () => { if (flowRaf || performance.now() < flowLock) return; flowRaf = requestAnimationFrame(() => { flowRaf = 0; if ($("#studio").hidden) return; const y = innerHeight*.3; let cur = "secLib"; for (const id of ["secLib","secFmt","secMat","secVis"]){ if ($("#" + id).getBoundingClientRect().top <= y) cur = id; } setFlow(cur); }); }, {passive:true});
+function renderFlow(){
+  const b = document.querySelector('.flow [data-flow="check"]'); if (!b || !layout) return;
+  let pf = []; try { pf = preflight(quote(state.qty)); } catch (e) {}
+  const nE = pf.filter(x => x.level === "error").length, nW = pf.filter(x => x.level === "warn").length;
+  b.classList.toggle("ok", !nE && !nW); b.classList.toggle("warn", !!(nE || nW)); b.title = nE ? `${nE} erreur(s) prépresse` : nW ? `${nW} alerte(s) prépresse` : "Prépresse OK";
+}
+document.addEventListener("click", e => { const h = e.target.closest("[data-help]"); if (h){ e.preventDefault(); e.stopPropagation(); togglePop(false); openGuide(h.dataset.help); } }, true);
+// Info-bulles : chaque commande décrite par un libellé accessible l'affiche aussi au survol.
+function addTitles(root){ root.querySelectorAll("[aria-label]:not([title])").forEach(n => { if (!/^(DIALOG|NAV|MAIN|ASIDE|SECTION)$/.test(n.tagName)) n.title = n.getAttribute("aria-label"); }); }
+addTitles(document);
+// Enregistrement automatique des projets déjà enregistrés une fois ; alerte avant de quitter avec des modifications.
+let autoT = 0;
+function autoSave(){ if (clientMode || !meta.id) return; clearTimeout(autoT); autoT = setTimeout(() => { if (dirty && !tour) saveProject(true); }, 4000); }
+addEventListener("beforeunload", e => { if (dirty && !clientMode && !CEP){ e.preventDefault(); e.returnValue = ""; } });
+// Garde-fou : une action qui remplace le projet en cours demande une seconde confirmation s'il n'est pas enregistré.
+let armed = null;
+function guardDirty(key, fn){
+  if (!dirty || clientMode){ fn(); return; }
+  if (armed && armed.key === key && performance.now() - armed.t < 5000){ armed = null; fn(); return; }
+  armed = {key, t:performance.now()}; toast("Modifications non enregistrées : cliquez à nouveau pour continuer, ou Ctrl+S pour enregistrer.");
+}
+// Filet de sécurité : une erreur inattendue est signalée sans perdre le travail en cours.
+let lastErr = 0;
+function reportError(msg){ console.error(msg); if (performance.now() - lastErr < 4000) return; lastErr = performance.now(); try { saveDraft(); } catch (e) {} toast("Une erreur inattendue est survenue ; votre travail est conservé. Si elle se répète, rechargez la page."); }
+addEventListener("error", e => { if (e && e.message && !/ResizeObserver|Script error/.test(e.message)) reportError(e.message); });
+addEventListener("unhandledrejection", e => { const r = e && e.reason; if (r && r.code && /declined|rate_limited|not_granted|aborted/.test(r.code)) return; reportError(r && (r.message || r.code) || "promesse rejetée"); });
 
 /* ================= Démarrage ================= */
 function onCapsReady(){
