@@ -8,6 +8,8 @@ Configurateur d'emballage en une page (`index.html`) pour l'imprimerie Label Pac
 - **Catalogue des modèles** à présenter aux clients : fiches avec maquette 3D, plan de découpe, dimensions possibles, matières et prix indicatif « dès … » ; **catalogue PDF** à envoyer ; **lien client** en lecture seule (voir en 3D, demande de devis WhatsApp).
 - **Maquette 3D** pliable / enroulable avec épaisseur du carton, vernis sélectif, vues prédéfinies, export PNG haute définition et vidéo WebM de l'animation.
 - **Finitions comme sur Pacdora** : dorure à chaud or, argent, cuivre, or rose ou holographique ; gaufrage en relief ou en creux (marque ou élément), chiffré dans le devis et contrôlé en prépresse.
+- **Import d'un plan de découpe (SVG, DXF)** comme l'outil « Dieline to 3D » de Pacdora : faces reconstituées à partir des coupes et rainages (calques, couleurs ou pointillés), pliage 3D automatique, angle global ou par volet, devis et exports comme un gabarit natif.
+- **Structure par IA** : décrivez le produit, l'assistant propose jusqu'à 3 structures du catalogue avec des cotes adaptées.
 - **Composition** : jusqu'à 8 emballages dans la même scène 3D, à l'échelle réelle (alignés, en arc, en quinconce), pour présenter une gamme.
 - **Cotes sur la maquette 3D**, **impression intérieure avec visuel** (fichier verso fourni dans le pack), **chartes graphiques clients** réutilisables.
 - **Exports image HD, 4K ou 8K** (4:3, 16:9, carré, portrait) et **vidéos MP4** : animation de pliage ou rotation 360°.

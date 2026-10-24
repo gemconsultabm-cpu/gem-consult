@@ -305,6 +305,16 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <div class="ed" id="libTpl">
         <div class="cats" id="cats"></div>
         <input type="search" class="search" id="tplSearch" placeholder="Rechercher un gabarit" aria-label="Rechercher un gabarit">
+        <div class="row">
+          <label class="btn small file-btn">Importer un plan (SVG, DXF)<input type="file" id="dieImport" accept=".svg,.dxf,image/svg+xml,application/dxf"></label>
+          <button type="button" class="btn small" id="aiStructBtn" hidden aria-expanded="false">Structure par IA</button>
+        </div>
+        <div id="aiStruct" class="field" hidden>
+          <label for="aiStructTxt">Décrivez le produit à emballer</label>
+          <textarea id="aiStructTxt" maxlength="400" placeholder="Ex. : 6 macarons de 45 mm à offrir ; pot de miel 250 g, Ø 70 mm ; savon 100 g à suspendre en magasin…"></textarea>
+          <div class="row"><button type="button" class="btn small primary" id="aiStructGo">Proposer des structures</button></div>
+          <div id="aiStructOut" class="ai-list"></div>
+        </div>
         <div class="tpls" id="tpls"></div>
       </div>
       <div class="ed" id="libPre" hidden>
@@ -706,9 +716,11 @@ const TEMPLATES = [
   {id:"can", cat:"cont", icon:"can", name:"Canette", sub:"Sleeve intégral", kind:"label", special:"can", mats:["ppw","ppt"], desc:"Canette aluminium habillée d'un sleeve imprimé sur toute la hauteur — boissons, jus, sodas artisanaux.", fold:"Enroulement"},
   {id:"tube", cat:"cont", icon:"tube", name:"Tube cosmétique", sub:"Décor intégral, soudé", kind:"label", special:"tube", mats:["ppw","ppt","couche"], desc:"Tube souple à décor intégral, soudé en tête, bouchon à vis — crèmes, gels, baumes, dentifrices.", fold:"Formage"},
   {id:"pouch", cat:"cont", icon:"pouch", name:"Sachet doypack", sub:"Tient debout, zip", kind:"label", special:"pouch", mats:["ppw","ppt"], desc:"Sachet souple qui tient debout grâce à son fond à soufflet, zip refermable — café, épices, fruits secs, snacks.", fold:"Formage", extra3d:true},
+  {id:"import", cat:"autre", icon:"rte", name:"Plan importé", sub:"SVG ou DXF", kind:"box", hidden:true, mats:ALL_BOX, desc:"Plan de découpe importé (SVG ou DXF) : faces reconstituées à partir des traits de coupe et de rainage, pliées automatiquement en 3D.", fold:"Pliage"},
   {id:"cup", cat:"alim", icon:"cup", name:"Gobelet carton", sub:"Jupe imprimée", kind:"cup", mats:["pe"], desc:"Jupe de gobelet développée en secteur de couronne (calcul exact du cône, recouvrement 8 mm) — café, boissons chaudes. Formage par le fabricant de gobelets.", fold:"Enroulement"},
 ];
 const TPL = () => TEMPLATES.find(t => t.id === state.model) || TEMPLATES[0];
+const CAT_T = () => TEMPLATES.filter(t => !t.hidden);
 const kind = () => TPL().kind;
 const DIM_FIELDS = {
   rte:[["L","Longueur",20,300],["W","Profondeur",15,200],["H","Hauteur",30,350]],
@@ -731,6 +743,7 @@ const DIM_FIELDS = {
   gable:[["L","Longueur",50,300],["W","Profondeur",40,200],["H","Hauteur du corps",40,250],["r","Hauteur du toit",15,140],["hh","Hauteur de l'anse",30,90]],
   bag:[["L","Largeur",120,450],["G","Soufflet",50,200],["H","Hauteur",150,500]],
   can:[["d","Diamètre",50,70],["ch","Hauteur",90,170]],
+  import:[],
   tube:[["d","Diamètre",20,60],["L","Longueur",70,220]],
   pouch:[["W","Largeur",80,300],["H","Hauteur",100,400],["G","Fond à soufflet",30,120]],
 };
@@ -781,11 +794,11 @@ const DEFAULT = {
   model:"rte", dimMode:"int",
   dims:{rte:{L:60,W:40,H:150}, ste:{L:80,W:30,H:120}, sleeve:{L:180,W:30,H:110}, rsc:{L:200,W:150,H:120}, tray:{L:220,W:150,H:45}, mailer:{L:250,W:180,H:80},
     labelPot:{lw:200,lh:62,d:75,ch:95,shape:"rect",r:4}, labelBottle:{lw:95,lh:105,d:72,ch:270,shape:"rect",r:3}, labelLid:{lw:60,lh:60,d:72,ch:85,shape:"rond",r:0},
-    hang:{L:60,W:30,H:120,hh:40}, pillow:{W:90,L:150,D:30}, pyramid:{b:80,h:90}, gable:{L:160,W:110,H:90,r:45,hh:50}, bag:{L:240,G:100,H:300}, can:{d:66,ch:115,lw:207.3,lh:95,shape:"rect",r:0}, tube:{d:35,L:150,lw:110,lh:150,shape:"rect",r:0}, pouch:{W:160,H:230,G:80,lw:160,lh:230,shape:"rect",r:0}, hex:{a:40,H:110}, coffret:{L:220,W:120,H:40,Hl:30}, drawer:{L:180,W:120,H:35}, display:{L:300,W:200,Hf:60,Hs:120,Hh:300}, cup:{D1:80,D2:56,h:93}},
+    hang:{L:60,W:30,H:120,hh:40}, pillow:{W:90,L:150,D:30}, pyramid:{b:80,h:90}, gable:{L:160,W:110,H:90,r:45,hh:50}, bag:{L:240,G:100,H:300}, import:{}, can:{d:66,ch:115,lw:207.3,lh:95,shape:"rect",r:0}, tube:{d:35,L:150,lw:110,lh:150,shape:"rect",r:0}, pouch:{W:160,H:230,G:80,lw:160,lh:230,shape:"rect",r:0}, hex:{a:40,H:110}, coffret:{L:220,W:120,H:40,Hl:30}, drawer:{L:180,W:120,H:35}, display:{L:300,W:200,Hf:60,Hs:120,Hh:300}, cup:{D1:80,D2:56,h:93}},
   window:{on:false, w:30, h:60, y:5, r:4},
   mat:{box:"gc1", label:"couche", cup:"pe"}, print:{box:"cmjn", label:"num", cup:"cmjn"}, lam:{box:"mat", label:"vernis", cup:"none"},
   varnish:false, foil:true, foilColor:"or", relief:"none", raw:false, inside:{on:false, color:"#e2b25a"},
-  scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
+  importData:null, scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
   design:{bg:"#123c3a", accent:"#e2b25a", brand:"Néroli", product:"Crème mains à la fleur d'oranger", mention:"75 ml · Fabriqué en Tunisie", pattern:"zellige", legal:"", ean:""},
   images:{logo:null, full:null, inside:null}, faces:{}, fullHide:false, elements:[],
   qty:2500, fold:1, showArt:true, showSafe:true
@@ -800,7 +813,7 @@ try {
   const ls = JSON.parse(localStorage.getItem("lp-settings-v2") || "null");
   if (ls) settings = merge(DEFAULT_SETTINGS, ls);
 } catch (e) {}
-function sanitizeState(){ state.fold = 1; if (!TEMPLATES.some(t => t.id === state.model)) state.model = "rte"; if (!Array.isArray(state.elements)) state.elements = []; fixMat(); }
+function sanitizeState(){ state.fold = 1; if (!TEMPLATES.some(t => t.id === state.model) || (state.model === "import" && !(state.importData && state.importData.segs && state.importData.segs.length))) state.model = "rte"; if (!Array.isArray(state.elements)) state.elements = []; fixMat(); }
 function fixMat(){ const t = TPL(), k = t.kind; if (!t.mats.includes(state.mat[k])) state.mat[k] = t.mats[0]; }
 sanitizeState();
 const saveDraft = () => { try { localStorage.setItem("lp-studio-v3", JSON.stringify({state, meta})); } catch (e) {} };
@@ -1147,7 +1160,212 @@ function buildPouch(d){
   return [{id:"front", name:"Face avant", poly:R(0,0,d.W,d.H), role:{type:"label", up:[0,1], area}},
           {id:"back", name:"Face arrière", origin:[d.W,0], poly:R(0,0,d.W,d.H), role:{type:"back", up:[0,1], area}}];
 }
-const BUILDERS = {can:buildWrap, tube:buildWrap, pouch:buildPouch, pillow:buildPillow, pyramid:buildPyramid, gable:buildGable, bag:buildBag, rte:buildRTE, ste:buildSTE, hang:buildHang, sleeve:buildSleeve, rsc:buildRSC, hex:buildHex, coffret:buildCoffret, drawer:buildDrawer, display:buildDisplay, tray:buildTray, mailer:buildMailer, labelPot:buildLabel, labelBottle:buildLabel, labelLid:buildLabel, cup:buildCup};
+/* ---- Import d'un plan de découpe : lecture SVG / DXF, reconstitution des faces, arbre de pliage ---- */
+const IMPORT_UNITS = {mm:["Millimètres", 1], cm:["Centimètres", 10], pt:["Points (Illustrator, 72 ppp)", 25.4/72], px:["Pixels (96 ppp)", 25.4/96], in:["Pouces", 25.4]};
+function nameKind(n){
+  n = String(n || "").toLowerCase();
+  if (/fond.?perdu|bleed|cote|dimension|texte|text|secur|safe|cartouche|annot|visuel|artwork|guide|repere/.test(n)) return "ignore";
+  if (/rain|crease|fold|pli|score|rill/.test(n)) return "crease";
+  if (/coupe|cut|decoupe|die/.test(n)) return "cut";
+  return "";
+}
+function parseDXF(txt){
+  const Ls = txt.split(/\r?\n/), pairs = [];
+  for (let i = 0; i + 1 < Ls.length; i += 2) pairs.push([parseInt(Ls[i], 10), Ls[i + 1].trim()]);
+  let unit = "mm";
+  const hi = pairs.findIndex(([c, v]) => c === 9 && v === "$INSUNITS"); if (hi >= 0 && pairs[hi + 1]){ const u = +pairs[hi + 1][1]; unit = u === 1 ? "in" : u === 5 ? "cm" : "mm"; }
+  let i = pairs.findIndex(([c, v]) => c === 2 && v === "ENTITIES"); if (i < 0) i = 0;
+  const ents = []; let cur = null;
+  for (; i < pairs.length; i++){ const [c, v] = pairs[i]; if (c === 0){ if (cur) ents.push(cur); if (v === "ENDSEC" || v === "EOF"){ cur = null; break; } cur = {type:v, d:[]}; } else if (cur) cur.d.push([c, v]); }
+  if (cur) ents.push(cur);
+  const get = (e, c) => { const x = e.d.find(q => q[0] === c); return x ? x[1] : undefined; };
+  const kindOf = e => { const nk = nameKind(get(e, 8)); if (nk === "ignore") return null; if (nk) return nk; return /dash|hidden|tiret|center/i.test(get(e, 6) || "") ? "crease" : "cut"; };
+  const arc = (cx, cy, r, a0, a1) => { if (a1 <= a0) a1 += 360; const n = Math.max(6, Math.ceil((a1 - a0)/5)), o = []; for (let k = 0; k <= n; k++){ const a = (a0 + (a1 - a0)*k/n)*Math.PI/180; o.push([cx + r*Math.cos(a), cy + r*Math.sin(a)]); } return o; };
+  const segs = [], add = (pts, t, closed) => { if (!t) return; for (let k = 0; k < pts.length - 1; k++) segs.push([pts[k], pts[k + 1], t]); if (closed && pts.length > 2) segs.push([pts[pts.length - 1], pts[0], t]); };
+  let pl = null;
+  for (const e of ents){
+    const t = kindOf(e), n = c => +get(e, c);
+    if (e.type === "LINE") add([[n(10), n(20)], [n(11), n(21)]], t);
+    else if (e.type === "ARC") add(arc(n(10), n(20), n(40), n(50), n(51)), t);
+    else if (e.type === "CIRCLE") add(arc(n(10), n(20), n(40), 0, 360), t);
+    else if (e.type === "LWPOLYLINE"){ const xs = e.d.filter(q => q[0] === 10).map(q => +q[1]), ys = e.d.filter(q => q[0] === 20).map(q => +q[1]); add(xs.map((x, k) => [x, ys[k]]), t, (n(70) & 1) === 1); }
+    else if (e.type === "POLYLINE") pl = {t, closed:(n(70) & 1) === 1, pts:[]};
+    else if (e.type === "VERTEX" && pl) pl.pts.push([n(10), n(20)]);
+    else if (e.type === "SEQEND" && pl){ add(pl.pts, pl.t, pl.closed); pl = null; }
+  }
+  return {segs:segs.filter(([a, b]) => [...a, ...b].every(Number.isFinite)), unit};
+}
+function parseSVG(txt){
+  const doc = new DOMParser().parseFromString(txt, "image/svg+xml"), root = doc.documentElement;
+  if (!root || root.nodeName.toLowerCase() !== "svg" || doc.querySelector("parsererror")) throw new Error("svg");
+  const host = document.createElement("div"); host.style.cssText = "position:absolute;left:-99999px;top:0;visibility:hidden;pointer-events:none";
+  const svg = document.importNode(root, true); svg.querySelectorAll("script,foreignObject,image,text,style").forEach(n => n.remove());
+  host.appendChild(svg); document.body.appendChild(host);
+  try {
+    const wA = root.getAttribute("width") || "", vb = (root.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
+    const m = /^\s*([\d.]+)\s*(mm|cm|in|pt|px)?/.exec(wA); let unit = "pt", k = null;
+    if (m && m[2] && /mm|cm|in/.test(m[2]) && vb.length === 4 && vb[2] > 0){ k = +m[1]*IMPORT_UNITS[m[2]][1]/vb[2]; unit = Math.abs(k - 1) < .002 ? "mm" : "custom"; }
+    else if (m && m[2] && /mm|cm|in/.test(m[2])){ unit = m[2]; }
+    const S = svg.getScreenCTM(), Si = S ? S.inverse() : null, segs = [];
+    const tmp = document.createElementNS("http://www.w3.org/2000/svg", "path"); svg.appendChild(tmp);
+    const sample = d => { tmp.setAttribute("d", d); const len = tmp.getTotalLength(), n = clamp(Math.ceil(len/2), 4, 48), o = []; for (let i = 1; i <= n; i++){ const q = tmp.getPointAtLength(len*i/n); o.push([q.x, q.y]); } return o; };
+    for (const el of svg.querySelectorAll("line,polyline,polygon,rect,path,circle,ellipse")){
+      if (el === tmp || el.closest("defs,clipPath,mask,pattern,symbol,marker")) continue;
+      const cs = getComputedStyle(el); if (!cs.stroke || cs.stroke === "none" || cs.display === "none" || parseFloat(cs.strokeOpacity) === 0) continue;
+      let names = ""; for (let n = el; n && n !== svg; n = n.parentNode) if (n.getAttribute) names += " " + [n.id, n.getAttribute("class"), n.getAttribute("inkscape:label"), n.getAttribute("data-name"), n.getAttribute("serif:id")].filter(Boolean).join(" ");
+      let t = nameKind(names); if (t === "ignore") continue;
+      if (!t){ const c = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(cs.stroke) || [0, 0, 0, 0], r = +c[1], g = +c[2], b = +c[3];
+        t = cs.strokeDasharray && cs.strokeDasharray !== "none" ? "crease" : (b > r + 40 && b >= g - 30) ? "crease" : (g > r + 60 && g > b + 30) ? "ignore" : "cut"; if (t === "ignore") continue; }
+      const M = Si && el.getScreenCTM() ? Si.multiply(el.getScreenCTM()) : (el.getCTM ? el.getCTM() : null), tf = ([x, y]) => M ? [M.a*x + M.c*y + M.e, -(M.b*x + M.d*y + M.f)] : [x, -y];
+      const paths = [], tag = el.nodeName.toLowerCase(), A = n => parseFloat(el.getAttribute(n)) || 0;
+      if (tag === "line") paths.push([[A("x1"), A("y1")], [A("x2"), A("y2")]]);
+      else if (tag === "rect"){ const x = A("x"), y = A("y"), w = A("width"), h = A("height"); paths.push([[x, y], [x + w, y], [x + w, y + h], [x, y + h], [x, y]]); }
+      else if (tag === "polyline" || tag === "polygon"){ const pts = [...el.points].map(q => [q.x, q.y]); if (tag === "polygon" && pts.length) pts.push(pts[0]); paths.push(pts); }
+      else if (tag === "circle" || tag === "ellipse"){ const cx = A("cx"), cy = A("cy"), rx = tag === "circle" ? A("r") : A("rx"), ry = tag === "circle" ? A("r") : A("ry"), o = []; for (let i = 0; i <= 48; i++){ const a = i/48*Math.PI*2; o.push([cx + rx*Math.cos(a), cy + ry*Math.sin(a)]); } paths.push(o); }
+      else {
+        const tk = (el.getAttribute("d") || "").match(/[a-zA-Z]|-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/g) || [];
+        let i = 0, cmd = "", cx = 0, cy = 0, sx = 0, sy = 0, cur = null, pc = null;
+        const num = () => +tk[i++], flush = () => { if (cur && cur.length > 1) paths.push(cur); cur = null; };
+        while (i < tk.length){
+          if (/[a-zA-Z]/.test(tk[i])) cmd = tk[i++];
+          const rel = cmd === cmd.toLowerCase(), C = cmd.toUpperCase(), ox = rel ? cx : 0, oy = rel ? cy : 0;
+          if (C === "Z"){ if (cur){ cur.push([sx, sy]); flush(); } cx = sx; cy = sy; pc = null; continue; }
+          if (i >= tk.length || /[a-zA-Z]/.test(tk[i])) { if (C !== "Z") i++; continue; }
+          if (C === "M"){ flush(); cx = ox + num(); cy = oy + num(); sx = cx; sy = cy; cur = [[cx, cy]]; cmd = rel ? "l" : "L"; pc = null; continue; }
+          if (!cur) cur = [[cx, cy]];
+          if (C === "L"){ cx = ox + num(); cy = oy + num(); cur.push([cx, cy]); pc = null; }
+          else if (C === "H"){ cx = (rel ? cx : 0) + num(); cur.push([cx, cy]); pc = null; }
+          else if (C === "V"){ cy = (rel ? cy : 0) + num(); cur.push([cx, cy]); pc = null; }
+          else if (C === "C" || C === "S" || C === "Q" || C === "T"){
+            let x1, y1, x2, y2;
+            if (C === "C"){ x1 = ox + num(); y1 = oy + num(); x2 = ox + num(); y2 = oy + num(); }
+            else if (C === "S"){ x1 = pc ? 2*cx - pc[0] : cx; y1 = pc ? 2*cy - pc[1] : cy; x2 = ox + num(); y2 = oy + num(); }
+            else if (C === "Q"){ x1 = ox + num(); y1 = oy + num(); x2 = x1; y2 = y1; }
+            else { x1 = pc ? 2*cx - pc[0] : cx; y1 = pc ? 2*cy - pc[1] : cy; x2 = x1; y2 = y1; }
+            const x = ox + num(), y = oy + num(), q = C === "Q" || C === "T";
+            for (let s2 = 1; s2 <= 12; s2++){ const u = s2/12, v2 = 1 - u;
+              cur.push(q ? [v2*v2*cx + 2*v2*u*x1 + u*u*x, v2*v2*cy + 2*v2*u*y1 + u*u*y] : [v2**3*cx + 3*v2*v2*u*x1 + 3*v2*u*u*x2 + u**3*x, v2**3*cy + 3*v2*v2*u*y1 + 3*v2*u*u*y2 + u**3*y]); }
+            pc = [x2, y2]; cx = x; cy = y;
+          } else if (C === "A"){
+            const rx = num(), ry = num(), rot = num(), la = num(), sw = num(), x = ox + num(), y = oy + num();
+            cur.push(...sample(`M${cx} ${cy}A${rx} ${ry} ${rot} ${la} ${sw} ${x} ${y}`)); cx = x; cy = y; pc = null;
+          } else i++;
+        }
+        flush();
+      }
+      for (const pts of paths){ const g = pts.map(tf); for (let j = 0; j < g.length - 1; j++) segs.push([g[j], g[j + 1], t]); }
+    }
+    return {segs:segs.filter(([a, b]) => [...a, ...b].every(Number.isFinite)), unit, k};
+  } finally { host.remove(); }
+}
+// Reconstitue les faces (graphe planaire) puis l'arbre de pliage à partir des rainages.
+let importCache = {key:"", res:null};
+function importGeometry(data){
+  const key = data.segs.length + ":" + data.k + ":" + data.name + ":" + data.segs.slice(0, 3).flat(2).join();
+  if (importCache.key === key) return importCache.res;
+  const tol = .05, k = data.k;
+  const raw = data.segs.map(([a, b, t]) => [[a[0]*k, a[1]*k], [b[0]*k, b[1]*k], t]);
+  const bx = polyBox(raw.flatMap(r => [r[0], r[1]]));
+  const V = [], grid = new Map(), cell = .5;
+  const vid = (x, y) => { x -= bx.minX; y -= bx.minY; const gx = Math.round(x/cell), gy = Math.round(y/cell);
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++){ const l = grid.get((gx + i) + "," + (gy + j)); if (l) for (const id of l){ const v = V[id]; if (Math.abs(v[0] - x) <= tol && Math.abs(v[1] - y) <= tol) return id; } }
+    V.push([x, y]); const kk = gx + "," + gy; if (!grid.has(kk)) grid.set(kk, []); grid.get(kk).push(V.length - 1); return V.length - 1; };
+  let E = []; for (const [a, b, t] of raw){ const i = vid(a[0], a[1]), j = vid(b[0], b[1]); if (i !== j) E.push([i, j, t]); }
+  if (E.length > 6000) throw new Error("Plan trop détaillé (plus de 6 000 segments).");
+  // découpe aux croisements et aux jonctions en T
+  const splits = E.map(() => []), bbE = E.map(([i, j]) => [Math.min(V[i][0], V[j][0]) - tol, Math.min(V[i][1], V[j][1]) - tol, Math.max(V[i][0], V[j][0]) + tol, Math.max(V[i][1], V[j][1]) + tol]);
+  for (let a = 0; a < E.length; a++) for (let b = a + 1; b < E.length; b++){
+    const A = bbE[a], B = bbE[b]; if (A[0] > B[2] || B[0] > A[2] || A[1] > B[3] || B[1] > A[3]) continue;
+    const [p1, p2] = [V[E[a][0]], V[E[a][1]]], [q1, q2] = [V[E[b][0]], V[E[b][1]]];
+    const r = [p2[0] - p1[0], p2[1] - p1[1]], sV = [q2[0] - q1[0], q2[1] - q1[1]], den = r[0]*sV[1] - r[1]*sV[0];
+    if (Math.abs(den) < 1e-9) continue;
+    const qp = [q1[0] - p1[0], q1[1] - p1[1]], t = (qp[0]*sV[1] - qp[1]*sV[0])/den, u = (qp[0]*r[1] - qp[1]*r[0])/den;
+    const la = Math.hypot(...r), lb = Math.hypot(...sV);
+    if (t > tol/la && t < 1 - tol/la && u > tol/lb && u < 1 - tol/lb){ const id = vid(p1[0] + r[0]*t + bx.minX, p1[1] + r[1]*t + bx.minY); splits[a].push(id); splits[b].push(id); }
+  }
+  for (let e = 0; e < E.length; e++){ const [i, j] = E[e], A = bbE[e], p1 = V[i], p2 = V[j], L2 = (p2[0] - p1[0])**2 + (p2[1] - p1[1])**2;
+    for (let v = 0; v < V.length; v++){ if (v === i || v === j) continue; const q = V[v]; if (q[0] < A[0] || q[0] > A[2] || q[1] < A[1] || q[1] > A[3]) continue;
+      const t = ((q[0] - p1[0])*(p2[0] - p1[0]) + (q[1] - p1[1])*(p2[1] - p1[1]))/L2; if (t <= 0 || t >= 1) continue;
+      const d = Math.hypot(p1[0] + (p2[0] - p1[0])*t - q[0], p1[1] + (p2[1] - p1[1])*t - q[1]); if (d <= tol) splits[e].push(v); } }
+  const E2 = new Map();
+  E.forEach(([i, j, t], e) => { const p1 = V[i], dir = [V[j][0] - p1[0], V[j][1] - p1[1]], pr = v => (V[v][0] - p1[0])*dir[0] + (V[v][1] - p1[1])*dir[1];
+    const chain = [i, ...[...new Set(splits[e])].sort((a, b) => pr(a) - pr(b)), j];
+    for (let c = 0; c < chain.length - 1; c++){ const a = chain[c], b = chain[c + 1]; if (a === b) continue; const kk = a < b ? a + "-" + b : b + "-" + a; const o = E2.get(kk); if (!o || (o[2] === "crease" && t === "cut")) E2.set(kk, [a, b, t]); } });
+  E = [...E2.values()];
+  // demi-arêtes et faces
+  const out = V.map(() => []), H = [];
+  E.forEach(([a, b, t]) => { const h1 = H.length; H.push({u:a, v:b, t, twin:h1 + 1}); H.push({u:b, v:a, t, twin:h1}); out[a].push(h1); out[b].push(h1 + 1); });
+  const ang = h => Math.atan2(V[H[h].v][1] - V[H[h].u][1], V[H[h].v][0] - V[H[h].u][0]);
+  out.forEach(l => l.sort((x, y) => ang(x) - ang(y))); const pos = new Map(); out.forEach(l => l.forEach((h, i) => pos.set(h, i)));
+  const next = h => { const tw = H[h].twin, l = out[H[h].v], i = pos.get(tw); return l[(i - 1 + l.length) % l.length]; };
+  const faceOf = new Array(H.length).fill(-1), faces = [];
+  for (let h0 = 0; h0 < H.length; h0++){ if (faceOf[h0] >= 0) continue; const loop = []; let h = h0, guard = 0;
+    while (faceOf[h] < 0 && guard++ < 20000){ faceOf[h] = faces.length; loop.push(h); h = next(h); }
+    const pts = loop.map(x => V[H[x].u]); let A = 0; for (let i = 0; i < pts.length; i++){ const p1 = pts[i], p2 = pts[(i + 1) % pts.length]; A += p1[0]*p2[1] - p2[0]*p1[1]; }
+    faces.push({loop, area:A/2}); }
+  const valid = faces.map(f => f.area > 1);
+  if (!valid.some(Boolean)) throw new Error("Aucune face fermée : vérifiez que les traits de coupe forment un contour continu.");
+  // nettoyage des polygones (allers-retours des fentes)
+  const clean = loop => { const ids = loop.map(x => H[x].u); let ch = true;
+    while (ch && ids.length > 3){ ch = false; for (let i = 0; i < ids.length; i++){ const n = ids.length, j = (i + 1) % n; if (ids[(i - 1 + n) % n] === ids[j]){ if (j > i){ ids.splice(j, 1); ids.splice(i, 1); } else { ids.splice(i, 1); ids.splice(j, 1); } ch = true; break; } } }
+    return ids; };
+  const F = faces.map((f, i) => valid[i] ? {i, ids:clean(f.loop), area:f.area, holes:[], adj:new Map()} : null);
+  // adjacences par les rainages
+  const extraCr = [];
+  H.forEach((h, x) => { if (h.t !== "crease" || x > h.twin) return; const fa = faceOf[x], fb = faceOf[h.twin];
+    if (fa === fb || !F[fa] || !F[fb]){ extraCr.push([V[h.u], V[h.v], fa]); return; }
+    for (const [f1, f2, he] of [[fa, fb, x], [fb, fa, h.twin]]){ const l = F[f1].adj.get(f2) || []; l.push(he); F[f1].adj.set(f2, l); } });
+  // trous : faces isolées contenues dans une autre face
+  const poly = f => f.ids.map(v => V[v]);
+  const inside = (pt, pl) => { let c = false; for (let i = 0, j = pl.length - 1; i < pl.length; j = i++){ const [xi, yi] = pl[i], [xj, yj] = pl[j]; if ((yi > pt[1]) !== (yj > pt[1]) && pt[0] < (xj - xi)*(pt[1] - yi)/(yj - yi) + xi) c = !c; } return c; };
+  const live = F.filter(Boolean);
+  for (const f of live) if (!f.adj.size){
+    const c = poly(f).reduce((a, q) => [a[0] + q[0]/f.ids.length, a[1] + q[1]/f.ids.length], [0, 0]);
+    const host = live.filter(g => g !== f && g.area > f.area && inside(c, poly(g))).sort((a, b) => a.area - b.area)[0];
+    if (host){ host.holes.push(poly(f).slice().reverse()); f.hole = true; }
+  }
+  const nodes = live.filter(f => !f.hole);
+  if (nodes.length > 150) throw new Error("Plan trop complexe (plus de 150 faces).");
+  // arbre de pliage : une racine par pièce (la plus grande face)
+  const seen = new Set(), order = [];
+  for (const r of nodes.slice().sort((a, b) => b.area - a.area)){ if (seen.has(r.i)) continue; seen.add(r.i); r.parent = null; r.depth = 0; const qu = [r];
+    while (qu.length){ const f = qu.shift(); order.push(f);
+      for (const [g, hs] of f.adj){ const G = F[g]; if (!G || G.hole || seen.has(g)) continue; seen.add(g); G.parent = f; G.depth = f.depth + 1;
+        const he = hs.find(x => faceOf[x] === g) ?? H[hs[0]].twin, h = H[he], A = V[h.u], B = V[h.v], dir = [B[0] - A[0], B[1] - A[1]], len = Math.hypot(...dir), ux = [dir[0]/len, dir[1]/len];
+        let lo = 0, hi = len; for (const x of hs){ for (const vv of [H[x].u, H[x].v]){ const pr = (V[vv][0] - A[0])*ux[0] + (V[vv][1] - A[1])*ux[1]; lo = Math.min(lo, pr); hi = Math.max(hi, pr); } }
+        G.hA = [A[0] + ux[0]*lo, A[1] + ux[1]*lo]; G.hLen = hi - lo; G.ang = Math.atan2(ux[1], ux[0]); qu.push(G);
+      }
+    } }
+  for (const f of order) for (const [g, hs] of f.adj){ const G = F[g]; if (G && !G.hole && f.i < g && G.parent !== f && f.parent !== G) for (const x of hs) if (faceOf[x] === f.i) extraCr.push([V[H[x].u], V[H[x].v], f.i]); }
+  const res = {V, order, extraCr, w:bx.w, h:bx.h, n:order.length, poly};
+  importCache = {key, res}; return res;
+}
+function buildImport(d, e){
+  const D = state.importData;
+  if (!D || !D.segs || !D.segs.length) return [{id:"f0", name:"Face", poly:R(0,0,100,100), role:{type:"main", up:[0,1]}}];
+  let G; try { G = importGeometry(D); } catch (err) { return [{id:"f0", name:"Face", poly:R(0,0,100,100), role:{type:"main", up:[0,1]}}]; }
+  const fold = (D.flip ? -1 : 1)*(D.fold ?? 90), byI = new Map(), out = [];
+  D.info = {name:D.name, w:G.w, h:G.h, n:G.n};
+  const inv = (p, [x, y]) => { const dx = x - p.T.x, dy = y - p.T.y; return [p.T.c*dx + p.T.s*dy, -p.T.s*dx + p.T.c*dy]; };
+  let n = 0;
+  for (const f of G.order){
+    const pts = G.poly(f), P = {id:"f" + f.i, name: f.depth ? `Volet ${++n}` : (f === G.order[0] ? "Face principale" : "Pièce"), holes:[]};
+    if (!f.parent){ P.origin = [0, 0]; P.poly = pts; P.holes = f.holes; P.T = {a:0, c:1, s:0, x:0, y:0}; P.role = f === G.order[0] ? {type:"main", up:[0,1]} : null; }
+    else {
+      const par = byI.get(f.parent.i), a = f.ang, T = {a, c:Math.cos(a), s:Math.sin(a), x:f.hA[0], y:f.hA[1]};
+      const fo = D.folds && Number.isFinite(D.folds["f" + f.i]) ? (D.flip ? -1 : 1)*D.folds["f" + f.i] : fold;
+      P.parent = par.id; P.anchor = inv(par, f.hA); P.rot = (a - par.T.a)*180/Math.PI; P.axis = "top"; P.fold = fo; P.hinge = [0, f.hLen];
+      const loc = ([x, y]) => { const dx = x - T.x, dy = y - T.y; return [T.c*dx + T.s*dy, -T.s*dx + T.c*dy]; };
+      P.T = T; P.poly = pts.map(loc); P.holes = f.holes.map(hh => hh.map(loc));
+      const st = Math.min(.7, (f.depth - 1)*.18); P.stage = [st, Math.min(1, st + .45)];
+    }
+    P.creases = G.extraCr.filter(c => c[2] === f.i).map(([a, b]) => [inv(P, a), inv(P, b)]);
+    byI.set(f.i, P); out.push(P);
+  }
+  for (const P of out) delete P.T;
+  return out;
+}
+const BUILDERS = {import:buildImport, can:buildWrap, tube:buildWrap, pouch:buildPouch, pillow:buildPillow, pyramid:buildPyramid, gable:buildGable, bag:buildBag, rte:buildRTE, ste:buildSTE, hang:buildHang, sleeve:buildSleeve, rsc:buildRSC, hex:buildHex, coffret:buildCoffret, drawer:buildDrawer, display:buildDisplay, tray:buildTray, mailer:buildMailer, labelPot:buildLabel, labelBottle:buildLabel, labelLid:buildLabel, cup:buildCup};
 function dimsText(d = innerDims()){
   const t = TPL(), f = v => fmt1.format(v);
   switch (t.id){
@@ -1164,6 +1382,7 @@ function dimsText(d = innerDims()){
     case "can": return `Ø ${f(d.d)} × ${f(d.ch)} mm, sleeve ${f(Math.PI*d.d)} × ${f(Math.max(20, d.ch - 20))} mm`;
     case "tube": return `Ø ${f(d.d)} × ${f(d.L)} mm, décor ${f(Math.PI*d.d)} × ${f(d.L)} mm`;
     case "pouch": return `${f(d.W)} × ${f(d.H)} mm, fond ${f(d.G)} mm`;
+    case "import": { const I = state.importData && state.importData.info; return I ? `plan importé « ${I.name} » : ${f(I.w)} × ${f(I.h)} mm à plat, ${I.n} faces` : "plan importé"; }
     case "bag": return `${f(d.L)} × ${f(d.G)} × ${f(d.H)} mm (largeur × soufflet × hauteur)`;
   }
   if (t.kind === "label") return `${d.lw} × ${d.lh} mm (${d.shape === "ovale" ? "ovale" : "rectangle"}), contenant Ø ${d.d} mm`;
@@ -1209,12 +1428,12 @@ function computeLayout(){
     else { const on = p.poly.filter(([x,y]) => Math.abs(vert ? x : y) < 1e-6).map(([x,y]) => vert ? y : x); lo = Math.min(...on); hi = Math.max(...on); }
     hinges.push((vert ? [[0, lo],[0, hi]] : [[lo, 0],[hi, 0]]).map(pt => applyT(p.T, pt)));
   }
-  const extra = panels.flatMap(p => (p.creases || []).map(seg => seg.map(pt => applyT(p.T, pt))));
+  const extra = panels.flatMap(p => (p.creases || []).map(seg => seg.map(pt => applyT(p.T, pt)))), hingesAll = [...hinges, ...extra];
   const cuts = [], seen = new Set();
   const push = s => { const k = s.map(([x,y]) => `${x.toFixed(2)},${y.toFixed(2)}`).sort().join("|"); if (!seen.has(k)){ seen.add(k); cuts.push(s); } };
   for (const p of panels){
     const q = p.gpoly;
-    for (let i = 0; i < q.length; i++) cutPieces(q[i], q[(i+1) % q.length], hinges).forEach(push);
+    for (let i = 0; i < q.length; i++) cutPieces(q[i], q[(i+1) % q.length], hingesAll).forEach(push);
     for (const h of p.gholes) for (let i = 0; i < h.length; i++) push([h[i], h[(i+1) % h.length]]);
   }
   const segLen = arr => arr.reduce((s,[a,b]) => s + Math.hypot(b[0]-a[0], b[1]-a[1]), 0);
@@ -1935,7 +2154,7 @@ function quote(qty){
     add("Forme de découpe", `${poses} pose(s) × ${fmt1.format(cutM)} m de filet`, B.dieBase + poses*cutM*B.diePerM);
     add("Découpe & rainage", `calage + ${fmt0.format(sheets)} feuilles`, B.cutCal + sheets*B.cutSheet);
     if (layout.panels.some(p => p.film)) add("Fenêtre (film PET + pose)", `${fmt0.format(qty)} pièces`, B.windowCal + qty*B.windowPc);
-    const nGlue = TPL().bag ? 0 : new Set(layout.panels.filter(p => p.glue).map(p => p.root)).size;
+    const nGlue = TPL().bag ? 0 : state.model === "import" ? (state.importData && state.importData.glue ? 1 : 0) : new Set(layout.panels.filter(p => p.glue).map(p => p.root)).size;
     if (TPL().bag){ add("Façonnage du sac (collage, fond)", `${fmt0.format(qty)} sacs`, qty*B.bagPc); add("Poignées torsadées posées", `${fmt0.format(qty)} paires`, qty*B.handlePc); }
     if (nGlue) add("Collage", `${fmt0.format(qty)} boîtes${nGlue > 1 ? ` × ${nGlue} pièces` : ""}`, B.glueCal + qty*nGlue*B.gluePc);
     tech.push(["Poses par feuille (imposition rectangulaire)", poses], ["Feuilles (gâche incluse)", fmt0.format(sheets)], ["Longueur de coupe", `${fmt2.format(cutM)} m / pose`], ["Longueur de rainage", `${fmt2.format(layout.creaseLen/1000)} m / pose`], ["Fond perdu", `${layout.bleed} mm`]);
@@ -2158,9 +2377,9 @@ function opts(sel, map, val, only){ sel.innerHTML = Object.entries(map).filter((
 function renderLibrary(){
   $("#cats").innerHTML = CATS.map(([k, l]) => `<button type="button" data-cat="${k}" aria-pressed="${k === cat}">${l}</button>`).join("");
   const q = $("#tplSearch").value.trim().toLowerCase();
-  const list = TEMPLATES.filter(t => (cat === "all" || t.cat === cat) && (!q || (t.name + " " + t.sub + " " + t.desc).toLowerCase().includes(q)));
+  const list = TEMPLATES.filter(t => (!t.hidden || t.id === state.model) && (cat === "all" || t.cat === cat) && (!q || (t.name + " " + t.sub + " " + t.desc).toLowerCase().includes(q)));
   $("#tpls").innerHTML = list.map(t => `<button type="button" class="tpl" data-tpl="${t.id}" aria-pressed="${t.id === state.model}"><svg viewBox="0 0 42 34" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">${ICONS[t.icon]}</svg><span>${esc(t.name)}<small>${esc(t.sub)}</small></span></button>`).join("") || `<p class="hint">Aucun gabarit ne correspond.</p>`;
-  $("#tplCount").dataset.n = `${list.length} / ${TEMPLATES.length} gabarits`; if (typeof libTab === "undefined" || libTab === "tpl") $("#tplCount").textContent = $("#tplCount").dataset.n;
+  $("#tplCount").dataset.n = `${list.filter(t => !t.hidden).length} / ${CAT_T().length} gabarits`; if (typeof libTab === "undefined" || libTab === "tpl") $("#tplCount").textContent = $("#tplCount").dataset.n;
 }
 function renderControls(){
   const t = TPL(), k = kind(), dims = state.dims[state.model];
@@ -2170,6 +2389,15 @@ function renderControls(){
   let h = DIM_FIELDS[state.model].map(([key, lbl, mn, mx]) => `<div class="field"><label for="dim-${key}">${lbl}</label><div class="unit" data-unit="mm"><input type="number" id="dim-${key}" data-k="${key}" min="${mn}" max="${mx}" step="0.5" value="${dims[key]}"></div></div>`).join("");
   if (k === "label" && t.container !== "couvercle" && !t.special) h += `<div class="field"><label for="dim-shape">Forme</label><select id="dim-shape" data-k="shape"><option value="rect"${dims.shape === "rect" ? " selected" : ""}>Rectangle</option><option value="ovale"${dims.shape === "ovale" ? " selected" : ""}>Ovale</option></select></div>
     <div class="field"><label for="dim-r">Rayon des coins</label><div class="unit" data-unit="mm"><input type="number" id="dim-r" data-k="r" min="0" max="20" step="0.5" value="${dims.r}"${dims.shape === "ovale" ? " disabled" : ""}></div></div>`;
+  if (t.id === "import"){
+    const D = state.importData || {}, I = D.info || {};
+    h = `<div class="field"><label for="impUnit">Unité du fichier</label><select id="impUnit">${Object.entries(IMPORT_UNITS).map(([k2, [l]]) => `<option value="${k2}"${D.unit === k2 ? " selected" : ""}>${l}</option>`).join("")}${D.unit === "custom" ? `<option value="custom" selected>Selon le fichier (${fmt3.format(D.k)} mm / unité)</option>` : ""}</select></div>
+      <div class="field"><label for="impFold">Angle de pliage</label><div class="unit" data-unit="°"><input type="number" id="impFold" min="0" max="180" step="5" value="${D.fold ?? 90}"></div></div>
+      <label class="check"><input type="checkbox" id="impFlip"${D.flip ? " checked" : ""}> Plan dessiné côté intérieur (inverser le pliage)</label>
+      <label class="check"><input type="checkbox" id="impGlue"${D.glue ? " checked" : ""}> Livré plié-collé (collage chiffré au devis)</label>
+      ${layout && layout.panels.length > 1 ? `<details class="imp-folds"><summary>Angle par volet (numéros visibles sur le plan)</summary><div class="grid2">${layout.panels.filter(q => q.parent).map(q => `<div class="field"><label for="impF-${q.id}">${esc(q.name)}</label><div class="unit" data-unit="°"><input type="number" id="impF-${q.id}" data-impf="${q.id}" min="-180" max="180" step="5" value="${D.folds && Number.isFinite(D.folds[q.id]) ? D.folds[q.id] : (D.fold ?? 90)}"></div></div>`).join("")}</div></details>` : ""}
+      <p class="hint">${esc(I.name || "")} · ${I.w ? `${fmt1.format(I.w)} × ${fmt1.format(I.h)} mm à plat, ${I.n} face(s)` : ""}. Coupes : traits pleins ou calque COUPE/CUT ; rainages : pointillés, traits bleus ou calque RAINAGE/CREASE.</p>`;
+  }
   $("#dims").innerHTML = h;
   $("#winBox").hidden = !t.window; $("#winOn").checked = state.window.on; $("#winFields").hidden = !state.window.on;
   $("#winW").value = state.window.w; $("#winH").value = state.window.h; $("#winY").value = state.window.y;
@@ -2852,14 +3080,14 @@ function catCard(t){
     <dl><dt>Dimensions</dt><dd>${esc(rangeText(t))}</dd><dt>Matières</dt><dd>${esc(mats)}</dd><dt>Prix indicatif</dt><dd class="price">${price}${pp ? `<br><small class="hint">5 000 ex., ${esc(pp.dims)}</small>` : ""}</dd></dl>
     <div class="row">${clientMode ? `<button class="btn" type="button" data-view3d="${t.id}">Voir en 3D</button>${wa ? `<a class="btn primary" href="https://wa.me/${wa}?text=${msg}" target="_blank" rel="noopener">Demander un devis</a>` : ""}` : `<button class="btn primary" type="button" data-custom="${t.id}">Personnaliser</button>`}</div></div></article>`;
 }
-function catList(){ const q = $("#catSearch").value.trim().toLowerCase(); return TEMPLATES.filter(t => (catCat === "all" || t.cat === catCat) && (!q || (t.name + " " + t.sub + " " + t.desc).toLowerCase().includes(q))); }
+function catList(){ const q = $("#catSearch").value.trim().toLowerCase(); return CAT_T().filter(t => (catCat === "all" || t.cat === catCat) && (!q || (t.name + " " + t.sub + " " + t.desc).toLowerCase().includes(q))); }
 function renderCatalog(quiet){
   $("#catCats").innerHTML = CATS.map(([k, l]) => `<button type="button" class="btn small" data-ccat="${k}" aria-pressed="${k === catCat}">${l}</button>`).join("");
   const list = catList();
   $("#catGrid").innerHTML = list.map(catCard).join("") || `<div class="empty">Aucun modèle ne correspond.</div>`;
   if (!quiet){
     const c = companyInfo();
-    $("#catNote").textContent = clientMode ? `${TEMPLATES.length} modèles personnalisables, prix indicatifs hors taxes${c && (c.phone || c.email) ? ` · Contact : ${[c.phone, c.email].filter(Boolean).join(" · ")}` : ""}. Visuels d'exemple ; dimensions, matières et décor adaptés à votre produit.` : `${TEMPLATES.length} modèles. Prix indicatifs calculés pour 5 000 ex. au format standard${P().example ? " avec la grille tarifaire d'exemple" : ""}.`;
+    $("#catNote").textContent = clientMode ? `${CAT_T().length} modèles personnalisables, prix indicatifs hors taxes${c && (c.phone || c.email) ? ` · Contact : ${[c.phone, c.email].filter(Boolean).join(" · ")}` : ""}. Visuels d'exemple ; dimensions, matières et décor adaptés à votre produit.` : `${CAT_T().length} modèles. Prix indicatifs calculés pour 5 000 ex. au format standard${P().example ? " avec la grille tarifaire d'exemple" : ""}.`;
     if (!catBusy && list.some(t => !thumbs[t.id] && !thumbTried.has(t.id))) ensureThumbs(list);
   }
 }
@@ -2875,7 +3103,7 @@ $("#catGrid").addEventListener("click", e => {
 });
 $("#catShare").addEventListener("click", async () => {
   const body = $("#shareBody"), url = `${SHARE_BASE}#catalogue`;
-  if (cloud()){ toast("Calcul des prix indicatifs…"); await ensureThumbs(TEMPLATES); await publishCompany(); }
+  if (cloud()){ toast("Calcul des prix indicatifs…"); await ensureThumbs(CAT_T()); await publishCompany(); }
   body.innerHTML = `<p class="hint">Ce lien ouvre le catalogue en lecture seule : visuels, dimensions possibles, prix indicatifs et bouton « Demander un devis » (WhatsApp, si le numéro est renseigné dans Paramètres). Les prix « dès … » publiés sont ceux de votre grille actuelle ; recliquez sur « Lien client » après une modification des tarifs. La page doit être partagée avec le client (menu Partager).</p>
     <div class="linkbox"><input type="text" readonly id="catUrl" value="${esc(url)}" aria-label="Lien du catalogue"><button class="btn" type="button" id="catCopy">Copier</button></div>`;
   openDlg("#shareDlg"); $("#catCopy").onclick = () => copyText(url, "Lien copié", $("#catUrl"));
@@ -2883,7 +3111,7 @@ $("#catShare").addEventListener("click", async () => {
 $("#catPdf").addEventListener("click", async e => {
   if (!window.jspdf){ toast("Bibliothèque PDF indisponible : rechargez la page."); return; }
   const btn = e.currentTarget; btn.disabled = true; btn.textContent = "Préparation…";
-  try { await ensureThumbs(TEMPLATES); await saveFile(`Catalogue-${slug2((companyInfo() || {}).name || "Label-Pack")}.pdf`, catalogPDF()); }
+  try { await ensureThumbs(CAT_T()); await saveFile(`Catalogue-${slug2((companyInfo() || {}).name || "Label-Pack")}.pdf`, catalogPDF()); }
   catch (err) { console.error(err); toast("Le catalogue n'a pas pu être généré."); }
   btn.disabled = false; btn.textContent = "Catalogue PDF";
 });
@@ -2894,14 +3122,14 @@ function catalogPDF(){
   doc.setFillColor(21,24,29); doc.rect(0, 0, W, 112, "F");
   doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(30); pdfText(doc, co.name || "Label Pack", M, 46);
   doc.setFont("helvetica", "normal"); doc.setFontSize(15); doc.text("Catalogue d'emballages personnalisés", M, 58);
-  doc.setFontSize(10); doc.setTextColor(210); doc.text(doc.splitTextToSize(pdfTxt(`${TEMPLATES.length} modèles : étuis, boîtes, coffrets, présentoirs, sacs, gobelets et étiquettes. Chaque modèle est fabriqué à vos dimensions, sur la matière et avec les finitions de votre choix (pelliculage, vernis sélectif, dorure, fenêtre).`), 175), M, 70);
+  doc.setFontSize(10); doc.setTextColor(210); doc.text(doc.splitTextToSize(pdfTxt(`${CAT_T().length} modèles : étuis, boîtes, coffrets, présentoirs, sacs, gobelets et étiquettes. Chaque modèle est fabriqué à vos dimensions, sur la matière et avec les finitions de votre choix (pelliculage, vernis sélectif, dorure, fenêtre).`), 175), M, 70);
   doc.setTextColor(184,15,90); doc.setFontSize(10); doc.text(pdfTxt([co.phone, co.email, co.address].filter(Boolean).join("  ·  ") || "Contactez-nous pour un devis personnalisé"), M, 100);
-  const cover = TEMPLATES.filter(t => thumbs[t.id]).slice(0, 9);
+  const cover = CAT_T().filter(t => thumbs[t.id]).slice(0, 9);
   cover.forEach((t, i) => { const x = M + (i % 3)*61, y = 124 + Math.floor(i/3)*50; doc.setDrawColor(225); doc.rect(x, y, 57, 43); doc.addImage(thumbs[t.id].img, "JPEG", x + 1, y + 1, 55, 41.25); });
   doc.setTextColor(110); doc.setFontSize(9); doc.text(pdfTxt("Visuels d'exemple (marques fictives). Prix indicatifs hors taxes, à confirmer par devis."), M, 280);
   footer(1);
   let page = 1, slot = 0;
-  for (const t of TEMPLATES){
+  for (const t of CAT_T()){
     if (slot % 2 === 0){ doc.addPage(); page++; footer(page); }
     const y0 = slot % 2 === 0 ? 14 : 150, th = thumbs[t.id], cat = (CATS.find(([k]) => k === t.cat) || [, ""])[1];
     if (th){ doc.setDrawColor(225); doc.rect(M, y0, 92, 69); doc.addImage(th.img, "JPEG", M + 1, y0 + 1, 90, 67.5); doc.rect(M, y0 + 72, 92, 52); doc.addImage(th.flat, "JPEG", M + 1, y0 + 73, 90, 50, undefined, "FAST"); }
@@ -2931,6 +3159,58 @@ async function bootCatalog(){
   if (publicCompany && publicCompany.name) $("#catTitle").textContent = `Catalogue ${publicCompany.name}`;
   showCatalog();
 }
+
+/* ================= Import d'un plan et structure par IA ================= */
+async function importDieline(file){
+  const name = file.name.replace(/\.[^.]+$/, ""), txt = await file.text();
+  let r;
+  try { r = /\.dxf$/i.test(file.name) || /^\s*0\s*\r?\nSECTION/.test(txt) ? parseDXF(txt) : parseSVG(txt); }
+  catch (e) { toast("Fichier illisible : utilisez un SVG ou un DXF de plan de découpe."); return; }
+  if (!r.segs.length){ toast("Aucun trait de coupe trouvé dans ce fichier."); return; }
+  const k = r.k || IMPORT_UNITS[r.unit] && IMPORT_UNITS[r.unit][1] || 1;
+  const D = {name, segs:r.segs.map(([a, b, t]) => [a.map(v => +v.toFixed(3)), b.map(v => +v.toFixed(3)), t]), unit:r.k && r.unit === "custom" ? "custom" : r.unit, k, fold:90, flip:false, glue:true, folds:{}};
+  try { importCache.key = ""; importGeometry(D); }
+  catch (e) { toast(e.message || "Plan non exploitable."); return; }
+  const G = importCache.res;
+  if (G.w > 2000 || G.h > 2000 || G.w < 10) toast(`Taille détectée ${fmt0.format(G.w)} × ${fmt0.format(G.h)} mm : vérifiez l'unité du fichier.`);
+  state.importData = D; state.model = "import"; state.dimMode = "int"; fixMat(); selEl = null;
+  renderControls(); changed("geo"); refresh("geo", true);
+  if (!reduce){ anim = {from:0, to:1, t0:performance.now() + 200, dur:2600}; setFold(0); }
+  toast(`Plan « ${name} » importé : ${G.n} face(s), ${fmt0.format(G.w)} × ${fmt0.format(G.h)} mm`);
+}
+$("#dieImport").addEventListener("change", e => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) importDieline(f); });
+$("#dims").addEventListener("change", e => {
+  const D = state.importData; if (!D || state.model !== "import") return;
+  if (e.target.id === "impUnit" && IMPORT_UNITS[e.target.value]){ D.unit = e.target.value; D.k = IMPORT_UNITS[D.unit][1]; importCache.key = ""; }
+  else if (e.target.id === "impFold"){ D.fold = clamp(+e.target.value || 0, 0, 180); D.folds = {}; }
+  else if (e.target.id === "impFlip"){ D.flip = e.target.checked; }
+  else if (e.target.id === "impGlue"){ D.glue = e.target.checked; changed("art"); renderQuote(); return; }
+  else if (e.target.dataset.impf){ D.folds = D.folds || {}; const v = +e.target.value; if (Number.isFinite(v)) D.folds[e.target.dataset.impf] = clamp(v, -180, 180); else delete D.folds[e.target.dataset.impf]; changed("geo"); return; }
+  else return;
+  try { renderControls(); changed("geo"); } catch (err) { toast(err.message || "Plan non exploitable."); }
+});
+$("#aiStructBtn").addEventListener("click", e => { const o = $("#aiStruct").hidden; $("#aiStruct").hidden = !o; e.currentTarget.setAttribute("aria-expanded", o); if (o) $("#aiStructTxt").focus(); });
+$("#aiStructGo").addEventListener("click", async e => {
+  const txt = $("#aiStructTxt").value.trim(); if (txt.length < 4){ toast("Décrivez le produit en quelques mots."); return; }
+  const btn = e.currentTarget; btn.disabled = true; btn.textContent = "Analyse…";
+  const cat = CAT_T().map(t => `- ${t.id} : ${t.name} (${t.sub}) — ${t.desc} Cotes en mm : ${DIM_FIELDS[t.id].map(([k2, l, mn, mx]) => `${k2} = ${l} [${mn}–${mx}]`).join(", ")}. Matières : ${t.mats.join(", ")}.`).join("\n");
+  try {
+    const res = await cap.sample.json(`Tu es ingénieur structure packaging dans une imprimerie tunisienne. Propose jusqu'à 3 structures d'emballage adaptées au produit décrit, choisies UNIQUEMENT dans ce catalogue :
+${cat}
+Produit : « ${txt} »
+Calcule des cotes intérieures réalistes avec 2 à 5 mm de jeu autour du produit (ou, pour une étiquette, des cotes adaptées au contenant). Respecte les plages indiquées.
+Réponds uniquement avec un tableau JSON : [{"tpl":"id du catalogue","dims":{"clé":nombre,...},"mat":"id de matière","titre":"5 mots max","raison":"une phrase : pourquoi cette structure et ces cotes"}].`, {modelTier:"default"});
+    const ok = (Array.isArray(res) ? res : []).map(x => { const t = x && CAT_T().find(q => q.id === x.tpl); if (!t) return null;
+      const dims = {}; for (const [k2, , mn, mx] of DIM_FIELDS[t.id]){ const v = +(x.dims || {})[k2]; if (Number.isFinite(v)) dims[k2] = +clamp(v, mn, mx).toFixed(1); }
+      return {t, dims, mat: t.mats.includes(x.mat) ? x.mat : null, titre:String(x.titre || t.name).slice(0, 50), raison:String(x.raison || "").slice(0, 220)}; }).filter(Boolean).slice(0, 3);
+    if (!ok.length) throw {code:"invalid_json"};
+    $("#aiStructOut").innerHTML = ok.map((x, i) => `<button type="button" class="ai-card" data-sx="${i}"><svg viewBox="0 0 42 34" width="34" height="28" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">${ICONS[x.t.icon]}</svg><span><b>${esc(x.titre)}</b><small>${esc(x.t.name)} · ${esc(Object.entries(x.dims).map(([k2, v]) => `${k2} ${fmt1.format(v)}`).join(" × "))} mm. ${esc(x.raison)}</small></span></button>`).join("");
+    $("#aiStructOut").onclick = ev => { const b = ev.target.closest("[data-sx]"); if (!b) return; const x = ok[+b.dataset.sx];
+      state.model = x.t.id; state.dimMode = "int"; state.dims[x.t.id] = merge(state.dims[x.t.id], x.dims); if (x.mat) state.mat[x.t.kind] = x.mat; fixMat(); selEl = null;
+      renderControls(); changed("geo"); refresh("geo", true); toast(`Structure « ${x.titre} » appliquée`); };
+  } catch (err) { toast(err && err.code === "rate_limited" ? "Trop de demandes, réessayez dans un instant." : err && err.code === "not_granted" ? "L'assistant IA n'est pas autorisé pour cette page." : "Pas de proposition exploitable, reformulez la description."); }
+  btn.disabled = false; btn.textContent = "Proposer des structures";
+});
 
 /* ================= Composition multi-produits ================= */
 let compoKey = "";
@@ -3080,7 +3360,7 @@ $("#kitSel").addEventListener("change", renderKits); $("#kitSave").addEventListe
 function onCapsReady(){
   $("#modeTag").textContent = cloud() ? "Équipe · partagé" : "Ce navigateur";
   $("#modeTag").classList.toggle("cloud", cloud());
-  $("#aiRow").hidden = !cap.sample;
+  $("#aiRow").hidden = !cap.sample; $("#aiStructBtn").hidden = !cap.sample;
   $("#expNote").textContent = cap.downloads ? "Chaque fichier vous est proposé à l'enregistrement." : "";
   addEventListener("hashchange", () => { if (/^#s-/.test(location.hash) || catalogMode() || clientMode) location.reload(); });
   const m = /^#s-([A-Za-z0-9]+)$/.exec(location.hash);
