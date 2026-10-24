@@ -243,6 +243,10 @@ details > :not(summary){margin-top:8px}
 .scene-tools{top:auto!important;bottom:10px;align-items:center;background:color-mix(in srgb,var(--surface) 85%,transparent);border:1px solid var(--line);border-radius:6px;padding:4px 8px;flex-wrap:wrap;max-width:calc(100% - 20px)}
 .scene-tools select{padding:3px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font-size:12px}
 .scene-tools input[type=range]{width:80px}
+.client #compoBtn{display:none}
+.compo-list{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.compo-list li{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:5px;padding:6px 8px;font-size:13px}
+.compo-list li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .client .scene-tools{display:flex}
 
 .overlay{position:fixed;inset:0;z-index:30;background:rgba(10,12,15,.45);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding-block:calc(24px + env(safe-area-inset-top,0px)) 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -339,7 +343,9 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <div class="field"><label for="foilColor">Couleur de dorure</label><select id="foilColor"></select></div>
           <div class="field"><label for="relief">Relief de la marque</label><select id="relief"></select></div>
         </div>
-        <label class="check" id="insideRow"><input type="checkbox" id="insideOn"> Impression intérieure <input type="color" id="insideColor" aria-label="Couleur intérieure"></label>
+        <div class="row" id="insideRow"><label class="check"><input type="checkbox" id="insideOn"> Impression intérieure</label> <input type="color" id="insideColor" aria-label="Couleur intérieure">
+          <label class="btn small file-btn">Visuel intérieur<input type="file" id="insideImg" accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>
+          <img class="thumb" id="insideThumb" alt="Visuel intérieur" hidden><button type="button" class="btn small" id="insideClear" hidden>Retirer</button></div>
       </div>
     </section>
 
@@ -370,6 +376,10 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <label class="btn file-btn">Importer un logo<input type="file" id="logo" accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>
           <button type="button" class="btn" id="logoClear" hidden>Retirer</button>
         </div>
+        <div class="field"><label for="kitSel">Charte graphique client</label>
+          <div class="row"><select id="kitSel" style="flex:1 1 140px;min-width:0;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)"></select>
+          <button type="button" class="btn small" id="kitApply">Appliquer</button><button type="button" class="btn small" id="kitSave">Enregistrer</button><button type="button" class="btn small" id="kitDel">Supprimer</button></div>
+          <p class="hint">Enregistre marque, couleurs, motif, logo et dorure sous le nom du client, pour les réutiliser sur toute sa gamme.</p></div>
         <div class="row" id="aiRow" hidden><button type="button" class="btn" id="aiBtn">Proposer 3 designs (IA)</button></div>
         <div class="ai-list" id="aiList"></div>
         <p class="hint">« Néroli » est une marque fictive d'exemple : remplacez-la par celle du client.</p>
@@ -473,9 +483,13 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <button class="exp" data-exp="diepdf" type="button"><b>Plan de découpe</b><small>Échelle 1:1, coupe / rainage, cartouche</small><span>.pdf</span></button>
       <button class="exp" data-exp="tplsvg" type="button"><b>Gabarit graphiste</b><small>Calques COUPE, RAINAGE, FOND_PERDU, SECURITE</small><span>.svg</span></button>
       <button class="exp" data-exp="bat" type="button"><b>Bon à tirer (BAT)</b><small>Maquette, visuel, contrôle prépresse, accord</small><span>.pdf</span></button>
-      <button class="exp" data-exp="png3d" type="button"><b>Maquette 3D haute définition</b><small>2000 × 1500 px, angle de vue actuel</small><span>.png</span></button>
-      <button class="exp" data-exp="video" type="button"><b>Animation de pliage</b><small>Vidéo 1280 × 720, pliage puis rotation</small><span>.webm</span></button>
+      <button class="exp" data-exp="png3d" type="button"><b>Maquette 3D haute définition</b><small id="resNote">Résolution et format ci-dessous, angle de vue actuel</small><span>.png</span></button>
+      <button class="exp" data-exp="video" type="button"><b>Animation de pliage</b><small>Vidéo Full HD, pliage puis rotation</small><span class="vext">.mp4</span></button>
+      <button class="exp" data-exp="spin" type="button"><b>Vidéo 360°</b><small>Rotation complète, idéale pour les réseaux sociaux</small><span class="vext">.mp4</span></button>
       <button class="exp" data-exp="flat" type="button"><b>Visuel à plat avec traits</b><small>Création + traits de coupe, pour contrôle</small><span>.png</span></button>
+      <div class="row"><label class="lbl" for="expRes">Image</label>
+        <select id="expRes" style="padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)"><option value="2000">HD (2000 px)</option><option value="3840">4K (3840 px)</option><option value="7680">8K (7680 px)</option></select>
+        <select id="expRatio" aria-label="Format de l'image" style="padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)"><option value="0.75">4:3</option><option value="0.5625">16:9</option><option value="1">Carré</option><option value="1.25">4:5 (portrait)</option></select></div>
       <div class="row"><label class="lbl" for="expBg">Fond des maquettes</label>
         <select id="expBg" style="padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)"><option value="scene">Scène affichée</option><option value="white">Blanc</option><option value="transparent">Transparent (PNG)</option><option value="color">Couleur</option></select>
         <input type="color" id="expBgColor" value="#e8e4dc" aria-label="Couleur de fond"></div>
@@ -494,6 +508,8 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <select id="sceneSel" aria-label="Scène de présentation"></select>
           <label class="lbl" for="lightAz">Lumière</label><input type="range" id="lightAz" min="0" max="359" aria-label="Orientation de la lumière">
           <input type="range" id="lightPow" min="40" max="180" aria-label="Intensité de la lumière">
+          <button class="btn small" id="dimsBtn" type="button" aria-pressed="false">Cotes</button>
+          <button class="btn small" id="compoBtn" type="button">Composition</button>
         </div>
         <span class="rec" id="recTag" hidden>● Enregistrement</span>
       </div>
@@ -579,6 +595,20 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
     <div class="body" id="shareBody"></div>
   </div>
 </div>
+<div class="overlay" id="compoDlg" hidden role="dialog" aria-modal="true" aria-labelledby="compoTitle">
+  <div class="dialog">
+    <header><h2 id="compoTitle">Composition : présenter une gamme</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body">
+      <p class="hint">Réunissez jusqu'à 8 emballages dans la même scène 3D, à l'échelle réelle. L'export PNG et la vidéo 360° reprennent la composition ; le BAT et le devis restent sur le projet en cours.</p>
+      <label class="check"><input type="checkbox" id="compoOn"> Afficher la composition dans la vue 3D</label>
+      <div class="grid2">
+        <div class="field"><label for="compoLayout">Disposition</label><select id="compoLayout"><option value="row">Alignés</option><option value="arc">En arc</option><option value="stagger">En quinconce</option></select></div>
+        <div class="field"><label for="compoAdd">Ajouter</label><div class="row"><select id="compoAdd" style="flex:1;min-width:0"></select><button class="btn small" type="button" id="compoAddBtn">Ajouter</button></div></div>
+      </div>
+      <ol class="compo-list" id="compoList"></ol>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -647,9 +677,12 @@ const ICONS = {
   pyramid:'<path d="M21 3L5 27l16 5 16-5z"/><path d="M21 3v29M5 27l16-6 16 6"/>',
   gable:'<path d="M10 14h22v18H10z"/><path d="M10 14l11-6 11 6"/><path d="M15 9V2h12v7"/><rect x="18" y="3.5" width="6" height="2" rx="1"/>',
   bag:'<path d="M9 11h24l-2 21H11z"/><path d="M15 11c0-7 12-7 12 0"/><path d="M9 11l4 3h16l4-3"/>',
+  can:'<path d="M13 5h16l2 4v19l-2 4H13l-2-4V9z"/><path d="M11 10h20M11 27h20"/>',
+  tube:'<path d="M15 26l-3-21h18l-3 21z"/><path d="M12 5h18"/><path d="M16 26h10v5H16z"/>',
+  pouch:'<path d="M10 5h22v4l2 21c-4 3-22 3-26 0l2-21z"/><path d="M10 10h22"/><path d="M12 25c5 3 13 3 18 0"/>',
   lid:'<ellipse cx="21" cy="8" rx="12" ry="4"/><path d="M9 8v4c0 2 5.4 4 12 4s12-2 12-4V8"/><ellipse cx="21" cy="8" rx="6" ry="2" fill="currentColor" fill-opacity=".25"/><path d="M11 16v14h20V16"/>',
 };
-const CATS = [["all","Tous"],["etui","Étuis"],["boite","Boîtes"],["coffret","Coffrets"],["plv","Présentoirs"],["alim","Alimentaire"],["sac","Sacs"],["etiquette","Étiquettes"]];
+const CATS = [["all","Tous"],["etui","Étuis"],["boite","Boîtes"],["coffret","Coffrets"],["plv","Présentoirs"],["alim","Alimentaire"],["sac","Sacs"],["cont","Contenants"],["etiquette","Étiquettes"]];
 const ALL_BOX = ["gc1","duplex","kraft","micro"], PAPERS = ["kraftp","whitep"], ALL_LABEL = ["couche","ppw","ppt","verge"];
 const TEMPLATES = [
   {id:"rte", cat:"etui", icon:"tuck", name:"Étui rabats inversés", sub:"Patte rentrante haut / bas", kind:"box", window:true, mats:ALL_BOX, desc:"Étui pliant à rabats rentrants opposés, fentes de verrouillage et patte de collage — cosmétique, pharmacie, agroalimentaire.", fold:"Pliage"},
@@ -670,6 +703,9 @@ const TEMPLATES = [
   {id:"labelPot", cat:"etiquette", icon:"pot", name:"Étiquette pot", sub:"Bocal, miel, harissa", kind:"label", container:"pot", mats:ALL_LABEL, desc:"Étiquette adhésive en bobine, posée sur pot ou bocal cylindrique.", fold:"Enroulement"},
   {id:"labelBottle", cat:"etiquette", icon:"bottle", name:"Étiquette bouteille", sub:"Huile, vin, sirop", kind:"label", container:"bouteille", mats:ALL_LABEL, desc:"Étiquette adhésive posée sur le corps cylindrique d'une bouteille.", fold:"Enroulement"},
   {id:"labelLid", cat:"etiquette", icon:"lid", name:"Étiquette couvercle", sub:"Ronde, dessus de pot", kind:"label", container:"couvercle", mats:ALL_LABEL, desc:"Étiquette ronde posée sur le couvercle d'un pot (miel, confiture, crème).", fold:"Pose"},
+  {id:"can", cat:"cont", icon:"can", name:"Canette", sub:"Sleeve intégral", kind:"label", special:"can", mats:["ppw","ppt"], desc:"Canette aluminium habillée d'un sleeve imprimé sur toute la hauteur — boissons, jus, sodas artisanaux.", fold:"Enroulement"},
+  {id:"tube", cat:"cont", icon:"tube", name:"Tube cosmétique", sub:"Décor intégral, soudé", kind:"label", special:"tube", mats:["ppw","ppt","couche"], desc:"Tube souple à décor intégral, soudé en tête, bouchon à vis — crèmes, gels, baumes, dentifrices.", fold:"Formage"},
+  {id:"pouch", cat:"cont", icon:"pouch", name:"Sachet doypack", sub:"Tient debout, zip", kind:"label", special:"pouch", mats:["ppw","ppt"], desc:"Sachet souple qui tient debout grâce à son fond à soufflet, zip refermable — café, épices, fruits secs, snacks.", fold:"Formage", extra3d:true},
   {id:"cup", cat:"alim", icon:"cup", name:"Gobelet carton", sub:"Jupe imprimée", kind:"cup", mats:["pe"], desc:"Jupe de gobelet développée en secteur de couronne (calcul exact du cône, recouvrement 8 mm) — café, boissons chaudes. Formage par le fabricant de gobelets.", fold:"Enroulement"},
 ];
 const TPL = () => TEMPLATES.find(t => t.id === state.model) || TEMPLATES[0];
@@ -694,6 +730,9 @@ const DIM_FIELDS = {
   pyramid:[["b","Côté de la base",40,200],["h","Hauteur",30,300]],
   gable:[["L","Longueur",50,300],["W","Profondeur",40,200],["H","Hauteur du corps",40,250],["r","Hauteur du toit",15,140],["hh","Hauteur de l'anse",30,90]],
   bag:[["L","Largeur",120,450],["G","Soufflet",50,200],["H","Hauteur",150,500]],
+  can:[["d","Diamètre",50,70],["ch","Hauteur",90,170]],
+  tube:[["d","Diamètre",20,60],["L","Longueur",70,220]],
+  pouch:[["W","Largeur",80,300],["H","Hauteur",100,400],["G","Fond à soufflet",30,120]],
 };
 const MAT = {
   box:{
@@ -742,17 +781,18 @@ const DEFAULT = {
   model:"rte", dimMode:"int",
   dims:{rte:{L:60,W:40,H:150}, ste:{L:80,W:30,H:120}, sleeve:{L:180,W:30,H:110}, rsc:{L:200,W:150,H:120}, tray:{L:220,W:150,H:45}, mailer:{L:250,W:180,H:80},
     labelPot:{lw:200,lh:62,d:75,ch:95,shape:"rect",r:4}, labelBottle:{lw:95,lh:105,d:72,ch:270,shape:"rect",r:3}, labelLid:{lw:60,lh:60,d:72,ch:85,shape:"rond",r:0},
-    hang:{L:60,W:30,H:120,hh:40}, pillow:{W:90,L:150,D:30}, pyramid:{b:80,h:90}, gable:{L:160,W:110,H:90,r:45,hh:50}, bag:{L:240,G:100,H:300}, hex:{a:40,H:110}, coffret:{L:220,W:120,H:40,Hl:30}, drawer:{L:180,W:120,H:35}, display:{L:300,W:200,Hf:60,Hs:120,Hh:300}, cup:{D1:80,D2:56,h:93}},
+    hang:{L:60,W:30,H:120,hh:40}, pillow:{W:90,L:150,D:30}, pyramid:{b:80,h:90}, gable:{L:160,W:110,H:90,r:45,hh:50}, bag:{L:240,G:100,H:300}, can:{d:66,ch:115,lw:207.3,lh:95,shape:"rect",r:0}, tube:{d:35,L:150,lw:110,lh:150,shape:"rect",r:0}, pouch:{W:160,H:230,G:80,lw:160,lh:230,shape:"rect",r:0}, hex:{a:40,H:110}, coffret:{L:220,W:120,H:40,Hl:30}, drawer:{L:180,W:120,H:35}, display:{L:300,W:200,Hf:60,Hs:120,Hh:300}, cup:{D1:80,D2:56,h:93}},
   window:{on:false, w:30, h:60, y:5, r:4},
   mat:{box:"gc1", label:"couche", cup:"pe"}, print:{box:"cmjn", label:"num", cup:"cmjn"}, lam:{box:"mat", label:"vernis", cup:"none"},
   varnish:false, foil:true, foilColor:"or", relief:"none", raw:false, inside:{on:false, color:"#e2b25a"},
-  scene:"studio", lightAz:35, lightPow:100,
+  scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
   design:{bg:"#123c3a", accent:"#e2b25a", brand:"Néroli", product:"Crème mains à la fleur d'oranger", mention:"75 ml · Fabriqué en Tunisie", pattern:"zellige", legal:"", ean:""},
-  images:{logo:null, full:null}, faces:{}, fullHide:false, elements:[],
+  images:{logo:null, full:null, inside:null}, faces:{}, fullHide:false, elements:[],
   qty:2500, fold:1, showArt:true, showSafe:true
 };
 const NEW_META = () => ({id:null, draftId:null, name:"", client:"", status:"brouillon", createdAt:null, createdBy:null, history:[]});
 let state = structuredClone(DEFAULT), meta = NEW_META(), dirty = false, savedAt = null;
+let compoT = 0;
 let view = "3d", edTab = "auto", faceSel = "front", selEl = null, cat = "all", clientMode = false, shareDoc = null;
 try {
   const saved = JSON.parse(localStorage.getItem("lp-studio-v3") || localStorage.getItem("lp-studio-v2") || "null");
@@ -1003,6 +1043,71 @@ function buildPillow3D(outMat){
   labelMesh.userData = {cup:true, flat, cone:tgt};
   holder.add(labelMesh);
 }
+function wrapMesh(outMat, lw, lh, R, yc){
+  const bb = layout.bb, sx = 120, geo = new THREE.BufferGeometry(), uvs = [], idx = [];
+  for (let j = 0; j <= 1; j++) for (let i = 0; i <= sx; i++){ const x = lw*i/sx, y = lh*j; uvs.push((x - bb.minX)/bb.w, (y - bb.minY)/bb.h); }
+  for (let i = 0; i < sx; i++){ const a = i, c = i + sx + 1; idx.push(a, a+1, c, a+1, c+1, c); }
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array((sx+1)*2*3), 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2)); geo.setIndex(idx);
+  labelMesh = new THREE.Mesh(geo, outMat({transparent:true, alphaTest:.04, side:THREE.DoubleSide}));
+  labelMesh.castShadow = true; labelMesh.userData = {sx, lw, lh, R, yc};
+  holder.add(labelMesh);
+}
+function buildCan3D(outMat){
+  const {d, ch, lw, lh} = state.dims.can, r = d/2;
+  const alu = new THREE.MeshStandardMaterial({color:lin(0xd3d6db), metalness:.95, roughness:.22, side:THREE.DoubleSide});
+  const prof = [[0,2],[r*.72,0],[r*.88,.5],[r*.97,3.5],[r,8],[r,ch - 12],[r*.9,ch - 4.5],[r*.85,ch - 1.5],[r*.88,ch],[r*.8,ch + .4],[r*.77,ch - 1.4],[0,ch - 1.4]];
+  const body = new THREE.Mesh(new THREE.LatheGeometry(prof.map(([x,y]) => new THREE.Vector2(x,y)), 72), alu); body.castShadow = true;
+  const tab = new THREE.Mesh(new THREE.BoxGeometry(r*.45, .7, r*.22), alu); tab.position.set(0, ch - .9, -r*.22);
+  holder.add(body, tab);
+  wrapMesh(outMat, lw, lh, r + .25, 8 + lh/2);
+}
+function morphMesh(outMat, flat, tgt, uvs, idx){
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(tgt.length), 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2)); geo.setIndex(idx);
+  labelMesh = new THREE.Mesh(geo, outMat({side:THREE.DoubleSide})); labelMesh.castShadow = true;
+  labelMesh.userData = {cup:true, flat, cone:tgt};
+  holder.add(labelMesh);
+}
+const gridIdx = (idx, off, nx, ny) => { for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++){ const a = off + j*(nx + 1) + i, b2 = a + nx + 1; idx.push(a, a + 1, b2, a + 1, b2 + 1, b2); } };
+function buildTube3D(outMat){
+  const c = state.dims.tube, r = c.d/2, lw = c.lw, L = c.lh, capH = clamp(L*.14, 12, 24), bb = layout.bb, nx = 72, ny = 48;
+  const flat = [], tgt = [], uvs = [], idx = [];
+  for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++){
+    const u = i/nx, v = j/ny, x = u*lw, y = v*L, q = clamp((v - .52)/.48, 0, 1), s = q*q*(3 - 2*q), th = (u - .5)*2*Math.PI;
+    uvs.push((x - bb.minX)/bb.w, (y - bb.minY)/bb.h);
+    flat.push(x - lw/2, y + capH + 6, 0);
+    tgt.push(r*(1 + s*(Math.PI/2 - 1))*Math.sin(th), capH + 3 + y, r*Math.max(.025, 1 - s)*Math.cos(th));
+  }
+  gridIdx(idx, 0, nx, ny);
+  morphMesh(outMat, flat, tgt, uvs, idx);
+  const capM = new THREE.MeshStandardMaterial({color:lin(0xf4f4f2), roughness:.3});
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(r*.66, r*.7, capH, 48), capM); cap.position.y = capH/2; cap.castShadow = true;
+  const sh = new THREE.Mesh(new THREE.CylinderGeometry(r, r*.66, 3.2, 48), capM); sh.position.y = capH + 1.5;
+  holder.add(cap, sh);
+}
+function buildPouch3D(outMat){
+  const c = state.dims.pouch, W = c.W, H = c.H, G = c.G, bb = layout.bb, nx = 40, ny = 64, flat = [], tgt = [], uvs = [], idx = [];
+  const puff = (x, y) => { const sx = Math.pow(Math.sin(Math.PI*x/W), .55), top = 1 - clamp((y - (H - 32))/16, 0, 1); return sx*top*((G/2)*Math.pow(1 - y/H, 1.4) + W*.06*Math.sin(Math.PI*Math.min(1, y/(H - 24)))); };
+  ["front","back"].forEach((id, k) => {
+    const P = layout.byId[id], off = k*(nx + 1)*(ny + 1);
+    for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++){
+      const x = W*i/nx, y = H*j/ny, [gx, gy] = applyT(P.T, [x, y]), z = puff(x, y), xx = x - W/2;
+      uvs.push((gx - bb.minX)/bb.w, (gy - bb.minY)/bb.h);
+      flat.push(gx - W, gy + 4, 0);
+      tgt.push(k ? -xx : xx, y + .5, k ? -z : z);
+    }
+    gridIdx(idx, off, nx, ny);
+  });
+  morphMesh(outMat, flat, tgt, uvs, idx);
+  const pts = []; for (let i = 0; i <= 40; i++){ const x = W*i/40; pts.push(new THREE.Vector2(x - W/2, puff(x, 0))); } for (let i = 40; i >= 0; i--){ const x = W*i/40; pts.push(new THREE.Vector2(x - W/2, -puff(x, 0))); }
+  const base = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(pts)), new THREE.MeshStandardMaterial({color:lin(state.raw ? "#e9e6df" : state.design.bg), roughness:.5, side:THREE.DoubleSide}));
+  base.rotation.x = Math.PI/2; base.position.y = .6;
+  const zip = new THREE.Mesh(new THREE.BoxGeometry(W*.96, 2.2, .8), new THREE.MeshStandardMaterial({color:0xffffff, transparent:true, opacity:.35, roughness:.2}));
+  zip.position.set(0, H - 40, .6);
+  for (const m of [base, zip]){ holder.add(m); extras3d.push(m); }
+}
 function buildCup(d){
   const r1 = d.D1/2, r2 = Math.min(d.D2, d.D1 - 4)/2, h = d.h, s = Math.hypot(h, r1 - r2), Ro = s*r1/(r1 - r2), Ri = Ro - s, ov = 8, th = 2*Math.PI*r1/Ro, thT = th + ov/Ro, N = 120, pts = [];
   for (let i = 0; i <= N; i++){ const f = -thT/2 + thT*i/N; pts.push([Ro*Math.sin(f), Ro*Math.cos(f)]); }
@@ -1031,7 +1136,18 @@ function buildLabel(d){
   const lid = TPL().container === "couvercle";
   return [{id:"label", name:"Étiquette", poly: lid ? ellipsePoly(d.lw, d.lw) : d.shape === "ovale" ? ellipsePoly(d.lw, d.lh) : roundRectPoly(d.lw, d.lh, Math.min(d.r, d.lw/2, d.lh/2)), role:{type:"label", up:[0,1]}}];
 }
-const BUILDERS = {pillow:buildPillow, pyramid:buildPyramid, gable:buildGable, bag:buildBag, rte:buildRTE, ste:buildSTE, hang:buildHang, sleeve:buildSleeve, rsc:buildRSC, hex:buildHex, coffret:buildCoffret, drawer:buildDrawer, display:buildDisplay, tray:buildTray, mailer:buildMailer, labelPot:buildLabel, labelBottle:buildLabel, labelLid:buildLabel, cup:buildCup};
+function buildWrap(d){
+  const t = TPL();
+  d.lw = +(Math.PI*d.d).toFixed(1); d.lh = t.special === "can" ? Math.max(20, d.ch - 20) : d.L; d.shape = "rect"; d.r = 0;
+  return [{id:"label", name: t.special === "can" ? "Sleeve" : "Décor du tube", poly:R(0,0,d.lw,d.lh), role:{type:"label", up:[0,1]}}];
+}
+function buildPouch(d){
+  d.lw = d.W; d.lh = d.H; // devis : 2 faces imprimées par sachet d.shape = "rect"; d.r = 0;
+  const area = [0, d.G*.2, d.W, d.H - 28];
+  return [{id:"front", name:"Face avant", poly:R(0,0,d.W,d.H), role:{type:"label", up:[0,1], area}},
+          {id:"back", name:"Face arrière", origin:[d.W,0], poly:R(0,0,d.W,d.H), role:{type:"back", up:[0,1], area}}];
+}
+const BUILDERS = {can:buildWrap, tube:buildWrap, pouch:buildPouch, pillow:buildPillow, pyramid:buildPyramid, gable:buildGable, bag:buildBag, rte:buildRTE, ste:buildSTE, hang:buildHang, sleeve:buildSleeve, rsc:buildRSC, hex:buildHex, coffret:buildCoffret, drawer:buildDrawer, display:buildDisplay, tray:buildTray, mailer:buildMailer, labelPot:buildLabel, labelBottle:buildLabel, labelLid:buildLabel, cup:buildCup};
 function dimsText(d = innerDims()){
   const t = TPL(), f = v => fmt1.format(v);
   switch (t.id){
@@ -1045,6 +1161,9 @@ function dimsText(d = innerDims()){
     case "pillow": return `${f(d.W)} × ${f(d.L)} mm, épaisseur ${f(Math.min(d.D, d.W*.8))} mm`;
     case "pyramid": return `base ${f(d.b)} × ${f(d.b)} mm, hauteur ${f(d.h)} mm`;
     case "gable": return `${f(d.L)} × ${f(d.W)} × ${f(d.H)} mm, toit ${f(Math.min(d.r, d.W*.7))} mm, anse ${f(d.hh)} mm`;
+    case "can": return `Ø ${f(d.d)} × ${f(d.ch)} mm, sleeve ${f(Math.PI*d.d)} × ${f(Math.max(20, d.ch - 20))} mm`;
+    case "tube": return `Ø ${f(d.d)} × ${f(d.L)} mm, décor ${f(Math.PI*d.d)} × ${f(d.L)} mm`;
+    case "pouch": return `${f(d.W)} × ${f(d.H)} mm, fond ${f(d.G)} mm`;
     case "bag": return `${f(d.L)} × ${f(d.G)} × ${f(d.H)} mm (largeur × soufflet × hauteur)`;
   }
   if (t.kind === "label") return `${d.lw} × ${d.lh} mm (${d.shape === "ovale" ? "ovale" : "rectangle"}), contenant Ø ${d.d} mm`;
@@ -1218,7 +1337,7 @@ function drawArt(L, pxPerMm, mode = "color"){
     }
   }
   drawElements(ctx, mode);
-  if (k === "label"){ ctx.globalCompositeOperation = "destination-in"; pathPoly(ctx, L.panels[0].gpoly); ctx.fill(); ctx.globalCompositeOperation = "source-over"; }
+  if (k === "label"){ ctx.globalCompositeOperation = "destination-in"; ctx.beginPath(); for (const p of L.panels){ p.gpoly.forEach(([x,y], i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y)); ctx.closePath(); } ctx.fill(); ctx.globalCompositeOperation = "source-over"; }
   return cv;
 }
 function faceFrame(ctx, p, extraRot){
@@ -1388,6 +1507,9 @@ scene.add(key);
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000), new THREE.ShadowMaterial({opacity:.16}));
 ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
 const holder = new THREE.Group(); holder.rotation.order = "YXZ"; scene.add(holder);
+const compoGroup = new THREE.Group(); compoGroup.visible = false; scene.add(compoGroup);
+const dimGroup = new THREE.Group(); dimGroup.visible = false; scene.add(dimGroup);
+const viewTarget = () => compoGroup.visible ? compoGroup : holder;
 let layout = null, artCanvas = null, pbrCanvas = null, texture = null, pbrTex = null, labelMesh = null, autoFrame = true;
 const box3 = new THREE.Box3(), v = new THREE.Vector3();
 const lin = c => new THREE.Color(c).convertSRGBToLinear();
@@ -1449,6 +1571,25 @@ function makeTextures(){
   texture = new THREE.CanvasTexture(artCanvas); texture.encoding = THREE.sRGBEncoding; texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
   pbrTex = new THREE.CanvasTexture(pbrCanvas); pbrTex.anisotropy = texture.anisotropy;
 }
+// Visuel intérieur dans le repère du plan, en miroir pour se lire correctement depuis l'intérieur de la boîte.
+function insideCanvas(){
+  const im = getImg(state.images.inside); if (!im || !layout) return null;
+  const bb = layout.bb, s = Math.min(6, 2048/Math.max(bb.w, bb.h)), c = document.createElement("canvas");
+  c.width = Math.ceil(bb.w*s); c.height = Math.ceil(bb.h*s);
+  const x = c.getContext("2d"); x.fillStyle = state.inside.color; x.fillRect(0, 0, c.width, c.height);
+  const k = Math.max(c.width/im.naturalWidth, c.height/im.naturalHeight), w = im.naturalWidth*k, h = im.naturalHeight*k;
+  x.translate(c.width, 0); x.scale(-1, 1); x.drawImage(im, (c.width - w)/2, (c.height - h)/2, w, h);
+  return c;
+}
+// Fichier d'impression du verso : visuel à l'endroit, plan en miroir (feuille retournée), traits de coupe en rouge.
+function versoCanvas(){
+  const ic = insideCanvas(); if (!ic) return null;
+  const bb = layout.bb, s = ic.width/bb.w, c = document.createElement("canvas"); c.width = ic.width; c.height = ic.height;
+  const x = c.getContext("2d"); x.translate(c.width, 0); x.scale(-1, 1); x.drawImage(ic, 0, 0); x.setTransform(1, 0, 0, 1, 0, 0);
+  x.strokeStyle = "#E30613"; x.lineWidth = 2; x.beginPath();
+  for (const [a, b] of layout.cuts){ x.moveTo(c.width - (a[0] - bb.minX)*s, (bb.maxY - a[1])*s); x.lineTo(c.width - (b[0] - bb.minX)*s, (bb.maxY - b[1])*s); }
+  x.stroke(); return c;
+}
 function build3D(){
   disposeHolder(); makeTextures();
   const k = kind(), bb = layout.bb;
@@ -1456,10 +1597,15 @@ function build3D(){
   const outMat = extra => new THREE.MeshStandardMaterial(Object.assign({map:texture, roughnessMap:pbrTex, metalnessMap:pbrTex, roughness:1, metalness:1}, relief ? {bumpMap:pbrTex, bumpScale:2} : {}, extra));
   extras3d = [];
   if (TPL().special === "pillow"){ buildPillow3D(outMat); return; }
+  if (TPL().special === "can"){ buildCan3D(outMat); return; }
+  if (TPL().special === "tube"){ buildTube3D(outMat); return; }
+  if (TPL().special === "pouch"){ buildPouch3D(outMat); return; }
   if (k === "box"){
     const e = layout.e, m = MAT.box[state.mat.box];
     const matOut = outMat({side:THREE.FrontSide});
-    const matIn = new THREE.MeshStandardMaterial({color:lin(state.inside.on ? state.inside.color : m.inside), roughness:.9, side:THREE.BackSide});
+    const inCv = state.inside.on && insideCanvas(), inTex = inCv ? new THREE.CanvasTexture(inCv) : null;
+    if (inTex){ inTex.encoding = THREE.sRGBEncoding; inTex.anisotropy = texture.anisotropy; }
+    const matIn = new THREE.MeshStandardMaterial(inTex ? {map:inTex, roughness:.85, side:THREE.BackSide} : {color:lin(state.inside.on ? state.inside.color : m.inside), roughness:.9, side:THREE.BackSide});
     const edgeMat = new THREE.MeshStandardMaterial({color:lin(m.edge), roughness:.95});
     const film = new THREE.MeshStandardMaterial({color:0xffffff, transparent:true, opacity:.14, roughness:.04, metalness:0, side:THREE.DoubleSide, depthWrite:false});
     const nodes = {};
@@ -1549,6 +1695,7 @@ function applyFold(t){
     const {flat, cone} = labelMesh.userData, e = ease(t), arr = labelMesh.geometry.attributes.position.array;
     for (let i = 0; i < arr.length; i++) arr[i] = flat[i]*(1 - e) + cone[i]*e;
     labelMesh.geometry.attributes.position.needsUpdate = true; labelMesh.geometry.computeVertexNormals(); labelMesh.geometry.computeBoundingSphere();
+    for (const x of extras3d) x.visible = t > .93;
     return;
   }
   if (kind() === "box"){
@@ -1588,7 +1735,7 @@ function applyFold(t){
   }
 }
 function frame(snap){
-  holder.updateMatrixWorld(true); box3.setFromObject(holder);
+  const tg = viewTarget(); tg.updateMatrixWorld(true); box3.setFromObject(tg);
   const size = box3.getSize(new THREE.Vector3()), c = box3.getCenter(new THREE.Vector3());
   const rad = Math.max(size.length()/2, 20), dist = rad/Math.sin(camera.fov*Math.PI/360)*(camera.aspect < 1 ? 1.25 : 1.02);
   const dir = camera.position.clone().sub(controls.target).normalize(), k = snap ? 1 : .12;
@@ -1617,16 +1764,17 @@ function loop(now){
 }
 function frameStep(now){
   if (recState){
-    const t = (now - recState.t0)/1000;
-    setFold(t < .4 ? 0 : t < 3.4 ? (t - .4)/3 : 1);
-    if (t > 3.6){ const a = (t - 3.6)/4*Math.PI*2, d0 = recState.dir0; camera.position.set(controls.target.x + d0.x*Math.cos(a) + d0.z*Math.sin(a), controls.target.y + d0.y, controls.target.z - d0.x*Math.sin(a) + d0.z*Math.cos(a)); }
-    if (t > 7.8 && recState.end){ const f = recState.end; recState.end = null; f(); }
+    const t = (now - recState.t0)/1000 + (recState.spin ? 3.6 : 0);
+    if (!recState.spin) setFold(t < .4 ? 0 : t < 3.4 ? (t - .4)/3 : 1);
+    if (t > 3.6){ const a = Math.min(1, (t - 3.6)/(recState.spin ? 6 : 4))*Math.PI*2, d0 = recState.dir0; camera.position.set(controls.target.x + d0.x*Math.cos(a) + d0.z*Math.sin(a), controls.target.y + d0.y, controls.target.z - d0.x*Math.sin(a) + d0.z*Math.cos(a)); }
+    if (t > (recState.spin ? 9.8 : 7.8) && recState.end){ const f = recState.end; recState.end = null; f(); }
   } else if (anim){
     const p = clamp((now - anim.t0)/anim.dur, 0, 1);
     setFold(anim.from + (anim.to - anim.from)*p);
     if (p >= 1){ if (anim.pingpong) anim = {...anim, from:anim.to, to:anim.from, t0:now}; else { anim = null; $("#animate").setAttribute("aria-pressed", "false"); } }
   }
   if (autoFrame) frame(false);
+  if (state.showDims && (++dimTick % 8 === 0)) updateDims(); else if (!state.showDims && dimGroup.visible) dimGroup.visible = false;
   if (!recState) controls.update(); else camera.lookAt(controls.target);
   renderer.render(scene, camera);
 }
@@ -1639,36 +1787,41 @@ function setBg(mode){
   else if (mode === "white") scene.background = new THREE.Color(0xffffff);
   else if (mode === "color") scene.background = new THREE.Color($("#expBgColor").value);
 }
-function captureMockup(w, h, bgMode, jpeg){
+function captureMockup(w, h, bgMode, jpeg, asBlob){
+  const cvis = compoGroup.visible, dvis = dimGroup.visible;
+  if (jpeg){ compoGroup.visible = false; dimGroup.visible = false; holder.visible = true; }
   const pr = renderer.getPixelRatio(), size = renderer.getSize(new THREE.Vector2());
   const pos = camera.position.clone(), tgt = controls.target.clone(), asp = camera.aspect, fold = state.fold;
   renderer.setPixelRatio(1); renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
   if (kind() === "box") applyFold(1);
   frame(true); setBg(jpeg && bgMode === "transparent" ? "white" : bgMode);
   renderer.render(scene, camera);
-  const url = jpeg ? renderer.domElement.toDataURL("image/jpeg", .9) : renderer.domElement.toDataURL("image/png");
+  const url = asBlob ? new Promise(r => renderer.domElement.toBlob(r, "image/png")) : jpeg ? renderer.domElement.toDataURL("image/jpeg", .9) : renderer.domElement.toDataURL("image/png");
+  compoGroup.visible = cvis; holder.visible = !cvis; dimGroup.visible = dvis;
   renderer.setPixelRatio(pr); renderer.setSize(size.x, size.y, false); camera.aspect = asp; camera.updateProjectionMatrix();
   camera.position.copy(pos); controls.target.copy(tgt); applyTheme(); renderer.setClearColor(0x000000, 1); applyFold(fold);
   return url;
 }
-async function exportVideo(){
+const VIDEO_MIMES = ["video/mp4;codecs=avc1.640028","video/mp4;codecs=avc1.42E01E","video/mp4","video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm"];
+const videoMime = () => window.MediaRecorder && VIDEO_MIMES.find(m => MediaRecorder.isTypeSupported(m));
+async function exportVideo(spin){
   const cv = renderer.domElement;
-  const mime = window.MediaRecorder && ["video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm"].find(m => MediaRecorder.isTypeSupported(m));
+  const mime = videoMime(), ext = mime && mime.startsWith("video/mp4") ? "mp4" : "webm";
   if (!cv.captureStream || !mime){ toast("La vidéo n'est pas prise en charge par ce navigateur."); return; }
   const pr = renderer.getPixelRatio(), size = renderer.getSize(new THREE.Vector2()), asp = camera.aspect, pos = camera.position.clone(), tgt = controls.target.clone();
-  anim = null; renderer.setPixelRatio(1); renderer.setSize(1280, 720, false); camera.aspect = 1280/720; camera.updateProjectionMatrix();
+  anim = null; renderer.setPixelRatio(1); renderer.setSize(1920, 1080, false); camera.aspect = 1920/1080; camera.updateProjectionMatrix();
   const bg = $("#expBg").value; setBg(bg === "transparent" ? "white" : bg);
-  setFold(0); autoFrame = true; frame(true);
-  const stream = cv.captureStream(30), rec = new MediaRecorder(stream, {mimeType:mime, videoBitsPerSecond:8e6}), chunks = [];
+  setFold(spin ? 1 : 0); autoFrame = true; frame(true);
+  const stream = cv.captureStream(30), rec = new MediaRecorder(stream, {mimeType:mime, videoBitsPerSecond:12e6}), chunks = [];
   rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
   const stopped = new Promise(r => rec.onstop = r);
-  $("#recTag").hidden = false; toast("Enregistrement de l'animation (8 s)…");
-  await new Promise(r => { recState = {t0:performance.now(), dir0:camera.position.clone().sub(controls.target), end:r}; rec.start(250); });
+  $("#recTag").hidden = false; toast(spin ? "Enregistrement de la rotation 360° (6 s)…" : "Enregistrement de l'animation (8 s)…");
+  await new Promise(r => { recState = {t0:performance.now(), dir0:camera.position.clone().sub(controls.target), end:r, spin:!!spin}; rec.start(250); });
   rec.stop(); await stopped; stream.getTracks().forEach(t => t.stop());
   recState = null; $("#recTag").hidden = true;
   renderer.setPixelRatio(pr); renderer.setSize(size.x, size.y, false); camera.aspect = asp; camera.updateProjectionMatrix();
   camera.position.copy(pos); controls.target.copy(tgt); applyTheme(); setFold(1); resize();
-  await saveFile(`${slug()}_animation.webm`, new Blob(chunks, {type:"video/webm"}));
+  await saveFile(`${slug()}_${spin ? "rotation-360" : "animation"}.${ext}`, new Blob(chunks, {type:mime.split(";")[0]}));
 }
 
 /* ================= Plan de découpe (SVG) et éditeur ================= */
@@ -1773,7 +1926,8 @@ function quote(qty){
     add("Support", `${fmt0.format(sheets)} feuilles × ${fmt3.format(B.sheet[state.mat.box])}`, sheets*B.sheet[state.mat.box]);
     add("Plaques offset", `${B.plates[pr]} plaque(s) × ${fmt0.format(B.platePrice)}`, B.plates[pr]*B.platePrice);
     add("Impression", `calage + ${fmt0.format(sheets)} passages`, B.printCal[pr] + sheets*B.printSheet[pr]);
-    if (state.inside.on) add("Impression intérieure", "1 couleur, calage + passages", B.insideCal + sheets*B.insideSheet);
+    if (state.inside.on && state.images.inside) add("Impression intérieure quadri", `plaques + calage + ${fmt0.format(sheets)} passages`, B.plates.cmjn*B.platePrice + B.printCal.cmjn + sheets*B.printSheet.cmjn);
+    else if (state.inside.on) add("Impression intérieure", "1 couleur, calage + passages", B.insideCal + sheets*B.insideSheet);
     add(LAM.box[lam], `${fmt0.format(sheets)} feuilles`, sheets*B.lam[lam]);
     if (state.varnish) add("Vernis sélectif UV", "calage + passages", B.varnishCal + sheets*B.varnishSheet);
     if (state.foil || state.elements.some(x => x.foil)) add("Dorure à chaud", "cliché, calage + passages", B.foilCal + sheets*B.foilSheet);
@@ -1804,7 +1958,7 @@ function quote(qty){
     const Lb = Pr.label, {lw, lh, shape} = state.dims[state.model], across = Math.floor((Lb.web - 10)/(lw + Lb.gap));
     tech.push(["Format étiquette", `${fmt1.format(lw)} × ${fmt1.format(lh)} mm`], ["Laize machine", `${Lb.web} mm`]);
     if (across < 1) return {error:`L'étiquette dépasse la laize utile (${Lb.web - 10} mm).`, tech};
-    const pas = lh + Lb.gap, m = Math.ceil(qty/across)*pas/1000*(1 + Pr.gache/100) + Lb.calM;
+    const pas = lh + Lb.gap, m = Math.ceil(qty*(TPL().special === "pouch" ? 2 : 1)/across)*pas/1000*(1 + Pr.gache/100) + Lb.calM;
     const bandW = (across*(lw + Lb.gap) + 10)/1000, m2 = m*bandW, pr = state.print.label, fin = state.lam.label;
     add("Support adhésif", `${fmt1.format(m2)} m² × ${fmt3.format(Lb.m2[state.mat.label])}`, m2*Lb.m2[state.mat.label]);
     add("Impression numérique", `calage + ${fmt1.format(m2)} m²`, Lb.printCal + m2*Lb.printM2[pr]);
@@ -1894,6 +2048,12 @@ function preflight(q){
   if (t.id === "labelLid"){
     const dd = state.dims.labelLid;
     if (dd.lw > dd.d*1.03 - 2) add("error", `L'étiquette (Ø ${dd.lw} mm) dépasse le couvercle (Ø ${fmt1.format(dd.d*1.03)} mm).`);
+  } else if (t.special === "can"){
+    add("info", "Sleeve thermorétractable ou étiquette intégrale : prévoir 0,5 à 1 mm de recouvrement à la pose et valider le diamètre sur canette réelle.");
+  } else if (t.special === "tube"){
+    add("info", "Décor de tube : la zone soudée (environ 8 mm en tête) reste visible mais aplatie ; évitez d'y placer un texte important.");
+  } else if (t.special === "pouch"){
+    add("info", "Sachet doypack : complexe imprimé puis soudé par le façonnier ; zone de soudure et zip (≈ 30 mm en haut) à garder sans texte. Prix à confirmer avec le façonnier.");
   } else if (t.kind === "label"){
     const dd = state.dims[state.model], circ = Math.PI*dd.d;
     if (dd.lw > circ - 2) add("error", `L'étiquette (${dd.lw} mm) dépasse la circonférence du contenant (${fmt1.format(circ)} mm).`);
@@ -1922,7 +2082,7 @@ function renderPreflight(q){
   const nE = pfItems.filter(x => x.level === "error").length, nW = pfItems.filter(x => x.level === "warn").length;
   $("#pfList").innerHTML = pfItems.map(x => `<li class="${x.level}">${esc(x.msg)}</li>`).join("");
   const cb = layout.cbb, c = [`<span>à plat ${fmt0.format(cb.w)} × ${fmt0.format(cb.h)} mm</span>`];
-  if (kind() === "box") c.push(`<span>e = ${fmt2.format(layout.e)} mm</span>`); else if (kind() === "cup") c.push(`<span>Ø ${state.dims.cup.D1} mm</span>`); else c.push(`<span>Ø ${state.dims[state.model].d} mm</span>`);
+  if (kind() === "box") c.push(`<span>e = ${fmt2.format(layout.e)} mm</span>`); else if (kind() === "cup") c.push(`<span>Ø ${state.dims.cup.D1} mm</span>`); else if (TPL().special === "pouch") c.push(`<span>fond ${state.dims.pouch.G} mm</span>`); else c.push(`<span>Ø ${state.dims[state.model].d} mm</span>`);
   c.push(`<button type="button" id="pfChip" class="${nE ? "pf-err" : nW ? "pf-warn" : "pf-ok"}">${nE ? nE + " erreur" + (nE > 1 ? "s" : "") : nW ? nW + " alerte" + (nW > 1 ? "s" : "") : "Prépresse OK"}</button>`);
   $("#chips").innerHTML = c.join("");
   $("#pfChip").onclick = () => { $("#pfSec details").open = true; $("#pfSec").scrollIntoView({behavior:reduce ? "auto" : "smooth", block:"center"}); };
@@ -1960,6 +2120,12 @@ const PRESETS = [
     design:{bg:"#fbe8ea", accent:"#c2185b", brand:"Pâtisserie Yasmine", product:"Gâteaux faits maison", mention:"À consommer dans les 48 h", pattern:"dots"}},
   {id:"boutique", sector:"Boutique", tpl:"bag", name:"Sac boutique", dims:{L:240, G:100, H:300}, mat:"kraftp", print:"cmjn", lam:"none", foil:false, raw:true,
     design:{bg:"#b98f5e", accent:"#1b1d20", brand:"Medina Concept Store", product:"Artisanat & déco", mention:"Merci de votre visite", pattern:"none"}},
+  {id:"limonade", sector:"Boissons", tpl:"can", name:"Canette limonade", dims:{d:66, ch:115}, mat:"ppw", print:"num", lam:"vernis", foil:false,
+    design:{bg:"#e8412c", accent:"#ffd23f", brand:"Bouhla", product:"Limonade artisanale au citron", mention:"33 cl · Tunisie", pattern:"dots"}},
+  {id:"tubecreme", sector:"Cosmétique", tpl:"tube", name:"Tube crème mains", dims:{d:35, L:150}, mat:"ppw", print:"num", lam:"vernis", foil:true,
+    design:{bg:"#f3ece2", accent:"#b5895a", brand:"Jasmin", product:"Crème mains au jasmin", mention:"75 ml", pattern:"none"}},
+  {id:"cafegrains", sector:"Café", tpl:"pouch", name:"Doypack café en grains", dims:{W:160, H:230, G:80}, mat:"ppw", print:"num", lam:"lam", foil:true,
+    design:{bg:"#2b1d16", accent:"#d4a056", brand:"Sidi Bou Coffee", product:"Café en grains, pur arabica", mention:"250 g · Torréfié à Tunis", pattern:"lines"}},
   {id:"ecommerce", sector:"E-commerce", tpl:"rsc", name:"Carton d'expédition", dims:{L:250, W:180, H:120}, mat:"ondB", print:"noir", lam:"none", foil:false, raw:true,
     design:{bg:"#b98e5b", accent:"#1b1d20", brand:"Souk en ligne", product:"Fragile — manipuler avec soin", mention:"Expédié depuis Tunis", pattern:"none"}},
 ];
@@ -2002,7 +2168,7 @@ function renderControls(){
   $("#modelDesc").textContent = t.desc; $("#foldLbl").textContent = t.fold;
   $("#dimMode").hidden = !STD_DIMS.includes(state.model); $("#dimMode").value = state.dimMode;
   let h = DIM_FIELDS[state.model].map(([key, lbl, mn, mx]) => `<div class="field"><label for="dim-${key}">${lbl}</label><div class="unit" data-unit="mm"><input type="number" id="dim-${key}" data-k="${key}" min="${mn}" max="${mx}" step="0.5" value="${dims[key]}"></div></div>`).join("");
-  if (k === "label" && t.container !== "couvercle") h += `<div class="field"><label for="dim-shape">Forme</label><select id="dim-shape" data-k="shape"><option value="rect"${dims.shape === "rect" ? " selected" : ""}>Rectangle</option><option value="ovale"${dims.shape === "ovale" ? " selected" : ""}>Ovale</option></select></div>
+  if (k === "label" && t.container !== "couvercle" && !t.special) h += `<div class="field"><label for="dim-shape">Forme</label><select id="dim-shape" data-k="shape"><option value="rect"${dims.shape === "rect" ? " selected" : ""}>Rectangle</option><option value="ovale"${dims.shape === "ovale" ? " selected" : ""}>Ovale</option></select></div>
     <div class="field"><label for="dim-r">Rayon des coins</label><div class="unit" data-unit="mm"><input type="number" id="dim-r" data-k="r" min="0" max="20" step="0.5" value="${dims.r}"${dims.shape === "ovale" ? " disabled" : ""}></div></div>`;
   $("#dims").innerHTML = h;
   $("#winBox").hidden = !t.window; $("#winOn").checked = state.window.on; $("#winFields").hidden = !state.window.on;
@@ -2010,8 +2176,10 @@ function renderControls(){
   $("#dimNote").textContent = k === "box" ? `Épaisseur prise en compte dans le plan : ${fmt2.format(caliper())} mm (${MAT.box[state.mat.box].name}).` : k === "cup" ? "Cotes du gobelet fini ; la jupe est développée en secteur de couronne avec 8 mm de recouvrement." : "Cotes de l'étiquette finie ; fond perdu de 2 mm ajouté automatiquement.";
   opts($("#mat"), MAT[k], state.mat[k], t.mats); opts($("#print"), PRINT[k], state.print[k]); opts($("#lam"), LAM[k], state.lam[k]);
   $("#insideRow").hidden = k !== "box"; $("#insideOn").checked = state.inside.on; $("#insideColor").value = state.inside.color;
+  const ii = state.images.inside; $("#insideThumb").hidden = !ii; if (ii) $("#insideThumb").src = ii.src; $("#insideClear").hidden = !ii;
   const d = state.design;
   for (const id of ["brand","product","mention","legal","ean","bg","accent","pattern"]) $("#" + id).value = d[id] ?? "";
+  syncCompo(); $("#dimsBtn").setAttribute("aria-pressed", !!state.showDims); dimKey = "";
   $("#sceneSel").value = state.scene in SCENES ? state.scene : "studio"; $("#lightAz").value = state.lightAz ?? 35; $("#lightPow").value = state.lightPow ?? 100; applyScene();
   $("#foilColor").value = state.foilColor in FOILS ? state.foilColor : "or"; $("#relief").value = state.relief in RELIEFS ? state.relief : "none";
   $("#varnish").checked = state.varnish; $("#foil").checked = state.foil; $("#raw").checked = state.raw; $("#fullHide").checked = state.fullHide;
@@ -2091,7 +2259,8 @@ function restore(i){ if (i < 0 || i >= hist.length) return; hIndex = i; const f 
 function undo(){ if (hTimer) pushHistory(); restore(hIndex - 1); }
 function redo(){ restore(hIndex + 1); }
 $("#undoBtn").addEventListener("click", undo); $("#redoBtn").addEventListener("click", redo);
-function changed(level = "art", noHistory){ if (clientMode) return; dirty = true; renderSaveState(); refresh(level); if (!noHistory) schedHistory(); }
+function changed(level = "art", noHistory){ if (clientMode) return; dirty = true; renderSaveState(); refresh(level); if (!noHistory) schedHistory();
+  if (state.compo && state.compo.on && state.compo.items.some(i => i.live)){ clearTimeout(compoT); compoT = setTimeout(() => { compoKey = ""; syncCompo(); }, 900); } }
 
 /* ================= Événements ================= */
 $("#cats").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if (!b) return; cat = b.dataset.cat; renderLibrary(); });
@@ -2130,6 +2299,8 @@ $("#lightPow").addEventListener("input", e => { state.lightPow = +e.target.value
 $("#foilColor").addEventListener("change", e => { state.foilColor = e.target.value; changed("art"); });
 $("#relief").addEventListener("change", e => { state.relief = e.target.value; changed("geo"); });
 $("#elRelief").addEventListener("change", e => { const el = curEl(); if (!el) return; el.relief = e.target.value; changed("geo"); });
+$("#insideImg").addEventListener("change", e => pickImage(e.target, 4000, false, r => { state.images.inside = r; state.inside.on = true; }).then(() => changed("geo")));
+$("#insideClear").addEventListener("click", () => { state.images.inside = null; renderControls(); changed("geo"); });
 $("#insideOn").addEventListener("change", e => { state.inside.on = e.target.checked; changed("geo"); });
 $("#insideColor").addEventListener("input", e => { state.inside.color = e.target.value; state.inside.on = true; $("#insideOn").checked = true; changed("geo"); });
 ["brand","product","mention","legal","bg","accent","pattern"].forEach(id => $("#" + id).addEventListener("input", e => { state.design[id] = e.target.value; changed("art"); }));
@@ -2485,8 +2656,14 @@ async function runExport(kindName){
   if (!window.jspdf && /pdf|bat|zip|devis/.test(kindName)){ toast("Bibliothèque PDF indisponible : rechargez la page."); return; }
   const base = slug(), bg = $("#expBg").value;
   try {
-    if (kindName === "png3d") await saveFile(`${base}_maquette.png`, dataURLtoBlob(captureMockup(2000, 1500, bg)));
+    if (kindName === "png3d"){
+      const gl = renderer.getContext(), mv = gl.getParameter(gl.MAX_VIEWPORT_DIMS), mr = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+      let w = +$("#expRes").value, h = Math.round(w*+$("#expRatio").value); const lim = Math.min(mv[0], mv[1], mr), k = Math.min(1, lim/Math.max(w, h));
+      if (k < 1){ w = Math.floor(w*k); h = Math.floor(h*k); toast(`Résolution limitée par la carte graphique : ${w} × ${h} px`); } else if (w > 4000) toast("Rendu 8K en cours…");
+      await saveFile(`${base}_maquette-${w}x${h}.png`, await captureMockup(w, h, bg, false, true));
+    }
     else if (kindName === "video") await exportVideo();
+    else if (kindName === "spin") await exportVideo(true);
     else if (kindName === "flat") await saveFile(`${base}_visuel-a-plat.png`, await new Promise(r => proofCanvas(4000).toBlob(r, "image/png")));
     else if (kindName === "tplsvg") await saveFile(`${base}_gabarit.svg`, dielineSVG(true));
     else if (kindName === "diepdf") await saveFile(`${base}_plan-decoupe.pdf`, dielinePDF());
@@ -2503,6 +2680,7 @@ async function runExport(kindName){
       zip.file(`${base}_maquette.png`, dataURLtoBlob(captureMockup(2000, 1500, bg)));
       zip.file(`${base}_BAT.pdf`, batPDF(captureMockup(1200, 1200, "white", true)));
       zip.file(`${base}_devis.pdf`, devisPDF(captureMockup(1000, 1000, "white", true)));
+      if (kind() === "box" && state.inside.on && state.images.inside){ const vc = versoCanvas(); if (vc) zip.file(`${base}_impression-interieure-verso.png`, await new Promise(r => vc.toBlob(r, "image/png"))); }
       zip.file("LISEZ-MOI.txt", `Pack fabrication ${quoteNo()} — ${meta.client || ""} ${meta.name || ""}\r\n\r\n` + specRows().map(([a,b]) => `${a} : ${b}`).join("\r\n") + `\r\nQuantité : ${state.qty}\r\n\r\nContrôle prépresse :\r\n` + pfItems.map(x => `- [${x.level}] ${x.msg}`).join("\r\n") + `\r\n\r\nFichiers :\r\n- plan-decoupe.pdf / .svg : échelle 1:1, calques COUPE (rouge) et RAINAGE (bleu), épaisseur du support compensée\r\n- plan-decoupe.dxf : pour table de découpe / CAO (mm)\r\n- visuel-a-plat.png : contrôle visuel avec traits\r\n- BAT.pdf : à faire signer par le client\r\n- devis.pdf : offre de prix\r\n\r\nGabarit à valider sur échantillon (table de découpe ou maquette blanche) avant la première production.\r\n`);
       await saveFile(`${base}_pack-fabrication.zip`, await zip.generateAsync({type:"blob"}));
     }
@@ -2636,6 +2814,7 @@ function shotState(t){
   st.fold = 1; return st;
 }
 function renderShot(t){
+  const cvis = compoGroup.visible, dvis = dimGroup.visible; compoGroup.visible = false; dimGroup.visible = false; holder.visible = true;
   const keep = state, pos = camera.position.clone(), tgt = controls.target.clone();
   state = shotState(t); fixMat();
   try {
@@ -2646,7 +2825,7 @@ function renderShot(t){
     const img = captureMockup(720, 540, "white", true);
     const flat = proofCanvas(900).toDataURL("image/jpeg", .85), q = quote(5000);
     thumbs[t.id] = {img, flat, unit: q.error ? null : q.unit, dims: dimsText(layout.inner)};
-  } finally { state = keep; camera.position.copy(pos); controls.target.copy(tgt); applyScene(); }
+  } finally { state = keep; camera.position.copy(pos); controls.target.copy(tgt); applyScene(); compoGroup.visible = cvis; holder.visible = !cvis; dimGroup.visible = dvis; }
 }
 let thumbJob = Promise.resolve(); const thumbTried = new Set();
 function ensureThumbs(list){ thumbJob = thumbJob.then(() => runThumbs(list)).catch(e => console.warn(e)); return thumbJob; }
@@ -2731,7 +2910,7 @@ function catalogPDF(){
     doc.setTextColor(20); doc.setFont("helvetica", "bold"); doc.setFontSize(15); doc.text(pdfTxt(t.name), x, y0 + 13);
     doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(70);
     let y = y0 + 21; const dl = doc.splitTextToSize(pdfTxt(t.desc), w); doc.text(dl, x, y); y += dl.length*4.2 + 3;
-    const rows = [["Dimensions", rangeText(t)], ["Matières", t.mats.map(m => (MAT[t.kind][m] || {}).name).join(", ")], ["Finitions", t.kind === "label" ? "vernis, lamination, dorure, vernis sélectif" : t.kind === "cup" ? "vernis acrylique alimentaire, dorure" : "pelliculage mat / brillant / soft-touch, vernis sélectif UV, dorure à chaud (or, argent, cuivre, or rose, holographique), gaufrage" + (t.window ? ", fenêtre PET" : "")], ["Exemple", th ? th.dims : ""], ["Prix indicatif", priceOf(t) ? `dès ${fmt3.format(priceOf(t).unit)} TND HT l'unité (5 000 ex.)` : "sur devis"]];
+    const rows = [["Dimensions", rangeText(t)], ["Matières", t.mats.map(m => (MAT[t.kind][m] || {}).name).join(", ")], ["Finitions", t.special === "pouch" ? "film PP ou kraft complexé, zip, fenêtre, finition mate ou brillante" : t.kind === "label" ? "vernis, lamination, dorure, vernis sélectif" : t.kind === "cup" ? "vernis acrylique alimentaire, dorure" : "pelliculage mat / brillant / soft-touch, vernis sélectif UV, dorure à chaud (or, argent, cuivre, or rose, holographique), gaufrage" + (t.window ? ", fenêtre PET" : "")], ["Exemple", th ? th.dims : ""], ["Prix indicatif", priceOf(t) ? `dès ${fmt3.format(priceOf(t).unit)} TND HT l'unité (5 000 ex.)` : "sur devis"]];
     for (const [a, b] of rows){ doc.setFontSize(7.5); doc.setTextColor(120); doc.text(pdfTxt(a.toUpperCase()), x, y); y += 3.8; doc.setFontSize(9); doc.setTextColor(25); const ls = doc.splitTextToSize(pdfTxt(b), w); doc.text(ls, x, y); y += ls.length*4.1 + 2.2; }
     slot++;
   }
@@ -2753,6 +2932,150 @@ async function bootCatalog(){
   showCatalog();
 }
 
+/* ================= Composition multi-produits ================= */
+let compoKey = "";
+const compoItemState = it => it.live ? merge(DEFAULT, JSON.parse(snap())) : merge(DEFAULT, it.config || {});
+function disposeTree(o){ o.traverse(n => { if (n.geometry) n.geometry.dispose(); if (n.material) [].concat(n.material).forEach(m => { if (m === hiddenMat) return; for (const k of ["map","roughnessMap","bumpMap"]) if (m[k] && m[k] !== pbrTex && m[k] !== texture && !Object.values(groundTex).includes(m[k])) m[k].dispose(); m.dispose(); }); }); }
+function buildCompo(){
+  compoGroup.children.slice().forEach(c => { disposeTree(c); compoGroup.remove(c); });
+  const C = state.compo, on = C.on && C.items.length > 0;
+  compoGroup.visible = on; holder.visible = !on;
+  if (!on){ autoFrame = true; return; }
+  const keep = state, wraps = [];
+  try {
+    for (const it of C.items.slice(0, 8)){
+      state = compoItemState(it); state.compo = {on:false, layout:"row", items:[]}; sanitizeState(); state.fold = 1;
+      try {
+        layout = computeLayout();
+        const px = Math.min(4, 2048/Math.max(layout.bb.w, layout.bb.h));
+        texture = null; pbrTex = null; artCanvas = drawArt(layout, px); pbrCanvas = drawArt(layout, px, "pbr"); build3D(); applyFold(1);
+        holder.updateMatrixWorld(true);
+        const w = new THREE.Group(), inner = new THREE.Group();
+        inner.position.copy(holder.position); inner.rotation.copy(holder.rotation);
+        holder.children.slice().forEach(ch => inner.add(ch)); w.add(inner); w.userData.name = it.name;
+        wraps.push(w);
+      } catch (e) { console.warn(e); }
+      holder.position.set(0,0,0); holder.rotation.set(0,0,0); labelMesh = null; extras3d = [];
+      texture = null; pbrTex = null;
+    }
+  } finally { state = keep; }
+  const sizes = wraps.map(w => { w.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(w); return {b, s:b.getSize(new THREE.Vector3())}; });
+  const gap = Math.max(18, sizes.reduce((a, x) => a + x.s.x, 0)/Math.max(1, sizes.length)*.18);
+  const total = sizes.reduce((a, x) => a + x.s.x, 0) + gap*(sizes.length - 1);
+  let cx = -total/2;
+  wraps.forEach((w, i) => {
+    const {b, s} = sizes[i], mid = cx + s.x/2; cx += s.x + gap;
+    const ox = -(b.min.x + b.max.x)/2, oz = -(b.min.z + b.max.z)/2;
+    w.children[0].position.x += ox; w.children[0].position.z += oz; w.children[0].position.y -= b.min.y;
+    let x = mid, z = 0, ry = 0;
+    if (C.layout === "arc"){ const Rr = Math.max(total*.8, 200); z = -(x*x)/(2*Rr); ry = -x/Rr*.9; }
+    else if (C.layout === "stagger"){ x = mid*.8; z = i % 2 ? -Math.max(...sizes.map(q => q.s.z))*.9 : 0; }
+    w.position.set(x, 0, z); w.rotation.y = ry;
+    w.traverse(n => { if (n.isMesh) n.castShadow = true; });
+    compoGroup.add(w);
+  });
+  autoFrame = true;
+  refresh("geo", true);
+}
+function compoSig(){ const C = state.compo; return JSON.stringify([C.on, C.layout, C.items.map(i => i.id)]); }
+function syncCompo(){ const k = compoSig(); if (k !== compoKey){ compoKey = k; setTimeout(buildCompo, 0); } }
+function compoSources(){
+  const pr = PRESETS.map(p => `<option value="p:${p.id}">${esc(p.name)}</option>`).join("");
+  const pj = projects.filter(p => p.config).slice(0, 60).map(p => `<option value="j:${p.id}">${esc(p.name || "Sans nom")}${p.client ? " · " + esc(p.client) : ""}</option>`).join("");
+  return `<option value="live">Projet en cours (mis à jour en direct)</option><optgroup label="Modèles types">${pr}</optgroup>${pj ? `<optgroup label="Projets enregistrés">${pj}</optgroup>` : ""}`;
+}
+function renderCompo(){
+  const C = state.compo;
+  $("#compoOn").checked = C.on; $("#compoLayout").value = C.layout;
+  $("#compoList").innerHTML = C.items.map((it, i) => `<li><span>${i + 1}. ${esc(it.name)}${it.live ? " <small class=\"hint\">(en direct)</small>" : ""}</span><button class="btn small" type="button" data-cmove="${i}" data-d="-1" aria-label="Monter"${i ? "" : " disabled"}>↑</button><button class="btn small" type="button" data-cmove="${i}" data-d="1" aria-label="Descendre"${i < C.items.length - 1 ? "" : " disabled"}>↓</button><button class="btn small" type="button" data-cdel="${i}">Retirer</button></li>`).join("") || `<li><span class="hint">Aucun emballage : ajoutez le projet en cours et des modèles types.</span></li>`;
+}
+function compoChanged(){ renderCompo(); changed("art"); syncCompo(); }
+$("#compoBtn").addEventListener("click", () => { $("#compoAdd").innerHTML = compoSources(); renderCompo(); openDlg("#compoDlg"); });
+$("#compoOn").addEventListener("change", e => { state.compo.on = e.target.checked; compoChanged(); });
+$("#compoLayout").addEventListener("change", e => { state.compo.layout = e.target.value; compoChanged(); compoKey = ""; syncCompo(); });
+$("#compoAddBtn").addEventListener("click", () => {
+  const C = state.compo, v = $("#compoAdd").value; if (C.items.length >= 8){ toast("8 emballages au maximum."); return; }
+  let it = null;
+  if (v === "live") it = {id:newId(), name:meta.name || TPL().name, live:true};
+  else if (v.startsWith("p:")){ const p = PRESETS.find(x => x.id === v.slice(2)); if (p){ const st = merge(DEFAULT, {model:p.tpl}); presetInto(st, p); delete st.compo; it = {id:newId(), name:p.name, config:JSON.parse(JSON.stringify(st))}; } }
+  else if (v.startsWith("j:")){ const p = projects.find(x => x.id === v.slice(2)); if (p){ const cfg = structuredClone(p.config); delete cfg.compo; it = {id:newId(), name:p.name || "Projet", config:cfg}; } }
+  if (!it) return;
+  C.items.push(it); C.on = true; compoChanged();
+});
+$("#compoList").addEventListener("click", e => {
+  const C = state.compo, m = e.target.closest("[data-cmove]"), d = e.target.closest("[data-cdel]");
+  if (m){ const i = +m.dataset.cmove, j = i + +m.dataset.d; [C.items[i], C.items[j]] = [C.items[j], C.items[i]]; compoChanged(); }
+  if (d){ C.items.splice(+d.dataset.cdel, 1); if (!C.items.length) C.on = false; compoChanged(); }
+});
+
+/* ================= Cotes sur la maquette 3D ================= */
+let dimKey = "", dimTick = 0;
+function textSprite(text, hgt){
+  const c = document.createElement("canvas"), x = c.getContext("2d"), fs = 44; x.font = `600 ${fs}px IBM Plex Mono, monospace`;
+  const w = Math.ceil(x.measureText(text).width) + 36; c.width = w; c.height = 72;
+  x.fillStyle = "rgba(255,255,255,.94)"; x.strokeStyle = "#b80f5a"; x.lineWidth = 4;
+  x.beginPath(); x.roundRect ? x.roundRect(2, 2, w - 4, 68, 14) : x.rect(2, 2, w - 4, 68); x.fill(); x.stroke();
+  x.fillStyle = "#15181d"; x.font = `600 ${fs}px IBM Plex Mono, monospace`; x.textBaseline = "middle"; x.fillText(text, 18, 38);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:t, depthTest:false, fog:false})); sp.scale.set(hgt*w/72, hgt, 1); sp.renderOrder = 20;
+  return sp;
+}
+function updateDims(force){
+  dimGroup.visible = !!state.showDims; if (!state.showDims) return;
+  const tg = viewTarget(); tg.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(tg); if (b.isEmpty()) return;
+  const key = [b.min.x, b.min.y, b.min.z, b.max.x, b.max.y, b.max.z].map(v => v.toFixed(1)).join();
+  if (key === dimKey && !force) return; dimKey = key;
+  dimGroup.children.slice().forEach(c => { disposeTree(c); dimGroup.remove(c); });
+  const s = b.getSize(new THREE.Vector3()), off = Math.max(s.x, s.y, s.z)*.07 + 4, th = Math.max(s.x, s.y, s.z)*.055 + 2;
+  const mat = new THREE.LineBasicMaterial({color:0xb80f5a, depthTest:false, fog:false});
+  const seg = (a, c, tick) => { const pts = [a, c]; const g = new THREE.BufferGeometry().setFromPoints(pts); const l = new THREE.Line(g, mat); l.renderOrder = 19; dimGroup.add(l);
+    for (const p of [a, c]){ const tg2 = new THREE.BufferGeometry().setFromPoints([p.clone().sub(tick), p.clone().add(tick)]); const tl = new THREE.Line(tg2, mat); tl.renderOrder = 19; dimGroup.add(tl); } };
+  const y0 = b.min.y + .5, V = (x, y, z) => new THREE.Vector3(x, y, z), f = v => `${fmt0.format(v)} mm`;
+  seg(V(b.min.x, y0, b.max.z + off), V(b.max.x, y0, b.max.z + off), V(0, 0, off*.4));
+  seg(V(b.max.x + off, y0, b.min.z), V(b.max.x + off, y0, b.max.z), V(off*.4, 0, 0));
+  seg(V(b.max.x + off, b.min.y, b.max.z + off), V(b.max.x + off, b.max.y, b.max.z + off), V(off*.4, 0, 0));
+  const l1 = textSprite(f(s.x), th); l1.position.set((b.min.x + b.max.x)/2, y0 + th*.7, b.max.z + off);
+  const l2 = textSprite(f(s.z), th); l2.position.set(b.max.x + off, y0 + th*.7, (b.min.z + b.max.z)/2);
+  const l3 = textSprite(f(s.y), th); l3.position.set(b.max.x + off + th*1.2, (b.min.y + b.max.y)/2, b.max.z + off);
+  dimGroup.add(l1, l2, l3);
+}
+$("#dimsBtn").addEventListener("click", () => { state.showDims = !state.showDims; $("#dimsBtn").setAttribute("aria-pressed", state.showDims); dimKey = ""; updateDims(true); if (!clientMode){ dirty = true; renderSaveState(); saveDraft(); } });
+
+/* ================= Chartes graphiques clients ================= */
+let brandKits = [], unsubKits = null;
+function loadKits(){
+  if (unsubKits) unsubKits();
+  if (cloud()) unsubKits = cap.db.collection("brands").orderBy("name").limit(200).onSnapshot(s => { brandKits = s.docs.map(d => ({id:d.id, ...d.data()})); renderKits(); }, () => {});
+  else { try { brandKits = JSON.parse(localStorage.getItem("lp-brands") || "[]"); } catch (e) { brandKits = []; } renderKits(); }
+}
+function renderKits(){
+  const sel = $("#kitSel"), cur = sel.value;
+  sel.innerHTML = `<option value="">${brandKits.length ? "Choisir une charte…" : "Aucune charte enregistrée"}</option>` + brandKits.map(k => `<option value="${esc(k.id)}">${esc(k.name)}</option>`).join("");
+  if (brandKits.some(k => k.id === cur)) sel.value = cur;
+  $("#kitApply").disabled = $("#kitDel").disabled = !sel.value;
+}
+async function saveKit(){
+  const d = state.design, name = (meta.client || d.brand || "Charte").trim(), id = slug2(name).toLowerCase().slice(0, 60) || newId();
+  const logo = state.images.logo && !(state.images.logo.src.startsWith("data:") && state.images.logo.src.length > 90000) ? state.images.logo : null;
+  const kit = {name, design:{bg:d.bg, accent:d.accent, brand:d.brand, pattern:d.pattern, mention:d.mention}, logo, foil:state.foil, foilColor:state.foilColor, fonts:[...new Set(state.elements.filter(e => e.type === "text").map(e => e.font))].slice(0, 3), updatedAt:new Date().toISOString()};
+  if (cloud()){ try { await cap.db.doc("brands/" + id).set(kit); } catch (e) { toast("Enregistrement refusé : niveau d'accès insuffisant."); return; } }
+  else { brandKits = brandKits.filter(k => k.id !== id).concat({id, ...kit}).sort((a, b) => a.name.localeCompare(b.name)); try { localStorage.setItem("lp-brands", JSON.stringify(brandKits)); } catch (e) {} renderKits(); }
+  $("#kitSel").value = id; renderKits(); toast(`Charte « ${name} » enregistrée${state.images.logo && !logo ? " (logo trop lourd non inclus)" : ""}`);
+}
+function applyKit(){
+  const k = brandKits.find(x => x.id === $("#kitSel").value); if (!k) return;
+  Object.assign(state.design, k.design || {}); if (k.logo) state.images.logo = k.logo;
+  if (k.foilColor) state.foilColor = k.foilColor; if (typeof k.foil === "boolean") state.foil = k.foil;
+  if (k.fonts && k.fonts[0]) state.elements.forEach(e => { if (e.type === "text" && !FONTS[e.font]) e.font = k.fonts[0]; });
+  renderControls(); changed("art"); toast(`Charte « ${k.name} » appliquée`);
+}
+async function deleteKit(){
+  const id = $("#kitSel").value; if (!id) return;
+  if (cloud()){ try { await cap.db.doc("brands/" + id).delete(); } catch (e) { toast("Suppression refusée."); return; } }
+  else { brandKits = brandKits.filter(k => k.id !== id); try { localStorage.setItem("lp-brands", JSON.stringify(brandKits)); } catch (e) {} renderKits(); }
+}
+$("#kitSel").addEventListener("change", renderKits); $("#kitSave").addEventListener("click", saveKit); $("#kitApply").addEventListener("click", applyKit); $("#kitDel").addEventListener("click", deleteKit);
+
 /* ================= Démarrage ================= */
 function onCapsReady(){
   $("#modeTag").textContent = cloud() ? "Équipe · partagé" : "Ce navigateur";
@@ -2767,7 +3090,7 @@ function onCapsReady(){
     if (unsubSettings) unsubSettings();
     unsubSettings = cap.db.doc("settings/main").onSnapshot(s => { if (s.exists){ settings = merge(DEFAULT_SETTINGS, s.data()); if (layout){ renderControls(); refresh("geo"); } } }, () => {});
   }
-  subscribeProjects();
+  subscribeProjects(); loadKits();
 }
 renderControls();
 showView("3d");
