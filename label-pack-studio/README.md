@@ -12,6 +12,7 @@ Configurateur d'emballage en une page (`index.html`) pour l'imprimerie Label Pac
 - **Structure par IA** : décrivez le produit, l'assistant propose jusqu'à 3 structures du catalogue avec des cotes adaptées.
 - **Prise de vue** (inspirée d'Esko Studio, Boxshot, Mockey.ai, Unblast et Mockupworld) : **rayon de magasin** avec façades et étagères, **mise en situation sur votre photo** avec flou d'arrière-plan, choix de l'**objectif** (24 à 135 mm).
 - **Déclinaisons de gamme** (parfums, variétés) : affichage de la gamme en 3D et **rendu en série** (une maquette et un visuel à plat par déclinaison).
+- **BAT et devis de tous les produits** : un BAT et un devis détaillé par produit (projet, déclinaisons, composition), références numérotées, et un **devis récapitulatif** de la gamme.
 - **Pack e-commerce multi-vues** : 5 angles en 2000 × 2000 px, fond transparent et fond blanc.
 - **Composition** : jusqu'à 8 emballages dans la même scène 3D, à l'échelle réelle (alignés, en arc, en quinconce), pour présenter une gamme.
 - **Cotes sur la maquette 3D**, **impression intérieure avec visuel** (fichier verso fourni dans le pack), **chartes graphiques clients** réutilisables.
