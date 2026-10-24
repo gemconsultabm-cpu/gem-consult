@@ -71,51 +71,101 @@ rm(OUT); rm(path.join(DIST, "LabelPackStudio.zip")); mk(OUT);
 // 1) Application de bureau (navigateur en mode application, aucune installation de serveur)
 write(path.join(OUT, "LabelPackStudio.html"), buildApp(OUT));
 fs.copyFileSync(path.join(TOOLS, "icone.ico"), path.join(OUT, "lib", "icone.ico"));
-const findBrowser = `$browser = @("\${env:ProgramFiles(x86)}\\Microsoft\\Edge\\Application\\msedge.exe", "$env:ProgramFiles\\Microsoft\\Edge\\Application\\msedge.exe", "$env:LOCALAPPDATA\\Google\\Chrome\\Application\\chrome.exe", "$env:ProgramFiles\\Google\\Chrome\\Application\\chrome.exe", "\${env:ProgramFiles(x86)}\\Google\\Chrome\\Application\\chrome.exe") | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1`;
-write(path.join(OUT, "outils", "ouvrir.ps1"), crlf(`# Ouvre Label Pack Studio dans une fenêtre d'application (Edge ou Chrome), sans barre d'adresse.
-$html = Join-Path (Split-Path -Parent $PSScriptRoot) 'LabelPackStudio.html'
-$url = ([System.Uri]$html).AbsoluteUri
-${findBrowser}
-if ($browser) { Start-Process -FilePath $browser -ArgumentList "--app=$url" } else { Start-Process $html }
-`));
-write(path.join(OUT, "outils", "installer.ps1"), crlf(`# Installe Label Pack Studio pour l'utilisateur courant (aucun droit administrateur requis)
-# et crée les raccourcis sur le Bureau et dans le menu Démarrer.
-$ErrorActionPreference = 'Stop'
-$src = Split-Path -Parent $PSScriptRoot
-$dest = Join-Path $env:LOCALAPPDATA 'LabelPackStudio'
-New-Item -ItemType Directory -Force -Path $dest | Out-Null
-Get-ChildItem -Path $src -Force | Where-Object { $_.Name -ne 'Illustrator' } | ForEach-Object { Copy-Item -Path $_.FullName -Destination $dest -Recurse -Force }
-$html = Join-Path $dest 'LabelPackStudio.html'
-$url = ([System.Uri]$html).AbsoluteUri
-${findBrowser}
-$ws = New-Object -ComObject WScript.Shell
-foreach ($dir in @([Environment]::GetFolderPath('Desktop'), (Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs'))) {
-  $lnk = $ws.CreateShortcut((Join-Path $dir 'Label Pack Studio.lnk'))
-  if ($browser) { $lnk.TargetPath = $browser; $lnk.Arguments = "--app=$url" } else { $lnk.TargetPath = $html }
-  $lnk.WorkingDirectory = $dest
-  $lnk.IconLocation = (Join-Path $dest 'lib\\icone.ico')
-  $lnk.Description = 'Label Pack Studio'
-  $lnk.Save()
-}
-Write-Host ''
-Write-Host 'Label Pack Studio est installe.' -ForegroundColor Green
-Write-Host 'Raccourcis crees : Bureau et menu Demarrer > Label Pack Studio.'
-`));
-write(path.join(OUT, "1 - Installer sur ce PC (Windows).bat"), crlf(`@echo off
-title Installation de Label Pack Studio
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0outils\\installer.ps1"
-if errorlevel 1 (echo. & echo L'installation a echoue. Decompressez d'abord le dossier ZIP, puis relancez ce fichier.)
+// Lanceur et installeur Windows en batch pur (aucune dépendance à PowerShell pour fonctionner) ; messages sans accents (console Windows).
+const LAUNCHER = `@echo off
+setlocal
+rem Ouvre Label Pack Studio en fenetre d'application (Edge, sinon Chrome, sinon navigateur par defaut).
+set "HTML=%~dp0LabelPackStudio.html"
+if exist "%HTML%" goto ouvrir
+echo.
+echo  Fichier introuvable : "%HTML%"
+echo  Decompressez d'abord le fichier ZIP : clic droit sur le ZIP, puis "Extraire tout".
 echo.
 pause
-`));
-write(path.join(OUT, "2 - Ouvrir sans installer (Windows).bat"), crlf(`@echo off
-powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "%~dp0outils\\ouvrir.ps1"
+exit /b 1
+:ouvrir
+set "URL=file:///%HTML:\\=/%"
+reg query "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\msedge.exe" >nul 2>&1 && (start "" msedge --app="%URL%" & exit /b 0)
+reg query "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\msedge.exe" >nul 2>&1 && (start "" msedge --app="%URL%" & exit /b 0)
+reg query "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe" >nul 2>&1 && (start "" chrome --app="%URL%" & exit /b 0)
+reg query "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe" >nul 2>&1 && (start "" chrome --app="%URL%" & exit /b 0)
+start "" "%HTML%"
+`;
+write(path.join(OUT, "Ouvrir Label Pack Studio.cmd"), crlf(LAUNCHER));
+write(path.join(OUT, "1 - Installer sur ce PC (Windows).cmd"), crlf(`@echo off
+setlocal
+title Installation de Label Pack Studio
+set "SRC=%~dp0"
+if not exist "%SRC%LabelPackStudio.html" goto pas_extrait
+set "DEST=%LOCALAPPDATA%\\LabelPackStudio"
+echo.
+echo  Installation de Label Pack Studio dans :
+echo    %DEST%
+echo.
+robocopy "%SRC%." "%DEST%" /E /XD Illustrator /R:1 /W:1 /NFL /NDL /NJH /NJS /NP >nul
+if errorlevel 8 goto erreur_copie
+if not exist "%DEST%\\LabelPackStudio.html" goto erreur_copie
+echo  [OK] Fichiers copies.
+
+rem Navigateur pour le mode application (chemin lu dans le registre Windows)
+set "BROWSER="
+for %%K in (HKLM HKCU) do if not defined BROWSER for /f "tokens=*" %%L in ('reg query "%%K\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\msedge.exe" /ve 2^>nul ^| find "REG_SZ"') do set "LINE=%%L"
+if defined LINE call set "BROWSER=%%LINE:*REG_SZ=%%"
+if not defined BROWSER for %%K in (HKLM HKCU) do if not defined LINE2 for /f "tokens=*" %%L in ('reg query "%%K\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe" /ve 2^>nul ^| find "REG_SZ"') do set "LINE2=%%L"
+if not defined BROWSER if defined LINE2 call set "BROWSER=%%LINE2:*REG_SZ=%%"
+if defined BROWSER for /f "tokens=*" %%B in ("%BROWSER%") do set "BROWSER=%%~B"
+set "TGT=%BROWSER%"
+set "ARGS=--app=file:///%DEST:\\=/%/LabelPackStudio.html"
+if not defined BROWSER set "TGT=%DEST%\\LabelPackStudio.html"
+if not defined BROWSER set "ARGS="
+if not exist "%TGT%" set "TGT=%DEST%\\LabelPackStudio.html"
+if not exist "%TGT%" set "ARGS="
+set "ICO=%DEST%\\lib\\icone.ico"
+
+rem Raccourcis Bureau et menu Demarrer (PowerShell si disponible, sinon lanceur de secours)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$w=New-Object -ComObject WScript.Shell; foreach($d in @([Environment]::GetFolderPath('Desktop'),[Environment]::GetFolderPath('Programs'))){ $s=$w.CreateShortcut((Join-Path $d 'Label Pack Studio.lnk')); $s.TargetPath=$env:TGT; $s.Arguments=$env:ARGS; $s.WorkingDirectory=$env:DEST; $s.IconLocation=$env:ICO; $s.Description='Label Pack Studio'; $s.Save() }" >nul 2>&1
+if errorlevel 1 goto raccourci_secours
+echo  [OK] Raccourcis "Label Pack Studio" crees sur le Bureau et dans le menu Demarrer.
+goto lancer
+
+:raccourci_secours
+set "DESK=%USERPROFILE%\\Desktop"
+if defined OneDrive if exist "%OneDrive%\\Desktop" set "DESK=%OneDrive%\\Desktop"
+> "%DESK%\\Label Pack Studio.cmd" echo @call "%DEST%\\Ouvrir Label Pack Studio.cmd"
+echo  [OK] Lanceur "Label Pack Studio" cree sur le Bureau.
+
+:lancer
+echo.
+echo  Installation terminee. Ouverture de Label Pack Studio...
+call "%DEST%\\Ouvrir Label Pack Studio.cmd"
+echo.
+pause
+exit /b 0
+
+:pas_extrait
+echo.
+echo  ERREUR : ce fichier est lance depuis l'interieur du ZIP.
+echo  1. Fermez cette fenetre.
+echo  2. Clic droit sur LabelPackStudio.zip, puis "Extraire tout...".
+echo  3. Ouvrez le dossier extrait et relancez "1 - Installer sur ce PC (Windows)".
+echo.
+pause
+exit /b 1
+
+:erreur_copie
+echo.
+echo  ERREUR : copie impossible vers %DEST%
+echo  Solution immediate : dans le dossier extrait, double-cliquez sur LabelPackStudio.html
+echo  (l'application s'ouvre dans votre navigateur, sans installation).
+echo.
+pause
+exit /b 1
 `));
 write(path.join(OUT, "Ouvrir Label Pack Studio (Mac).command"), `#!/bin/bash
 # Ouvre Label Pack Studio dans une fenêtre d'application (Chrome ou Edge), sinon dans le navigateur par défaut.
 DIR="$(cd "$(dirname "$0")" && pwd)"
 HTML="$DIR/LabelPackStudio.html"
-URL="file://$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$HTML" 2>/dev/null || echo "$HTML")"
+URL="file://\${HTML// /%20}"
 if [ -d "/Applications/Google Chrome.app" ]; then open -na "Google Chrome" --args --app="$URL"
 elif [ -d "/Applications/Microsoft Edge.app" ]; then open -na "Microsoft Edge" --args --app="$URL"
 else open "$HTML"; fi
@@ -197,10 +247,11 @@ Aucun serveur, aucune connexion Internet, aucun compte : tout fonctionne sur le 
 
 INSTALLATION SUR WINDOWS (une fois par poste)
 1. Faites un clic droit sur le fichier ZIP > « Extraire tout… » (ne lancez rien depuis l'intérieur du ZIP).
-2. Double-cliquez sur « 1 - Installer sur ce PC (Windows).bat ».
+2. Double-cliquez sur « 1 - Installer sur ce PC (Windows) ». L'application s'ouvre à la fin de l'installation.
 3. Ouvrez Label Pack Studio depuis le raccourci du Bureau ou du menu Démarrer.
    Si Windows affiche « Windows a protégé votre ordinateur », cliquez sur « Informations complémentaires » puis « Exécuter quand même ».
-Pour essayer sans installer : double-cliquez sur « 2 - Ouvrir sans installer (Windows).bat ».
+Pour essayer sans installer : double-cliquez sur « Ouvrir Label Pack Studio ».
+SOLUTION DE SECOURS, toujours valable : double-cliquez sur « LabelPackStudio.html » ; l'application s'ouvre dans le navigateur.
 
 MAC
 Double-cliquez sur « Ouvrir Label Pack Studio (Mac).command »
