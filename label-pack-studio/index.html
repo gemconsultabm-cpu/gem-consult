@@ -244,6 +244,11 @@ details > :not(summary){margin-top:8px}
 .scene-tools select{padding:3px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font-size:12px}
 .scene-tools input[type=range]{width:80px}
 .client #compoBtn{display:none}
+.var-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) 34px 34px auto;gap:6px;align-items:center;margin:6px 0}
+.var-row input[type=text]{min-width:0;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font:inherit;font-size:13px}
+.var-row input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:4px}
+details.variants{border:1px solid var(--line);border-radius:5px;padding:8px 10px}
+details.variants summary{cursor:pointer;font-weight:600;font-size:13px}
 .compo-list{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
 .compo-list li{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:5px;padding:6px 8px;font-size:13px}
 .compo-list li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -386,6 +391,11 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <label class="btn file-btn">Importer un logo<input type="file" id="logo" accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>
           <button type="button" class="btn" id="logoClear" hidden>Retirer</button>
         </div>
+        <details class="variants" id="varBox"><summary>Déclinaisons de gamme</summary>
+          <p class="hint">Même emballage, plusieurs versions (parfums, variétés, contenances) : chaque déclinaison reprend ce design en changeant le produit et les couleurs.</p>
+          <div id="varList"></div>
+          <div class="row"><button type="button" class="btn small" id="varAdd">Ajouter une déclinaison</button><button type="button" class="btn small" id="varShow">Voir la gamme en 3D</button></div>
+        </details>
         <div class="field"><label for="kitSel">Charte graphique client</label>
           <div class="row"><select id="kitSel" style="flex:1 1 140px;min-width:0;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)"></select>
           <button type="button" class="btn small" id="kitApply">Appliquer</button><button type="button" class="btn small" id="kitSave">Enregistrer</button><button type="button" class="btn small" id="kitDel">Supprimer</button></div>
@@ -496,6 +506,8 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <button class="exp" data-exp="png3d" type="button"><b>Maquette 3D haute définition</b><small id="resNote">Résolution et format ci-dessous, angle de vue actuel</small><span>.png</span></button>
       <button class="exp" data-exp="video" type="button"><b>Animation de pliage</b><small>Vidéo Full HD, pliage puis rotation</small><span class="vext">.mp4</span></button>
       <button class="exp" data-exp="spin" type="button"><b>Vidéo 360°</b><small>Rotation complète, idéale pour les réseaux sociaux</small><span class="vext">.mp4</span></button>
+      <button class="exp" data-exp="multiview" type="button"><b>Pack e-commerce multi-vues</b><small>5 angles, 2000 × 2000 px, fond transparent et fond blanc</small><span>.zip</span></button>
+      <button class="exp" data-exp="range" type="button"><b>Maquettes de la gamme</b><small>Une maquette et un visuel à plat par déclinaison</small><span>.zip</span></button>
       <button class="exp" data-exp="flat" type="button"><b>Visuel à plat avec traits</b><small>Création + traits de coupe, pour contrôle</small><span>.png</span></button>
       <div class="row"><label class="lbl" for="expRes">Image</label>
         <select id="expRes" style="padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)"><option value="2000">HD (2000 px)</option><option value="3840">4K (3840 px)</option><option value="7680">8K (7680 px)</option></select>
@@ -520,6 +532,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <input type="range" id="lightPow" min="40" max="180" aria-label="Intensité de la lumière">
           <button class="btn small" id="dimsBtn" type="button" aria-pressed="false">Cotes</button>
           <button class="btn small" id="compoBtn" type="button">Composition</button>
+          <button class="btn small" id="shootBtn" type="button">Prise de vue</button>
         </div>
         <span class="rec" id="recTag" hidden>● Enregistrement</span>
       </div>
@@ -616,6 +629,25 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
         <div class="field"><label for="compoAdd">Ajouter</label><div class="row"><select id="compoAdd" style="flex:1;min-width:0"></select><button class="btn small" type="button" id="compoAddBtn">Ajouter</button></div></div>
       </div>
       <ol class="compo-list" id="compoList"></ol>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="shootDlg" hidden role="dialog" aria-modal="true" aria-labelledby="shootTitle">
+  <div class="dialog">
+    <header><h2 id="shootTitle">Prise de vue</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body">
+      <div class="field"><label for="focalSel">Objectif</label><select id="focalSel"></select></div>
+      <h3 class="eyebrow">Mise en situation sur photo</h3>
+      <p class="hint">Importez une photo (comptoir, étagère, main, vitrine…) : l'emballage est posé dessus avec son ombre. Tournez la vue et la lumière pour l'accorder à la photo.</p>
+      <div class="row"><label class="btn small file-btn">Importer une photo de fond<input type="file" id="bgPhoto" accept="image/png,image/jpeg,image/webp"></label><img class="thumb" id="bgThumb" alt="Photo de fond" hidden><button type="button" class="btn small" id="bgClear" hidden>Retirer</button></div>
+      <div class="field"><label for="bgBlur">Flou d'arrière-plan</label><input type="range" id="bgBlur" min="0" max="20" step="1"></div>
+      <h3 class="eyebrow">Rayon de magasin</h3>
+      <p class="hint">Visualisez l'impact en linéaire : l'emballage est répété en façades sur des étagères.</p>
+      <div class="grid2">
+        <div class="field"><label for="shelfCols">Façades par étagère</label><input type="number" id="shelfCols" min="1" max="8" step="1"></div>
+        <div class="field"><label for="shelfRows">Étagères</label><input type="number" id="shelfRows" min="1" max="4" step="1"></div>
+      </div>
+      <div class="row"><button type="button" class="btn small primary" id="shelfShow">Afficher en rayon</button><button type="button" class="btn small" id="shelfOff">Revenir au studio</button></div>
     </div>
   </div>
 </div>
@@ -798,9 +830,9 @@ const DEFAULT = {
   window:{on:false, w:30, h:60, y:5, r:4},
   mat:{box:"gc1", label:"couche", cup:"pe"}, print:{box:"cmjn", label:"num", cup:"cmjn"}, lam:{box:"mat", label:"vernis", cup:"none"},
   varnish:false, foil:true, foilColor:"or", relief:"none", raw:false, inside:{on:false, color:"#e2b25a"},
-  importData:null, scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
+  importData:null, focal:42, bgBlur:0, shelf:{cols:4, rows:2}, variants:[], scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
   design:{bg:"#123c3a", accent:"#e2b25a", brand:"Néroli", product:"Crème mains à la fleur d'oranger", mention:"75 ml · Fabriqué en Tunisie", pattern:"zellige", legal:"", ean:""},
-  images:{logo:null, full:null, inside:null}, faces:{}, fullHide:false, elements:[],
+  images:{logo:null, full:null, inside:null, bg:null}, faces:{}, fullHide:false, elements:[],
   qty:2500, fold:1, showArt:true, showSafe:true
 };
 const NEW_META = () => ({id:null, draftId:null, name:"", client:"", status:"brouillon", createdAt:null, createdBy:null, history:[]});
@@ -1728,7 +1760,9 @@ ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
 const holder = new THREE.Group(); holder.rotation.order = "YXZ"; scene.add(holder);
 const compoGroup = new THREE.Group(); compoGroup.visible = false; scene.add(compoGroup);
 const dimGroup = new THREE.Group(); dimGroup.visible = false; scene.add(dimGroup);
-const viewTarget = () => compoGroup.visible ? compoGroup : holder;
+const shelfGroup = new THREE.Group(); shelfGroup.visible = false; scene.add(shelfGroup);
+const viewTarget = () => compoGroup.visible ? compoGroup : shelfGroup.visible ? shelfGroup : holder;
+function soloView(){ const st = [compoGroup.visible, shelfGroup.visible, holder.visible, dimGroup.visible]; compoGroup.visible = shelfGroup.visible = dimGroup.visible = false; holder.visible = true; return () => { [compoGroup.visible, shelfGroup.visible, holder.visible, dimGroup.visible] = st; }; }
 let layout = null, artCanvas = null, pbrCanvas = null, texture = null, pbrTex = null, labelMesh = null, autoFrame = true;
 const box3 = new THREE.Box3(), v = new THREE.Vector3();
 const lin = c => new THREE.Color(c).convertSRGBToLinear();
@@ -1741,7 +1775,22 @@ const SCENES = {
   lin:{name:"Nappe en lin", bg:"#e7e2d8", ground:"lin"},
   beton:{name:"Béton", bg:"#d8d8d5", ground:"beton"},
   nuit:{name:"Vitrine sombre", bg:"#1d2024", ground:"nuit"},
+  rayon:{name:"Rayon de magasin", bg:"#eef0f2", ground:null, shelf:true},
+  photo:{name:"Photo personnelle", bg:null, photo:true},
 };
+const FOCALS = [[24,"Grand angle 24 mm"],[35,"35 mm"],[42,"Standard 42 mm"],[50,"50 mm"],[85,"Portrait 85 mm"],[135,"Téléobjectif 135 mm"]];
+let photoTex = null, photoKey = "", photoPending = false;
+// Photo du client en arrière-plan, recadrée au format de la vue (comme une prise de vue), avec flou optionnel.
+function photoBackground(){
+  const im = getImg(state.images.bg); photoPending = !!(state.images.bg && !im); if (!im) return null;
+  const asp = camera.aspect || 1.33, H = 1024, W = Math.min(2400, Math.round(H*asp)), key = [state.images.bg.src.length, state.images.bg.src.slice(-40), W, H, state.bgBlur].join("|");
+  if (photoTex && key === photoKey) return photoTex;
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  const k = Math.max(W/im.naturalWidth, H/im.naturalHeight), w = im.naturalWidth*k, h = im.naturalHeight*k, bl = (state.bgBlur || 0)*H/400;
+  if (bl > 0){ x.filter = `blur(${bl}px)`; x.drawImage(im, (W - w)/2 - bl*2, (H - h)/2 - bl*2, w + bl*4, h + bl*4); } else x.drawImage(im, (W - w)/2, (H - h)/2, w, h);
+  if (photoTex) photoTex.dispose(); photoTex = new THREE.CanvasTexture(c); photoTex.encoding = THREE.sRGBEncoding; photoKey = key;
+  return photoTex;
+}
 const groundTex = {};
 function makeGroundTex(kindG){
   if (groundTex[kindG]) return groundTex[kindG];
@@ -1774,6 +1823,9 @@ function applyScene(){
   const bg = sc.bg || cssVar("--stage");
   scene.background = new THREE.Color(bg);
   scene.fog = sc.ground ? new THREE.Fog(new THREE.Color(bg), 1, 1e6) : null;
+  if (sc.photo){ const t = photoBackground(); if (t) scene.background = t; ground.material = shadowMat; scene.fog = null; }
+  const fov = 2*Math.atan(24/(2*(state.focal || 42)))*180/Math.PI; if (Math.abs(camera.fov - fov) > .01){ camera.fov = fov; camera.updateProjectionMatrix(); autoFrame = true; }
+  if (typeof syncShelf === "function") syncShelf();
   const az = (state.lightAz ?? 35)*Math.PI/180, pw = (state.lightPow ?? 100)/100;
   key.position.set(Math.sin(az)*610, 700, Math.cos(az)*610); key.intensity = .9*pw;
   renderer.toneMappingExposure = sc.ground === "nuit" ? 1.15 : 1;
@@ -1957,6 +2009,7 @@ function frame(snap){
   const tg = viewTarget(); tg.updateMatrixWorld(true); box3.setFromObject(tg);
   const size = box3.getSize(new THREE.Vector3()), c = box3.getCenter(new THREE.Vector3());
   const rad = Math.max(size.length()/2, 20), dist = rad/Math.sin(camera.fov*Math.PI/360)*(camera.aspect < 1 ? 1.25 : 1.02);
+  if (camera.position.distanceTo(controls.target) < 1e-3) camera.position.copy(controls.target).add(new THREE.Vector3(...CAMS.three).normalize());
   const dir = camera.position.clone().sub(controls.target).normalize(), k = snap ? 1 : .12;
   controls.target.lerp(new THREE.Vector3(0, c.y, 0), k);
   const cur = camera.position.distanceTo(controls.target);
@@ -1974,7 +2027,7 @@ renderer.domElement.addEventListener("wheel", () => { autoFrame = false; }, {pas
 renderer.domElement.addEventListener("touchstart", e => { if (e.touches.length > 1) autoFrame = false; }, {passive:true});
 $("#reframe").addEventListener("click", () => { autoFrame = true; });
 let anim = null, recState = null;
-function resize(){ if (recState) return; const w = v3d.clientWidth, h = v3d.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix(); }
+function resize(){ if (recState) return; const w = v3d.clientWidth, h = v3d.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix(); if (state.scene === "photo") applyScene(); }
 new ResizeObserver(resize).observe(v3d);
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 function loop(now){
@@ -1992,6 +2045,7 @@ function frameStep(now){
     setFold(anim.from + (anim.to - anim.from)*p);
     if (p >= 1){ if (anim.pingpong) anim = {...anim, from:anim.to, to:anim.from, t0:now}; else { anim = null; $("#animate").setAttribute("aria-pressed", "false"); } }
   }
+  if (photoPending && state.scene === "photo" && getImg(state.images.bg)) applyScene();
   if (autoFrame) frame(false);
   if (state.showDims && (++dimTick % 8 === 0)) updateDims(); else if (!state.showDims && dimGroup.visible) dimGroup.visible = false;
   if (!recState) controls.update(); else camera.lookAt(controls.target);
@@ -2007,8 +2061,7 @@ function setBg(mode){
   else if (mode === "color") scene.background = new THREE.Color($("#expBgColor").value);
 }
 function captureMockup(w, h, bgMode, jpeg, asBlob){
-  const cvis = compoGroup.visible, dvis = dimGroup.visible;
-  if (jpeg){ compoGroup.visible = false; dimGroup.visible = false; holder.visible = true; }
+  const restoreView = jpeg ? soloView() : null;
   const pr = renderer.getPixelRatio(), size = renderer.getSize(new THREE.Vector2());
   const pos = camera.position.clone(), tgt = controls.target.clone(), asp = camera.aspect, fold = state.fold;
   renderer.setPixelRatio(1); renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
@@ -2016,7 +2069,7 @@ function captureMockup(w, h, bgMode, jpeg, asBlob){
   frame(true); setBg(jpeg && bgMode === "transparent" ? "white" : bgMode);
   renderer.render(scene, camera);
   const url = asBlob ? new Promise(r => renderer.domElement.toBlob(r, "image/png")) : jpeg ? renderer.domElement.toDataURL("image/jpeg", .9) : renderer.domElement.toDataURL("image/png");
-  compoGroup.visible = cvis; holder.visible = !cvis; dimGroup.visible = dvis;
+  if (restoreView) restoreView();
   renderer.setPixelRatio(pr); renderer.setSize(size.x, size.y, false); camera.aspect = asp; camera.updateProjectionMatrix();
   camera.position.copy(pos); controls.target.copy(tgt); applyTheme(); renderer.setClearColor(0x000000, 1); applyFold(fold);
   return url;
@@ -2408,6 +2461,8 @@ function renderControls(){
   const d = state.design;
   for (const id of ["brand","product","mention","legal","ean","bg","accent","pattern"]) $("#" + id).value = d[id] ?? "";
   syncCompo(); $("#dimsBtn").setAttribute("aria-pressed", !!state.showDims); dimKey = "";
+  $("#focalSel").value = state.focal || 42; $("#bgBlur").value = state.bgBlur || 0; $("#shelfCols").value = state.shelf.cols; $("#shelfRows").value = state.shelf.rows;
+  const bgi = state.images.bg; $("#bgThumb").hidden = !bgi; if (bgi) $("#bgThumb").src = bgi.src; $("#bgClear").hidden = !bgi; renderVariants();
   $("#sceneSel").value = state.scene in SCENES ? state.scene : "studio"; $("#lightAz").value = state.lightAz ?? 35; $("#lightPow").value = state.lightPow ?? 100; applyScene();
   $("#foilColor").value = state.foilColor in FOILS ? state.foilColor : "or"; $("#relief").value = state.relief in RELIEFS ? state.relief : "none";
   $("#varnish").checked = state.varnish; $("#foil").checked = state.foil; $("#raw").checked = state.raw; $("#fullHide").checked = state.fullHide;
@@ -2468,7 +2523,7 @@ function refresh(level = "geo", full){
     pending = 0; const lvl = pendLevel, fl = pendFull; pendLevel = "art"; pendFull = false;
     if (lvl === "geo" || !layout || !texture){
       layout = computeLayout(); artCanvas = drawArt(layout); pbrCanvas = drawArt(layout, null, "pbr");
-      build3D(); applyFold(state.fold);
+      build3D(); applyFold(state.fold); syncShelf();
     } else {
       artCanvas = drawArt(layout); pbrCanvas = drawArt(layout, null, "pbr");
       texture.image = artCanvas; texture.needsUpdate = true; pbrTex.image = pbrCanvas; pbrTex.needsUpdate = true;
@@ -2625,6 +2680,7 @@ function stripHeavy(body){
   let dropped = false;
   const strip = ref => { if (ref && ref.src && ref.src.startsWith("data:") && ref.src.length > 90000){ dropped = true; return null; } return ref; };
   body.config.images.logo = strip(body.config.images.logo); body.config.images.full = strip(body.config.images.full);
+  if (body.config.images.bg) body.config.images.bg = strip(body.config.images.bg); if (body.config.images.inside) body.config.images.inside = strip(body.config.images.inside);
   for (const f of Object.values(body.config.faces || {})) if (f) f.img = strip(f.img);
   body.config.elements = (body.config.elements || []).filter(el => el.type !== "image" || (el.img = strip(el.img)));
   return dropped;
@@ -2892,6 +2948,8 @@ async function runExport(kindName){
     }
     else if (kindName === "video") await exportVideo();
     else if (kindName === "spin") await exportVideo(true);
+    else if (kindName === "multiview") await exportMultiView(base);
+    else if (kindName === "range") await exportRange(base, bg);
     else if (kindName === "flat") await saveFile(`${base}_visuel-a-plat.png`, await new Promise(r => proofCanvas(4000).toBlob(r, "image/png")));
     else if (kindName === "tplsvg") await saveFile(`${base}_gabarit.svg`, dielineSVG(true));
     else if (kindName === "diepdf") await saveFile(`${base}_plan-decoupe.pdf`, dielinePDF());
@@ -3042,7 +3100,7 @@ function shotState(t){
   st.fold = 1; return st;
 }
 function renderShot(t){
-  const cvis = compoGroup.visible, dvis = dimGroup.visible; compoGroup.visible = false; dimGroup.visible = false; holder.visible = true;
+  const restoreView = soloView();
   const keep = state, pos = camera.position.clone(), tgt = controls.target.clone();
   state = shotState(t); fixMat();
   try {
@@ -3053,7 +3111,7 @@ function renderShot(t){
     const img = captureMockup(720, 540, "white", true);
     const flat = proofCanvas(900).toDataURL("image/jpeg", .85), q = quote(5000);
     thumbs[t.id] = {img, flat, unit: q.error ? null : q.unit, dims: dimsText(layout.inner)};
-  } finally { state = keep; camera.position.copy(pos); controls.target.copy(tgt); applyScene(); compoGroup.visible = cvis; holder.visible = !cvis; dimGroup.visible = dvis; }
+  } finally { state = keep; camera.position.copy(pos); controls.target.copy(tgt); applyScene(); restoreView(); }
 }
 let thumbJob = Promise.resolve(); const thumbTried = new Set();
 function ensureThumbs(list){ thumbJob = thumbJob.then(() => runThumbs(list)).catch(e => console.warn(e)); return thumbJob; }
@@ -3220,7 +3278,7 @@ function buildCompo(){
   compoGroup.children.slice().forEach(c => { disposeTree(c); compoGroup.remove(c); });
   const C = state.compo, on = C.on && C.items.length > 0;
   compoGroup.visible = on; holder.visible = !on;
-  if (!on){ autoFrame = true; return; }
+  if (!on){ autoFrame = true; syncShelf(); return; }
   const keep = state, wraps = [];
   try {
     for (const it of C.items.slice(0, 8)){
@@ -3287,6 +3345,108 @@ $("#compoList").addEventListener("click", e => {
   if (m){ const i = +m.dataset.cmove, j = i + +m.dataset.d; [C.items[i], C.items[j]] = [C.items[j], C.items[i]]; compoChanged(); }
   if (d){ C.items.splice(+d.dataset.cdel, 1); if (!C.items.length) C.on = false; compoChanged(); }
 });
+
+/* ================= Rayon de magasin ================= */
+var shelfT = 0;
+function syncShelf(){ clearTimeout(shelfT); shelfT = setTimeout(buildShelf, 40); }
+function buildShelf(){
+  shelfGroup.children.slice().forEach(c => { if (c.userData.own) disposeTree(c); shelfGroup.remove(c); });
+  const on = !!(SCENES[state.scene] || {}).shelf && !compoGroup.visible && !!layout;
+  shelfGroup.visible = on; if (!compoGroup.visible) holder.visible = !on;
+  if (!on) return;
+  const f = state.fold; applyFold(1); holder.updateMatrixWorld(true);
+  const b = new THREE.Box3().setFromObject(holder), sz = b.getSize(new THREE.Vector3()), c0 = b.getCenter(new THREE.Vector3());
+  const cols = clamp(Math.round(state.shelf.cols) || 4, 1, 8), rows = clamp(Math.round(state.shelf.rows) || 2, 1, 4), gap = Math.max(3, sz.x*.05);
+  const W = cols*sz.x + (cols - 1)*gap + 4*gap, D = Math.max(sz.z*1.4 + 20, 120), T = 18, rowH = sz.y + Math.max(30, sz.y*.15), base = 70, H = base + rows*(rowH + T) + 30;
+  const own = (m) => { m.userData.own = true; m.receiveShadow = true; shelfGroup.add(m); return m; };
+  const white = new THREE.MeshStandardMaterial({color:lin(0xf4f4f2), roughness:.55}), grey = new THREE.MeshStandardMaterial({color:lin(0xdfe2e6), roughness:.8}), rail = new THREE.MeshStandardMaterial({color:lin(0x2b2f36), roughness:.4});
+  own(new THREE.Mesh(new THREE.BoxGeometry(W + 2*T, H, 8), grey)).position.set(0, H/2, -D/2 - 4);
+  for (const sx of [-1, 1]) own(new THREE.Mesh(new THREE.BoxGeometry(T, H, D + 8), white)).position.set(sx*(W/2 + T/2), H/2, -4);
+  own(new THREE.Mesh(new THREE.BoxGeometry(W, base, D), white)).position.set(0, base/2, 0);
+  for (let r = 0; r < rows; r++){
+    const y0 = base + r*(rowH + T);
+    if (r) own(new THREE.Mesh(new THREE.BoxGeometry(W, T, D), white)).position.set(0, y0 - T/2, 0);
+    own(new THREE.Mesh(new THREE.BoxGeometry(W, 24, 3), rail)).position.set(0, y0 - 12, D/2 + 1.5);
+    for (let c = 0; c < cols; c++){
+      const x = -W/2 + 2*gap + sz.x/2 + c*(sz.x + gap), cl = holder.clone(); cl.visible = true;
+      cl.position.set(holder.position.x + x - c0.x, holder.position.y + y0 - b.min.y, holder.position.z - c0.z + (D/2 - sz.z/2 - 8));
+      cl.traverse(n => { if (n.isMesh) n.castShadow = true; }); shelfGroup.add(cl);
+      if (r === 0 || c % 2 === 0){ const tag = own(new THREE.Mesh(new THREE.PlaneGeometry(Math.min(46, sz.x*.8), 18), new THREE.MeshStandardMaterial({color:lin(0xfff8d6), roughness:.6}))); tag.position.set(x, y0 - 12, D/2 + 3.1); }
+    }
+  }
+  applyFold(f); autoFrame = true;
+}
+$("#shootBtn").addEventListener("click", () => { $("#focalSel").innerHTML = FOCALS.map(([v, l]) => `<option value="${v}">${l}</option>`).join(""); renderControls(); openDlg("#shootDlg"); });
+const shootSaved = () => { if (!clientMode){ dirty = true; renderSaveState(); saveDraft(); } };
+$("#focalSel").addEventListener("change", e => { state.focal = +e.target.value; applyScene(); shootSaved(); });
+$("#bgBlur").addEventListener("input", e => { state.bgBlur = +e.target.value; applyScene(); });
+$("#bgBlur").addEventListener("change", shootSaved);
+$("#bgPhoto").addEventListener("change", e => pickImage(e.target, 2400, false, r => { state.images.bg = r; state.scene = "photo"; }));
+$("#bgClear").addEventListener("click", () => { state.images.bg = null; if (state.scene === "photo") state.scene = "studio"; renderControls(); changed("art"); });
+for (const id of ["shelfCols","shelfRows"]) $("#" + id).addEventListener("change", e => { state.shelf[id === "shelfCols" ? "cols" : "rows"] = clamp(Math.round(+e.target.value) || 1, 1, id === "shelfCols" ? 8 : 4); e.target.value = state.shelf[id === "shelfCols" ? "cols" : "rows"]; syncShelf(); shootSaved(); });
+$("#shelfShow").addEventListener("click", () => { state.scene = "rayon"; if (state.compo.on){ state.compo.on = false; compoChanged(); } $("#sceneSel").value = "rayon"; applyScene(); const d = new THREE.Vector3(...CAMS.front).normalize(), dist = camera.position.distanceTo(controls.target); camera.position.copy(controls.target).addScaledVector(d, dist); autoFrame = true; shootSaved(); closeDlg("#shootDlg"); });
+$("#shelfOff").addEventListener("click", () => { state.scene = "studio"; $("#sceneSel").value = "studio"; applyScene(); shootSaved(); });
+
+/* ================= Déclinaisons de gamme ================= */
+function renderVariants(){
+  const el = $("#varList"); if (!el) return;
+  el.innerHTML = state.variants.map((v, i) => `<div class="var-row" data-vi="${i}"><input type="text" data-vk="name" value="${esc(v.name)}" aria-label="Nom de la déclinaison" maxlength="30"><input type="text" data-vk="product" value="${esc(v.product)}" aria-label="Produit" maxlength="60"><input type="color" data-vk="bg" value="${esc(v.bg)}" aria-label="Couleur de fond"><input type="color" data-vk="accent" value="${esc(v.accent)}" aria-label="Couleur d'accent"><button type="button" class="btn small" data-vdel="${i}" aria-label="Supprimer">×</button></div>`).join("") || `<p class="hint">Aucune déclinaison : la référence actuelle sert de modèle.</p>`;
+  $("#varShow").disabled = !state.variants.length;
+}
+function variantState(v){
+  const st = merge(DEFAULT, JSON.parse(snap()));
+  if (v){ if (v.product) st.design.product = v.product; st.design.bg = v.bg; st.design.accent = v.accent; }
+  st.compo = {on:false, layout:"row", items:[]}; st.variants = []; st.scene = "studio"; return st;
+}
+$("#varAdd").addEventListener("click", () => {
+  if (state.variants.length >= 7){ toast("7 déclinaisons au maximum."); return; }
+  const hues = ["#7b2d8b","#1f6f4a","#c2410c","#0f4c81","#a16207","#be123c","#334155"], i = state.variants.length;
+  state.variants.push({id:newId(), name:`Version ${i + 2}`, product:state.design.product, bg:hues[i % hues.length], accent:state.design.accent});
+  renderVariants(); dirty = true; renderSaveState(); schedHistory(); saveDraft();
+});
+$("#varList").addEventListener("input", e => { const row = e.target.closest("[data-vi]"); if (!row || !e.target.dataset.vk) return; const v = state.variants[+row.dataset.vi]; v[e.target.dataset.vk] = e.target.value; dirty = true; renderSaveState(); schedHistory(); saveDraft(); });
+$("#varList").addEventListener("click", e => { const d = e.target.closest("[data-vdel]"); if (!d) return; state.variants.splice(+d.dataset.vdel, 1); renderVariants(); dirty = true; renderSaveState(); schedHistory(); saveDraft(); });
+$("#varShow").addEventListener("click", () => {
+  if (state.scene === "rayon"){ state.scene = "studio"; }
+  state.compo = {on:true, layout:"row", items:[{id:newId(), name:meta.name || "Référence", live:true}, ...state.variants.map(v => ({id:newId(), name:v.name, config:variantState(v)}))]};
+  compoChanged(); applyScene(); toast("Gamme affichée en composition (bouton « Composition » pour la modifier)");
+});
+
+/* ================= Exports en série : multi-vues et gamme ================= */
+async function exportMultiView(base){
+  if (!window.JSZip){ toast("Bibliothèque ZIP indisponible : rechargez la page."); return; }
+  toast("Rendu des 5 vues…");
+  const zip = new JSZip(), restore = soloView(), pos = camera.position.clone(), tgt = controls.target.clone(), f = state.fold;
+  const views = [["1-face", CAMS.front], ["2-trois-quarts", CAMS.three], ["3-profil", [1, .12, .02]], ["4-dos", CAMS.back], ["5-dessus", CAMS.top]];
+  try {
+    applyFold(1);
+    for (const [n, d] of views){
+      const dir = new THREE.Vector3(...d).normalize(), dist = Math.max(100, camera.position.distanceTo(controls.target)); camera.position.copy(controls.target).addScaledVector(dir, dist);
+      zip.file(`${base}_${n}.png`, dataURLtoBlob(captureMockup(2000, 2000, "transparent")));
+      zip.file(`${base}_${n}_fond-blanc.jpg`, dataURLtoBlob(captureMockup(2000, 2000, "white", true)));
+    }
+  } finally { camera.position.copy(pos); controls.target.copy(tgt); restore(); applyFold(f); }
+  await saveFile(`${base}_pack-e-commerce.zip`, await zip.generateAsync({type:"blob"}));
+}
+async function exportRange(base, bg){
+  if (!window.JSZip){ toast("Bibliothèque ZIP indisponible : rechargez la page."); return; }
+  if (!state.variants.length){ toast("Ajoutez d'abord des déclinaisons (onglet Décor)."); return; }
+  toast(`Rendu de ${state.variants.length + 1} maquettes…`);
+  const zip = new JSZip(), list = [[meta.name || "reference", null], ...state.variants.map(v => [v.name, v])].map(([n, v]) => [n, variantState(v)]);
+  const keep = state, restore = soloView();
+  try {
+    for (const [name, st] of list){
+      state = st; fixMat();
+      layout = computeLayout(); const px = Math.min(6, 4096/Math.max(layout.bb.w, layout.bb.h));
+      artCanvas = drawArt(layout, px); pbrCanvas = drawArt(layout, px, "pbr"); build3D(); applyFold(1);
+      const n = slug2(name).toLowerCase() || "version";
+      zip.file(`${n}/${base}_${n}_maquette.png`, dataURLtoBlob(captureMockup(2000, 1500, bg === "scene" ? "white" : bg)));
+      zip.file(`${n}/${base}_${n}_visuel-a-plat.png`, await new Promise(r => proofCanvas(3000).toBlob(r, "image/png")));
+      await new Promise(r => setTimeout(r, 0));
+    }
+  } finally { state = keep; restore(); refresh("geo", true); }
+  await saveFile(`${base}_gamme.zip`, await zip.generateAsync({type:"blob"}));
+}
 
 /* ================= Cotes sur la maquette 3D ================= */
 let dimKey = "", dimTick = 0;

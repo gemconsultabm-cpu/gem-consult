@@ -10,6 +10,9 @@ Configurateur d'emballage en une page (`index.html`) pour l'imprimerie Label Pac
 - **Finitions comme sur Pacdora** : dorure à chaud or, argent, cuivre, or rose ou holographique ; gaufrage en relief ou en creux (marque ou élément), chiffré dans le devis et contrôlé en prépresse.
 - **Import d'un plan de découpe (SVG, DXF)** comme l'outil « Dieline to 3D » de Pacdora : faces reconstituées à partir des coupes et rainages (calques, couleurs ou pointillés), pliage 3D automatique, angle global ou par volet, devis et exports comme un gabarit natif.
 - **Structure par IA** : décrivez le produit, l'assistant propose jusqu'à 3 structures du catalogue avec des cotes adaptées.
+- **Prise de vue** (inspirée d'Esko Studio, Boxshot, Mockey.ai, Unblast et Mockupworld) : **rayon de magasin** avec façades et étagères, **mise en situation sur votre photo** avec flou d'arrière-plan, choix de l'**objectif** (24 à 135 mm).
+- **Déclinaisons de gamme** (parfums, variétés) : affichage de la gamme en 3D et **rendu en série** (une maquette et un visuel à plat par déclinaison).
+- **Pack e-commerce multi-vues** : 5 angles en 2000 × 2000 px, fond transparent et fond blanc.
 - **Composition** : jusqu'à 8 emballages dans la même scène 3D, à l'échelle réelle (alignés, en arc, en quinconce), pour présenter une gamme.
 - **Cotes sur la maquette 3D**, **impression intérieure avec visuel** (fichier verso fourni dans le pack), **chartes graphiques clients** réutilisables.
 - **Exports image HD, 4K ou 8K** (4:3, 16:9, carré, portrait) et **vidéos MP4** : animation de pliage ou rotation 360°.
