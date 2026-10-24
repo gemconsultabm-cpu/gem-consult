@@ -2348,7 +2348,7 @@ function frameStep(now){
   if (recState){
     const t = (now - recState.t0)/1000 + (recState.spin ? 3.6 : 0);
     if (!recState.spin) setFold(t < .4 ? 0 : t < 3.4 ? (t - .4)/3 : 1);
-    if (t > 3.6){ const a = Math.min(1, (t - 3.6)/(recState.spin ? 6 : 4))*Math.PI*2, d0 = recState.dir0; camera.position.set(controls.target.x + d0.x*Math.cos(a) + d0.z*Math.sin(a), controls.target.y + d0.y, controls.target.z - d0.x*Math.sin(a) + d0.z*Math.cos(a)); }
+    if (t > 3.6){ if (!recState.dir1){ if (!recState.spin) frame(true); recState.dir1 = recState.spin ? recState.dir0 : camera.position.clone().sub(controls.target); } const a = Math.min(1, (t - 3.6)/(recState.spin ? 6 : 4))*Math.PI*2, d0 = recState.dir1; camera.position.set(controls.target.x + d0.x*Math.cos(a) + d0.z*Math.sin(a), controls.target.y + d0.y, controls.target.z - d0.x*Math.sin(a) + d0.z*Math.cos(a)); }
     if (t > (recState.spin ? 9.8 : 7.8) && recState.end){ const f = recState.end; recState.end = null; f(); }
   } else if (anim){
     const p = clamp((now - anim.t0)/anim.dur, 0, 1);
@@ -4168,7 +4168,7 @@ function endTour(completed){
   if (!tour) return; const t = tour; tour = null; $("#tourHole").hidden = $("#tourTip").hidden = true; document.body.classList.remove("touring"); togglePop(false);
   document.querySelectorAll(".overlay:not([hidden])").forEach(o => closeDlg("#" + o.id));
   if (completed && !t.single){ [...new Set(t.steps.map(x => x.ch))].forEach(id => guideState.done[id] = true); saveGuide(); toast("Visite terminée : retrouvez le guide à tout moment via le bouton « Guide »"); }
-  if (t.single) openGuide();
+  if (t.single && completed) openGuide();
 }
 function showTourStep(){
   if (!tour) return; const st = tour.steps[tour.i];
