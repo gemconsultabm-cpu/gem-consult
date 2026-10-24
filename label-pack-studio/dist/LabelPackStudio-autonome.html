@@ -703,6 +703,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
         </div>
       </div>
       <p class="hint" id="dimNote"></p>
+      <div class="field" id="grainRow"><label for="grainSel">Sens des fibres du carton</label><select id="grainSel"><option value="h">Horizontal sur le plan (perpendiculaire aux plis du corps, conseillé)</option><option value="v">Vertical sur le plan</option></select></div>
     </section>
 
     <section class="sec" id="secMat">
@@ -866,6 +867,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <button class="exp" data-exp="ai-send" type="button" hidden><b>Envoyer vers Illustrator</b><small>Nouveau document : calques Visuel, Fond perdu, Rainage, Coupe (tons directs CutContour et Rainage)</small><span>AI</span></button>
       <button class="exp" data-exp="aijsx" type="button"><b>Script Illustrator</b><small>Recrée le gabarit dans Illustrator avec calques et tons directs (Fichier › Scripts › Autre script)</small><span>.zip</span></button>
       <button class="exp" data-exp="printpdf" type="button"><b>PDF d'impression</b><small>300 dpi, fond perdu, traits de coupe ; forme de découpe et calques de finition sur pages séparées</small><span>.pdf</span></button>
+      <button class="exp" data-exp="formiste" type="button"><b>Dossier formiste</b><small>Forme 1 pose et montage feuille en DXF / PDF, vrais arcs, calques normalisés, filets, sens des fibres, contrôle du tracé</small><span>.zip</span></button>
       <button class="exp" data-exp="diepdf" type="button"><b>Plan de découpe</b><small>Échelle 1:1, coupe / rainage, cartouche</small><span>.pdf</span></button>
       <button class="exp" data-exp="tplsvg" type="button"><b>Gabarit graphiste</b><small>Calques COUPE, RAINAGE, FOND_PERDU, SECURITE</small><span>.svg</span></button>
       <button class="exp" data-exp="bat" type="button"><b>Bon à tirer (BAT)</b><small>Maquette, visuel, contrôle prépresse, accord</small><span>.pdf</span></button>
@@ -2687,7 +2689,7 @@ const DEFAULT = {
   window:{on:false, w:30, h:60, y:5, r:4},
   mat:{box:"gc1", label:"couche", cup:"pe"}, print:{box:"cmjn", label:"num", cup:"cmjn"}, lam:{box:"mat", label:"vernis", cup:"none"},
   varnish:false, foil:true, foilColor:"or", relief:"none", raw:false, inside:{on:false, color:"#e2b25a"},
-  importData:null, softProof:false, focal:42, bgBlur:0, shelf:{cols:4, rows:2}, variants:[], scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
+  importData:null, grain:"h", softProof:false, focal:42, bgBlur:0, shelf:{cols:4, rows:2}, variants:[], scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
   design:{bg:"#123c3a", accent:"#e2b25a", brand:"Néroli", product:"Crème mains à la fleur d'oranger", mention:"75 ml · Fabriqué en Tunisie", pattern:"zellige", legal:"", ean:""},
   images:{logo:null, full:null, inside:null, bg:null}, faces:{}, fullHide:false, elements:[],
   qty:2500, fold:1, showArt:true, showSafe:true
@@ -2731,8 +2733,17 @@ function innerDims(){
   if (kind() !== "box" || state.dimMode !== "ext") return d;
   const e = caliper(), o = {...d}; for (const k of ["L","W","H"]) if (k in o) o[k] = d[k] - 2*e; return o;
 }
-function tuckPoly(L, t, s){ const k = Math.min(t*.35, L*.2); return [[0,0],[L,0],[L-1.5,s*t*.55],[L-1.5-k,s*t],[1.5+k,s*t],[1.5,s*t*.55]]; }
-function dustPoly(W, d, s, slantRight){ const k = d*.35; return slantRight ? [[0,0],[W,0],[W-k,s*d],[2,s*d]] : [[0,0],[W,0],[W-2,s*d],[k,s*d]]; }
+// Languette rentrante standard : épaulement droit de 1,5 mm au pli, bords bien droits, coins supérieurs arrondis.
+function tuckPoly(L, t, s){
+  const c = 1.5, r = Math.min(t*.5, (L - 2*c)*.25), n = 6, out = [[c,0],[L-c,0],[L-c,s*(t-r)]];
+  for (let i = 1; i < n; i++){ const a = i/n*Math.PI/2; out.push([L-c-r + r*Math.cos(a), s*(t-r + r*Math.sin(a))]); }
+  out.push([L-c-r,s*t],[c+r,s*t]);
+  for (let i = 1; i < n; i++){ const a = Math.PI/2 + i/n*Math.PI/2; out.push([c+r + r*Math.cos(a), s*(t-r + r*Math.sin(a))]); }
+  out.push([c,s*(t-r)]);
+  return out;
+}
+// Rabat anti-poussière : bord droit côté rabat sur 55 % de la hauteur, puis dégagement en biais.
+function dustPoly(W, d, s, slantRight){ const k = Math.min(d*.35, W*.45), h = d*.55; return slantRight ? [[0,0],[W,0],[W,s*h],[W-k,s*d],[2,s*d]] : [[0,0],[W,0],[W-2,s*d],[k,s*d],[0,s*h]]; }
 function ring(d, e, hAdd, st){
   const L = d.L + e, W = d.W + e, H = d.H + hAdd, ei = Math.max(e, .45);
   const g = e >= 1 ? Math.min(35, L*.35, H*.4) : Math.min(15, L*.3), tp = Math.min(g*.4, H*.06);
@@ -3295,6 +3306,25 @@ function cutPieces(a, b, hinges){
 }
 const applyT = (T, [x, y]) => [T.x + T.c*x - T.s*y, T.y + T.s*x + T.c*y];
 const rot2 = ([x, y], a) => [Math.cos(a)*x - Math.sin(a)*y, Math.sin(a)*x + Math.cos(a)*y];
+// Trait commun : deux coupes alignées qui se recouvrent deviennent un seul trait, coupé à toutes les extrémités d'origine.
+function mergeCollinear(segs){
+  const groups = new Map(), out = [];
+  for (const sg of segs){
+    let [a, b] = sg, dx = b[0]-a[0], dy = b[1]-a[1]; const l = Math.hypot(dx, dy); if (l < 1e-6) continue;
+    dx /= l; dy /= l; if (dx < -1e-9 || (Math.abs(dx) <= 1e-9 && dy < 0)){ dx = -dx; dy = -dy; }
+    const off = dx*a[1] - dy*a[0], key = `${(Math.round(Math.atan2(dy, dx)*2e3))}|${Math.round(off*20)}`;
+    if (!groups.has(key)) groups.set(key, {dx, dy, a, list:[]});
+    const g = groups.get(key), pr = q => (q[0]-g.a[0])*g.dx + (q[1]-g.a[1])*g.dy, u0 = pr(a), u1 = pr(b);
+    g.list.push([Math.min(u0, u1), Math.max(u0, u1), u0 <= u1 ? a : b, u0 <= u1 ? b : a]);
+  }
+  for (const g of groups.values()){
+    if (g.list.length === 1){ out.push([g.list[0][2], g.list[0][3]]); continue; }
+    const pts = new Map(); for (const [u0, u1, pa, pb] of g.list){ pts.set(u0.toFixed(3), [u0, pa]); pts.set(u1.toFixed(3), [u1, pb]); }
+    const ts = [...pts.values()].sort((x, y) => x[0] - y[0]);
+    for (let i = 0; i < ts.length - 1; i++){ const m = (ts[i][0] + ts[i+1][0])/2; if (ts[i+1][0] - ts[i][0] > 1e-3 && g.list.some(([u0, u1]) => u0 - 1e-4 <= m && m <= u1 + 1e-4)) out.push([ts[i][1], ts[i+1][1]]); }
+  }
+  return out;
+}
 function computeLayout(){
   const e = caliper(), d = innerDims(), panels = BUILDERS[state.model](d, e), byId = {};
   for (const p of panels){
@@ -3324,8 +3354,9 @@ function computeLayout(){
   for (const p of panels){
     const q = p.gpoly;
     for (let i = 0; i < q.length; i++) cutPieces(q[i], q[(i+1) % q.length], hingesAll).forEach(push);
-    for (const h of p.gholes) for (let i = 0; i < h.length; i++) push([h[i], h[(i+1) % h.length]]);
+    for (const h of p.gholes) for (let i = 0; i < h.length; i++){ const a = h[i], b2 = h[(i+1) % h.length]; if (Math.hypot(b2[0] - a[0], b2[1] - a[1]) >= .01) push([a, b2]); }
   }
+  const merged = mergeCollinear(cuts); cuts.length = 0; cuts.push(...merged);
   const segLen = arr => arr.reduce((s,[a,b]) => s + Math.hypot(b[0]-a[0], b[1]-a[1]), 0);
   const cbb = polyBox(panels.flatMap(p => p.gpoly)), bleed = kind() === "label" ? 2 : 3;
   const bb = {minX:cbb.minX-bleed, minY:cbb.minY-bleed, maxX:cbb.maxX+bleed, maxY:cbb.maxY+bleed, w:cbb.w+2*bleed, h:cbb.h+2*bleed};
@@ -3666,6 +3697,7 @@ function renderGamut(){
   $("#gamutTxt").textContent = `${g.length} couleur(s) hors gamut CMJN : elles ne peuvent pas être reproduites en quadrichromie et sortiront plus ternes.`;
   $("#gamutSw").innerHTML = g.map(x => `<span class="gsw" title="${esc(x.where)}"><i style="background:${x.hex}"></i>${x.hex} → <i style="background:${x.fix}"></i>${x.fix}</span>`).join("");
 }
+$("#grainSel").addEventListener("change", e => { state.grain = e.target.value; changed("art"); });
 $("#softProof").addEventListener("change", e => { state.softProof = e.target.checked; changed("art"); });
 $("#gamutFix").addEventListener("click", () => { const g = gamutIssues(); g.forEach(x => x.set(x.fix)); renderControls(); changed("art"); toast(`${g.length} couleur(s) remplacée(s) par une teinte imprimable`); });
 
@@ -4210,6 +4242,14 @@ function dielineSVG(forExport){
   s += `<line x1="${f2(xr)}" y1="${f2(-cb.maxY)}" x2="${f2(xr)}" y2="${f2(-cb.minY)}"${vef}/><line x1="${f2(xr - fs*.6)}" y1="${f2(-cb.maxY)}" x2="${f2(xr + fs*.6)}" y2="${f2(-cb.maxY)}"${vef}/><line x1="${f2(xr - fs*.6)}" y1="${f2(-cb.minY)}" x2="${f2(xr + fs*.6)}" y2="${f2(-cb.minY)}"${vef}/></g>`;
   s += `<text x="${f2((x1 + x2)/2)}" y="${f2(y0 + fs*1.6)}" text-anchor="middle" style="font-size:${fs}px">${fmt1.format(cb.w)} mm</text>`;
   s += `<text transform="translate(${f2(xr + fs*1.5)} ${f2(-(cb.minY + cb.maxY)/2)}) rotate(90)" text-anchor="middle" style="font-size:${fs}px">${fmt1.format(cb.h)} mm</text></g>`;
+  if (kind() === "box"){
+    const gl = Math.min(42, Math.max(cb.w, cb.h)/4), ah = fs*.6, col = forExport ? "#00A651" : "var(--ok)";
+    const [x0, y0, x1, y1] = state.grain === "v" ? [cb.minX - pad*.45, cb.maxY, cb.minX - pad*.45, cb.maxY - gl] : [cb.minX, cb.maxY + pad*.42, cb.minX + gl, cb.maxY + pad*.42];
+    const head = (xa, ya, dx, dy) => `M${f2(xa - dx*ah - dy*ah*.6)} ${f2(-(ya - dy*ah + dx*ah*.6))}L${f2(xa)} ${f2(-ya)}L${f2(xa - dx*ah + dy*ah*.6)} ${f2(-(ya - dy*ah - dx*ah*.6))}`;
+    const ux = Math.sign(x1 - x0), uy = Math.sign(y1 - y0);
+    s += `<g id="SENS_FIBRE" style="pointer-events:none;stroke:${col};fill:none;stroke-width:${forExport ? .3 : 1.2}"${vef}><path d="M${f2(x0)} ${f2(-y0)}L${f2(x1)} ${f2(-y1)}${head(x1, y1, ux, uy)}${head(x0, y0, -ux, -uy)}"${vef}/>`;
+    s += `<text x="${f2((x0 + x1)/2 + (state.grain === "v" ? -fs*.4 : 0))}" y="${f2(-(y0 + y1)/2 - (state.grain === "v" ? 0 : fs*.5))}" ${state.grain === "v" ? `transform="rotate(-90 ${f2((x0 + x1)/2 - fs*.4)} ${f2(-(y0 + y1)/2)})" ` : ""}text-anchor="middle" style="fill:${col};stroke:none;font-family:IBM Plex Mono,monospace;font-size:${fs*.8}px">SENS FIBRE</text></g>`;
+  }
   if (!forExport){
     s += `<g id="ELS" style="pointer-events:${edit ? "all" : "none"}">`;
     for (const el of state.elements){
@@ -4352,6 +4392,7 @@ const hasRelief = () => state.relief !== "none" || state.elements.some(x => x.re
 function preflight(q){
   const out = [], add = (level, msg) => out.push({level, msg}), t = TPL(), d = state.design, L = layout;
   if (q && q.error) add("error", q.error);
+  if (L && kind() !== "label"){ try { const dc = dieCheck(L); add(dc.ok ? "info" : "warn", dieCheckText(dc)); } catch (e) {} }
   for (const g of gamutIssues()) add("warn", `Couleur ${g.hex} (${g.where}) hors gamut CMJN : elle sortira plus terne à l'impression. Teinte imprimable proche : ${g.fix}.`);
   if (artCanvas){ const r = gamutArea(artCanvas); if (r > .03) add("warn", `${fmt0.format(r*100)} % de la surface du visuel (images comprises) est hors gamut CMJN : vérifiez le rendu avec « Aperçu des couleurs imprimées ».`); }
   if (hasRelief()){
@@ -4544,7 +4585,8 @@ function renderControls(){
   $("#focalSel").value = state.focal || 42; $("#bgBlur").value = state.bgBlur || 0; $("#shelfCols").value = state.shelf.cols; $("#shelfRows").value = state.shelf.rows;
   const bgi = state.images.bg; $("#bgThumb").hidden = !bgi; if (bgi) $("#bgThumb").src = bgi.src; $("#bgClear").hidden = !bgi; renderVariants();
   $("#sceneSel").value = state.scene in SCENES ? state.scene : "studio"; $("#lightAz").value = state.lightAz ?? 35; $("#lightPow").value = state.lightPow ?? 100; applyScene();
-  $("#softProof").checked = !!state.softProof; renderGamut(); setTimeout(renderFlow, 50);
+  $("#softProof").checked = !!state.softProof; renderGamut();
+  $("#grainRow").hidden = kind() !== "box"; $("#grainSel").value = state.grain === "v" ? "v" : "h"; setTimeout(renderFlow, 50);
   $("#foilColor").value = state.foilColor in FOILS ? state.foilColor : "or"; $("#relief").value = state.relief in RELIEFS ? state.relief : "none";
   $("#varnish").checked = state.varnish; $("#foil").checked = state.foil; $("#raw").checked = state.raw; $("#fullHide").checked = state.fullHide;
   $("#qty").value = state.qty; $("#showArt").checked = state.showArt; $("#showSafe").checked = state.showSafe;
@@ -4961,15 +5003,171 @@ function specRows(){
   const fmtD = dimsText(layout.inner);
   return [["Modèle", t.name], ["Format", fmtD], ["Développé à plat", `${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm`], ["Support", MAT[k][state.mat[k]].name + (k === "box" ? ` (e = ${fmt2.format(layout.e)} mm)` : "")], ["Impression", PRINT[k][state.print[k]]], ["Finitions", fin]];
 }
-function dielineDXF(){
-  const out = [], p = (...a) => out.push(...a), L = layout;
-  p("0","SECTION","2","HEADER","9","$INSUNITS","70","4","0","ENDSEC","0","SECTION","2","TABLES","0","TABLE","2","LAYER","70","2");
-  for (const [n, c] of [["COUPE",1],["RAINAGE",5]]) p("0","LAYER","2",n,"70","0","62",String(c),"6","CONTINUOUS");
-  p("0","ENDTAB","0","ENDSEC","0","SECTION","2","ENTITIES");
-  const line = (lay, a, b) => p("0","LINE","8",lay,"10",a[0].toFixed(3),"20",a[1].toFixed(3),"30","0","11",b[0].toFixed(3),"21",b[1].toFixed(3),"31","0");
-  L.cuts.forEach(([a,b]) => line("COUPE", a, b)); L.creases.forEach(([a,b]) => line("RAINAGE", a, b));
-  p("0","ENDSEC","0","EOF");
+/* ---- Forme de découpe pour le formiste : traits continus, vrais arcs, DXF R12 normalisé, montage feuille, contrôle ---- */
+// Chaînes continues sans sommets alignés superflus.
+function dieChains(segs){
+  return chainSegs(segs.filter(([a, b]) => Math.hypot(b[0] - a[0], b[1] - a[1]) >= .01)).map(ch => {
+    let pts = ch.p.slice();
+    const straight = (a, b, c) => { const ux = b[0] - a[0], uy = b[1] - a[1], vx = c[0] - b[0], vy = c[1] - b[1], l1 = Math.hypot(ux, uy), l2 = Math.hypot(vx, vy); return l1 > 1e-9 && l2 > 1e-9 && Math.abs(ux*vy - uy*vx)/(l1*l2) < 2e-4 && ux*vx + uy*vy > 0; };
+    for (let ch2 = true; ch2;){ ch2 = false; for (let i = 1; i < pts.length - 1; i++) if (straight(pts[i - 1], pts[i], pts[i + 1])){ pts.splice(i, 1); ch2 = true; break; } }
+    if (ch.c && pts.length > 3){ for (let ch2 = true; ch2 && pts.length > 3;){ ch2 = false; const n = pts.length; if (straight(pts[n - 1], pts[0], pts[1])){ pts.shift(); ch2 = true; } else if (straight(pts[n - 2], pts[n - 1], pts[0])){ pts.pop(); ch2 = true; } } }
+    return {p:pts, c:ch.c};
+  });
+}
+// Remplace les suites de petits segments situés sur un même cercle par de vrais arcs (cintrage des filets).
+function dieEntities(chains){
+  const out = [], tol = .02, D = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const circ = (a, b, c) => { const d = 2*(a[0]*(b[1] - c[1]) + b[0]*(c[1] - a[1]) + c[0]*(a[1] - b[1])); if (Math.abs(d) < 1e-9) return null;
+    const a2 = a[0]*a[0] + a[1]*a[1], b2 = b[0]*b[0] + b[1]*b[1], c2 = c[0]*c[0] + c[1]*c[1], x = (a2*(b[1] - c[1]) + b2*(c[1] - a[1]) + c2*(a[1] - b[1]))/d, y = (a2*(c[0] - b[0]) + b2*(a[0] - c[0]) + c2*(b[0] - a[0]))/d; return {x, y, r:Math.hypot(a[0] - x, a[1] - y)}; };
+  const cross = (a, b, c) => (b[0] - a[0])*(c[1] - b[1]) - (b[1] - a[1])*(c[0] - b[0]);
+  const ang = (c, q) => (Math.atan2(q[1] - c.y, q[0] - c.x)*180/Math.PI + 360) % 360;
+  for (const ch of chains){
+    const pts = ch.c ? [...ch.p, ch.p[0]] : ch.p;
+    if (ch.c && ch.p.length >= 12){ const c = circ(ch.p[0], ch.p[Math.floor(ch.p.length/3)], ch.p[Math.floor(2*ch.p.length/3)]);
+      if (c && ch.p.every(q => Math.abs(D(q, [c.x, c.y]) - c.r) < tol) && pts.every((q, i) => !i || D(q, pts[i - 1]) < c.r*.5)){ out.push({t:"C", x:c.x, y:c.y, r:c.r}); continue; } }
+    let i = 0;
+    while (i < pts.length - 1){
+      let best = -1, bc = null;
+      for (let j = i + 3; j < pts.length; j++){
+        const c = circ(pts[i], pts[Math.floor((i + j)/2)], pts[j]); if (!c || c.r > 3000) break;
+        let ok = true; const sg = Math.sign(cross(pts[i], pts[i + 1], pts[i + 2]));
+        for (let k = i; k <= j && ok; k++){ if (Math.abs(D(pts[k], [c.x, c.y]) - c.r) > tol) ok = false;
+          if (k > i){ const l = D(pts[k - 1], pts[k]); if (l > c.r || c.r - Math.sqrt(Math.max(0, c.r*c.r - l*l/4)) > .12) ok = false; }
+          if (k > i && k < j && Math.sign(cross(pts[k - 1], pts[k], pts[k + 1])) !== sg) ok = false; }
+        if (!ok) break; best = j; bc = {...c, ccw:sg > 0};
+      }
+      if (best > 0){ const a0 = ang(bc, pts[i]), a1 = ang(bc, pts[best]); out.push({t:"A", x:bc.x, y:bc.y, r:bc.r, a0:bc.ccw ? a0 : a1, a1:bc.ccw ? a1 : a0}); i = best; }
+      else { out.push({t:"L", a:pts[i], b:pts[i + 1]}); i++; }
+    }
+  }
+  return out;
+}
+function dieGeometry(L = layout){ return {cut:dieEntities(dieChains(L.cuts)), crease:dieEntities(dieChains(L.creases))}; }
+// Contrôle du tracé selon les exigences d'un formiste.
+function dieCheck(L = layout){
+  const S = arr => arr.map(([a, b]) => ({a, b, l:Math.hypot(b[0] - a[0], b[1] - a[1])}));
+  const C = S(L.cuts), K = S(L.creases), r = {tiny:0, doubles:0, creaseOnCut:0, microGaps:0, freeEnds:0};
+  const over = (s, t) => { const dx = s.b[0] - s.a[0], dy = s.b[1] - s.a[1], d = q => Math.abs(dx*(q[1] - s.a[1]) - dy*(q[0] - s.a[0]))/s.l; if (s.l < 1e-6 || d(t.a) > .02 || d(t.b) > .02) return 0; const pr = q => ((q[0] - s.a[0])*dx + (q[1] - s.a[1])*dy)/s.l; let u0 = pr(t.a), u1 = pr(t.b); if (u0 > u1) [u0, u1] = [u1, u0]; return Math.min(s.l, u1) - Math.max(0, u0); };
+  for (const s of C) if (s.l < .2) r.tiny++;
+  for (let i = 0; i < C.length; i++) for (let j = i + 1; j < C.length; j++) if (over(C[i], C[j]) > .05) r.doubles++;
+  for (let i = 0; i < K.length; i++) for (let j = i + 1; j < K.length; j++) if (over(K[i], K[j]) > .05) r.doubles++;
+  for (const k of K) for (const c of C) if (over(c, k) > .05) r.creaseOnCut++;
+  const key = q => q[0].toFixed(2) + "," + q[1].toFixed(2), deg = new Map();
+  for (const s of C) for (const q of [s.a, s.b]) deg.set(key(q), (deg.get(key(q)) || 0) + 1);
+  const ends = [...deg].filter(([, d]) => d === 1).map(([k]) => k.split(",").map(Number)); r.freeEnds = ends.length;
+  const all = [...deg.keys()].map(k => k.split(",").map(Number));
+  for (const e of ends) if (all.some(q => { const d = Math.hypot(q[0] - e[0], q[1] - e[1]); return d > .005 && d < .3; })) r.microGaps++;
+  const g = dieGeometry(L); r.arcs = [...g.cut, ...g.crease].filter(x => x.t !== "L").length; r.entities = g.cut.length + g.crease.length;
+  r.slits = ["rte","ste","hang","hex","gable"].includes(state.model);
+  r.ok = !r.tiny && !r.doubles && !r.creaseOnCut && !r.microGaps && (!r.freeEnds || r.slits);
+  return r;
+}
+function dieCheckText(r){
+  return r.ok ? `Tracé conforme : aucun double trait, aucun rainage sous une coupe, aucun micro-écart ni segment parasite${r.freeEnds ? ` ; ${r.freeEnds} extrémités libres = fentes de verrouillage voulues` : " ; contours fermés"}${r.arcs ? ` ; ${r.arcs} courbes en vrais arcs` : ""}.`
+    : `Tracé à vérifier : ${[r.doubles && `${r.doubles} double(s) trait(s)`, r.creaseOnCut && `${r.creaseOnCut} rainage(s) sous une coupe`, r.microGaps && `${r.microGaps} micro-écart(s)`, r.tiny && `${r.tiny} segment(s) < 0,2 mm`, r.freeEnds && !r.slits && `${r.freeEnds} extrémité(s) libre(s) (contour ouvert)`].filter(Boolean).join(", ")}.`;
+}
+// Caractéristiques indicatives des filets (à confirmer par le formiste).
+function knifeSpec(){
+  const e = kind() === "box" ? layout.e : kind() === "cup" ? .45 : .1, rule = .71;
+  return {e, txt:`Filet de coupe 2 pt (0,71 mm), hauteur 23,80 mm ; filet de rainage 2 pt, hauteur ≈ ${fmt2.format(23.8 - e - .05)} mm ; contre-partie : largeur ≈ ${fmt2.format(rule + 1.5*e)} mm, profondeur ≈ ${fmt2.format(e)} mm (indicatif, à valider par le formiste).`};
+}
+const asciiTxt = t => String(t).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\x20-\x7e]/g, " ").replace(/\s+/g, " ").trim();
+// DXF R12 (AC1009) : en-tête complet, types de traits, calques COUPE / RAINAGE / INFOS, unités mm, origine en bas à gauche.
+function dxfWrite(groups, ext){
+  const out = [], p = (...a) => out.push(...a.map(String)), n = v => (+v).toFixed(4);
+  p(0,"SECTION",2,"HEADER",9,"$ACADVER",1,"AC1009",9,"$INSBASE",10,"0.0",20,"0.0",30,"0.0",9,"$EXTMIN",10,n(ext[0]),20,n(ext[1]),30,"0.0",9,"$EXTMAX",10,n(ext[2]),20,n(ext[3]),30,"0.0",9,"$INSUNITS",70,4,9,"$MEASUREMENT",70,1,0,"ENDSEC");
+  p(0,"SECTION",2,"TABLES",0,"TABLE",2,"LTYPE",70,2,0,"LTYPE",2,"CONTINUOUS",70,0,3,"Solid line",72,65,73,0,40,"0.0",0,"LTYPE",2,"DASHED",70,0,3,"Dashed",72,65,73,2,40,"3.2",49,"2.0",49,"-1.2",0,"ENDTAB");
+  p(0,"TABLE",2,"LAYER",70,3); for (const [nm, col, lt] of [["COUPE",1,"CONTINUOUS"],["RAINAGE",5,"CONTINUOUS"],["INFOS",3,"CONTINUOUS"]]) p(0,"LAYER",2,nm,70,0,62,col,6,lt); p(0,"ENDTAB",0,"ENDSEC");
+  p(0,"SECTION",2,"ENTITIES");
+  for (const [lay, ents] of groups) for (const e of ents){
+    if (e.t === "L") p(0,"LINE",8,lay,10,n(e.a[0]),20,n(e.a[1]),30,"0.0",11,n(e.b[0]),21,n(e.b[1]),31,"0.0");
+    else if (e.t === "A") p(0,"ARC",8,lay,10,n(e.x),20,n(e.y),30,"0.0",40,n(e.r),50,n(e.a0),51,n(e.a1));
+    else if (e.t === "C") p(0,"CIRCLE",8,lay,10,n(e.x),20,n(e.y),30,"0.0",40,n(e.r));
+    else if (e.t === "T") p(0,"TEXT",8,lay,10,n(e.x),20,n(e.y),30,"0.0",40,n(e.h),1,asciiTxt(e.s), ...(e.rot ? [50, n(e.rot)] : []));
+  }
+  p(0,"ENDSEC",0,"EOF");
   return out.join("\r\n") + "\r\n";
+}
+// Transformation d'une entité : rotation de 90° (pose tournée) puis translation.
+function entMove(e, dx, dy, rot, h){
+  const P = q => rot ? [h - q[1] + dx, q[0] + dy] : [q[0] + dx, q[1] + dy];
+  if (e.t === "L") return {t:"L", a:P(e.a), b:P(e.b)};
+  if (e.t === "T"){ const [x, y] = P([e.x, e.y]); return {...e, x, y, rot:(e.rot || 0) + (rot ? 90 : 0)}; }
+  const [x, y] = P([e.x, e.y]); return e.t === "C" ? {t:"C", x, y, r:e.r} : {t:"A", x, y, r:e.r, a0:(e.a0 + (rot ? 90 : 0)) % 360, a1:(e.a1 + (rot ? 90 : 0)) % 360};
+}
+function grainEnts(x0, y0, len, vertical, label = "SENS FIBRE"){
+  const a = 3, E = [];
+  if (vertical){ E.push({t:"L", a:[x0, y0], b:[x0, y0 + len]}, {t:"L", a:[x0, y0 + len], b:[x0 - a*.6, y0 + len - a]}, {t:"L", a:[x0, y0 + len], b:[x0 + a*.6, y0 + len - a]}, {t:"L", a:[x0, y0], b:[x0 - a*.6, y0 + a]}, {t:"L", a:[x0, y0], b:[x0 + a*.6, y0 + a]}, {t:"T", x:x0 - 2, y:y0 + 2, h:3, s:label, rot:90}); }
+  else { E.push({t:"L", a:[x0, y0], b:[x0 + len, y0]}, {t:"L", a:[x0 + len, y0], b:[x0 + len - a, y0 - a*.6]}, {t:"L", a:[x0 + len, y0], b:[x0 + len - a, y0 + a*.6]}, {t:"L", a:[x0, y0], b:[x0 + a, y0 - a*.6]}, {t:"L", a:[x0, y0], b:[x0 + a, y0 + a*.6]}, {t:"T", x:x0 + len + 3, y:y0 - 1.5, h:3, s:label}); }
+  return E;
+}
+function dielineDXF(){
+  const L = layout, cb = L.cbb, g = dieGeometry(L), mv = e => entMove(e, -cb.minX, -cb.minY, false, 0), w = cb.w, h = cb.h, t = TPL();
+  const info = [{t:"T", x:0, y:-12, h:3.5, s:`${settings.company.name || "Label Pack"} - forme de decoupe ${quoteNo()} - ${t.name} - ${dimsText()}`},
+    {t:"T", x:0, y:-18, h:2.5, s:`Developpe ${fmt1.format(w)} x ${fmt1.format(h)} mm - echelle 1:1, unites mm - support ${kind() === "box" ? MAT.box[state.mat.box].name + ", e = " + fmt2.format(L.e) + " mm" : MAT[kind()][state.mat[kind()]].name} - coupe ${fmt2.format(L.cutLen/1000)} m, rainage ${fmt2.format(L.creaseLen/1000)} m`}];
+  if (kind() === "box") info.push(...grainEnts(state.grain === "v" ? -8 : 0, state.grain === "v" ? 0 : h + 8, Math.min(40, Math.max(w, h)/4), state.grain === "v"));
+  return dxfWrite([["COUPE", g.cut.map(mv)], ["RAINAGE", g.crease.map(mv)], ["INFOS", info]], [-12, -22, w + 10, h + 14]);
+}
+// Montage sur la feuille : même calcul de poses que le devis (prise de pince et espace entre poses des paramètres).
+function montage(){
+  const k = kind(); if (k === "label") return null;
+  const B = P().box, cb = layout.cbb, gap = B.gap, grip = B.grip, SW = B.sheetW - 2*grip, SH = B.sheetH - 2*grip;
+  const a = [Math.floor(SW/(cb.w + gap)), Math.floor(SH/(cb.h + gap))], b = [Math.floor(SW/(cb.h + gap)), Math.floor(SH/(cb.w + gap))], rot = b[0]*b[1] > a[0]*a[1], [nx, ny] = rot ? b : a;
+  const pw = rot ? cb.h : cb.w, ph = rot ? cb.w : cb.h, poses = [];
+  const ox = grip + (SW - (nx*pw + (nx - 1)*gap))/2, oy = grip + (SH - (ny*ph + (ny - 1)*gap))/2;
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) poses.push({dx:ox + i*(pw + gap), dy:oy + j*(ph + gap)});
+  return {W:B.sheetW, H:B.sheetH, grip, gap, nx, ny, rot, pw, ph, poses, n:poses.length};
+}
+function montageDXF(){
+  const M = montage(); if (!M || !M.n) return null;
+  const L = layout, cb = L.cbb, g = dieGeometry(L), base = e => entMove(e, -cb.minX, -cb.minY, false, 0);
+  const cut = [], crease = [];
+  for (const q of M.poses){ for (const e of g.cut) cut.push(entMove(base(e), q.dx, q.dy, M.rot, cb.h)); for (const e of g.crease) crease.push(entMove(base(e), q.dx, q.dy, M.rot, cb.h)); }
+  const rect = (x0, y0, x1, y1) => [{t:"L", a:[x0, y0], b:[x1, y0]}, {t:"L", a:[x1, y0], b:[x1, y1]}, {t:"L", a:[x1, y1], b:[x0, y1]}, {t:"L", a:[x0, y1], b:[x0, y0]}];
+  const info = [...rect(0, 0, M.W, M.H), {t:"L", a:[0, M.grip], b:[M.W, M.grip]},
+    {t:"T", x:2, y:2, h:3, s:`Prise de pince ${M.grip} mm`},
+    {t:"T", x:0, y:-10, h:4, s:`${settings.company.name || "Label Pack"} - montage ${quoteNo()} - feuille ${M.W} x ${M.H} mm - ${M.n} poses (${M.nx} x ${M.ny})${M.rot ? ", poses tournees de 90 degres" : ""} - espace entre poses ${M.gap} mm`},
+    {t:"T", x:0, y:-16, h:3, s:`Coupe ${fmt1.format(L.cutLen*M.n/1000)} m, rainage ${fmt1.format(L.creaseLen*M.n/1000)} m par feuille (hors filets de chute et attaches)`}];
+  if (kind() === "box") info.push(...grainEnts(M.W + 8, 0, 60, (state.grain === "v") !== M.rot, "SENS FIBRE (poses)"));
+  return dxfWrite([["COUPE", cut], ["RAINAGE", crease], ["INFOS", info]], [-5, -20, M.W + 20, M.H + 5]);
+}
+function montagePDF(){
+  const M = montage(); if (!M || !M.n) return null;
+  const {jsPDF} = window.jspdf, doc = new jsPDF({unit:"mm", format:"a3", orientation:"landscape"}), L = layout, cb = L.cbb, g = dieGeometry(L);
+  const k = Math.min(380/M.W, 240/M.H), ox = 20, oy = 30 + M.H*k, X = x => ox + x*k, Y = y => oy - y*k;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(20); doc.text(pdfTxt(`${settings.company.name || "Label Pack"} — Montage de la forme ${quoteNo()}`), 20, 16);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(80);
+  doc.text(pdfTxt(`Feuille ${M.W} × ${M.H} mm · ${M.n} poses (${M.nx} × ${M.ny})${M.rot ? ", poses tournées de 90°" : ""} · prise de pince ${M.grip} mm · espace entre poses ${M.gap} mm · échelle ${fmt2.format(k)} (cotes réelles dans le DXF)`), 20, 22);
+  doc.setDrawColor(150); doc.setLineWidth(.3); doc.rect(X(0), Y(M.H), M.W*k, M.H*k); doc.setFillColor(235, 238, 242); doc.rect(X(0), Y(M.grip), M.W*k, M.grip*k, "F");
+  const draw = (e, col, dash) => { doc.setDrawColor(...col); doc.setLineDashPattern(dash ? [1.2, .8] : [], 0);
+    if (e.t === "L") doc.line(X(e.a[0]), Y(e.a[1]), X(e.b[0]), Y(e.b[1]));
+    else { const a0 = e.t === "C" ? 0 : e.a0, a1 = e.t === "C" ? 360 : (e.a1 <= e.a0 ? e.a1 + 360 : e.a1), n = Math.max(4, Math.ceil((a1 - a0)/10)); let pv = null;
+      for (let i = 0; i <= n; i++){ const a = (a0 + (a1 - a0)*i/n)*Math.PI/180, q = [e.x + e.r*Math.cos(a), e.y + e.r*Math.sin(a)]; if (pv) doc.line(X(pv[0]), Y(pv[1]), X(q[0]), Y(q[1])); pv = q; } } };
+  doc.setLineWidth(.15);
+  for (const q of M.poses){ for (const e of g.crease) draw(entMove(entMove(e, -cb.minX, -cb.minY, false, 0), q.dx, q.dy, M.rot, cb.h), [0, 80, 255], true); for (const e of g.cut) draw(entMove(entMove(e, -cb.minX, -cb.minY, false, 0), q.dx, q.dy, M.rot, cb.h), [227, 6, 19], false); }
+  doc.setLineDashPattern([], 0); doc.setFontSize(8.5); doc.setTextColor(60);
+  const ks = knifeSpec(), chk = dieCheck(L);
+  doc.text(doc.splitTextToSize(pdfTxt(`Coupe ${fmt1.format(L.cutLen*M.n/1000)} m · rainage ${fmt1.format(L.creaseLen*M.n/1000)} m par feuille. ${ks.txt} ${dieCheckText(chk)}${kind() === "box" ? ` Sens des fibres : ${(state.grain === "v") !== M.rot ? "parallèle au petit côté" : "parallèle au grand côté"} de la feuille.` : ""}`), 380), 20, oy + 8);
+  doc.setTextColor(227, 6, 19); doc.text("— Coupe", 20, 290); doc.setTextColor(0, 80, 255); doc.text("- - Rainage", 45, 290); doc.setTextColor(120); doc.text("Zone grise : prise de pince", 75, 290);
+  return doc.output("blob");
+}
+async function exportFormiste(base){
+  if (!window.JSZip){ toast("Bibliothèque ZIP indisponible : rechargez la page."); return; }
+  const zip = new JSZip(), chk = dieCheck(layout), ks = knifeSpec(), M = montage(), md = montageDXF(), mp = montagePDF();
+  zip.file(`${base}_forme-1-pose.dxf`, dielineDXF());
+  zip.file(`${base}_forme-1-pose.pdf`, dielinePDF());
+  if (md) zip.file(`${base}_montage-feuille.dxf`, md);
+  if (mp) zip.file(`${base}_montage-feuille.pdf`, mp);
+  zip.file("LISEZ-MOI-formiste.txt", [`Forme de découpe ${quoteNo()} — ${meta.client || ""} ${meta.name || ""}`, "",
+    `Modèle : ${TPL().name} — ${dimsText()}`, `Développé (1 pose) : ${fmt1.format(layout.cbb.w)} × ${fmt1.format(layout.cbb.h)} mm`,
+    kind() === "box" ? `Support : ${MAT.box[state.mat.box].name}, épaisseur ${fmt2.format(layout.e)} mm — sens des fibres : ${state.grain === "v" ? "vertical" : "horizontal"} sur le plan 1 pose` : `Support : ${MAT[kind()][state.mat[kind()]].name}`,
+    `Longueurs par pose : coupe ${fmt2.format(layout.cutLen/1000)} m, rainage ${fmt2.format(layout.creaseLen/1000)} m`,
+    M ? `Montage : feuille ${M.W} × ${M.H} mm, ${M.n} poses (${M.nx} × ${M.ny})${M.rot ? ", poses tournées de 90°" : ""}, prise de pince ${M.grip} mm, espace ${M.gap} mm` : "Montage : étiquettes en bobine (outil magnétique), pas de montage feuille",
+    "", "Filets : " + ks.txt, "", "Contrôle du tracé : " + dieCheckText(chk), "",
+    "Fichiers :", "- forme-1-pose.dxf : DXF R12 (AC1009), unités mm, échelle 1:1, origine en bas à gauche ; calques COUPE (rouge), RAINAGE (bleu), INFOS (vert, ne pas tailler) ; courbes en vrais arcs, traits continus sans doublon",
+    "- forme-1-pose.pdf : plan 1:1 avec cartouche", "- montage-feuille.dxf / .pdf : poses sur la feuille (attaches / ponts et filets de chute à ajouter par le formiste)", "",
+    "À valider sur échantillon (table de découpe ou maquette blanche) avant fabrication de la forme."].join("\r\n"));
+  await saveFile(`${base}_dossier-formiste.zip`, await zip.generateAsync({type:"blob"}));
 }
 function dielinePDF(){
   const {jsPDF} = window.jspdf, L = layout, bb = L.bb, m = 15, cart = 34;
@@ -4988,10 +5186,16 @@ function dielinePDF(){
   doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(20);
   pdfText(doc, `${settings.company.name} — Plan de découpe ${quoteNo()}`, m + 3, cy + 6);
   doc.setFont("helvetica", "normal"); doc.setFontSize(7.5);
-  const rows = specRows().concat([["Coupe / rainage", `${fmt2.format(L.cutLen/1000)} m / ${fmt2.format(L.creaseLen/1000)} m`], ["Échelle", "1:1 — cotes en mm"], ["Date", new Date().toLocaleDateString("fr-FR")]]);
+  const rows = specRows().concat([["Coupe / rainage", `${fmt2.format(L.cutLen/1000)} m / ${fmt2.format(L.creaseLen/1000)} m`], ["Échelle", "1:1 — cotes en mm"], ["Date", new Date().toLocaleDateString("fr-FR")]].concat(kind() === "box" ? [["Sens des fibres", state.grain === "v" ? "vertical sur le plan" : "horizontal sur le plan"]] : []));
   const colW = (W - 2*m - 6)/3;
   rows.forEach(([a, b], i) => doc.text(pdfTxt(`${a} : ${b}`), m + 3 + Math.floor(i/3)*colW, cy + 11 + (i % 3)*4.2, {maxWidth:colW - 2}));
   doc.setTextColor(227,6,19); doc.text("— Coupe", W - m - 60, cy + 6); doc.setTextColor(0,80,255); doc.text("- - Rainage", W - m - 42, cy + 6); doc.setTextColor(0,160,227); doc.text("Fond perdu", W - m - 22, cy + 6);
+  doc.setTextColor(70); doc.setFontSize(6.5); doc.text(doc.splitTextToSize(pdfTxt(`${dieCheckText(dieCheck(L))} ${knifeSpec().txt}`), W - 2*m - 6), m + 3, cy + cart - 13);
+  if (kind() === "box"){ const cb = L.cbb, gl = Math.min(40, Math.max(cb.w, cb.h)/4); doc.setDrawColor(0,166,81); doc.setLineWidth(.35); doc.setLineDashPattern([], 0);
+    const ar = (x0, y0, x1, y1) => { doc.line(x0, y0, x1, y1); const dx = Math.sign(x1 - x0), dy = Math.sign(y1 - y0); for (const [xa, ya, sx, sy] of [[x1, y1, dx, dy], [x0, y0, -dx, -dy]]){ doc.line(xa, ya, xa - sx*2.5 - sy*1.5, ya - sy*2.5 + sx*1.5); doc.line(xa, ya, xa - sx*2.5 + sy*1.5, ya - sy*2.5 - sx*1.5); } };
+    doc.setTextColor(0,166,81); doc.setFontSize(7);
+    if (state.grain === "v"){ ar(X(cb.minX) - 6, Y(cb.maxY), X(cb.minX) - 6, Y(cb.maxY) + gl); doc.text("SENS FIBRE", X(cb.minX) - 7.5, Y(cb.maxY) + gl + 1, {angle:90}); }
+    else { ar(X(cb.minX), Y(cb.maxY) - 7, X(cb.minX) + gl, Y(cb.maxY) - 7); doc.text("SENS FIBRE", X(cb.minX) + gl + 2, Y(cb.maxY) - 6); } }
   return doc.output("blob");
 }
 function devisPDF(mockup){
@@ -5068,6 +5272,7 @@ async function runExport(kindName){
     else if (kindName === "multiview") await exportMultiView(base);
     else if (kindName === "range") await exportRange(base, bg);
     else if (kindName === "allbat") await exportAllBat(base);
+    else if (kindName === "formiste") await exportFormiste(base);
     else if (kindName === "aijsx") await exportIllustratorZip(base);
     else if (kindName === "ai-send") await sendToIllustrator();
     else if (kindName === "printpdf"){ toast("Calcul du fichier d'impression…"); await new Promise(r => setTimeout(r, 30)); await saveFile(`${base}_impression.pdf`, printPDF()); }
@@ -5083,6 +5288,7 @@ async function runExport(kindName){
       zip.file(`${base}_plan-decoupe.pdf`, dielinePDF());
       zip.file(`${base}_plan-decoupe.svg`, dielineSVG(true));
       zip.file(`${base}_plan-decoupe.dxf`, dielineDXF());
+      { const md = montageDXF(); if (md) zip.file(`${base}_montage-feuille.dxf`, md); }
       zip.file(`${base}_impression.pdf`, printPDF());
       zip.file(`${base}_visuel-a-plat.png`, await new Promise(r => proofCanvas(4000).toBlob(r, "image/png")));
       zip.file(`${base}_maquette.png`, dataURLtoBlob(captureMockup(2000, 1500, bg)));
