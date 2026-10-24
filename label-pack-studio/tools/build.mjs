@@ -282,6 +282,22 @@ Assistant IA (designs, structures, fonds sur mesure), projets partagés en équi
 Tout le reste (modèles, 3D, plans, devis, BAT, PDF d'impression, exports) est disponible hors ligne.
 `));
 
+// 3) Fichier HTML unique et autonome (tout intégré : bibliothèques, polices, icône) — un double-clic suffit
+{
+  let one = fs.readFileSync(path.join(OUT, "LabelPackStudio.html"), "utf8");
+  for (const [, , name] of LIBS){
+    const js = fs.readFileSync(path.join(OUT, "lib", name), "utf8").replace(/<\/script/gi, "<\\/script");
+    one = one.replace(`<script src="lib/${name}"></script>`, () => `<script>/* ${name} */\n${js}\n</script>`);
+  }
+  const fcss = fs.readFileSync(path.join(OUT, "fonts", "fonts.css"), "utf8")
+    .replace(/url\(\.\/([^)]+\.woff2)\) format\('woff2'\), url\(\.\/[^)]+\.woff\) format\('woff'\)/g, (m, f) => `url(data:font/woff2;base64,${fs.readFileSync(path.join(OUT, "fonts", f)).toString("base64")}) format('woff2')`);
+  one = one.replace('<link rel="stylesheet" href="fonts/fonts.css">', () => `<style>\n${fcss}</style>`)
+    .replace('<link rel="icon" href="lib/icone.png">', `<link rel="icon" href="data:image/png;base64,${fs.readFileSync(path.join(TOOLS, "icone.png")).toString("base64")}">`);
+  if (/(src|href)="(lib|fonts)\//.test(one) || /url\(\.\//.test(one)) throw new Error("Ressource locale non intégrée dans le fichier autonome.");
+  write(path.join(DIST, "LabelPackStudio-autonome.html"), one);
+  console.log(`dist/LabelPackStudio-autonome.html : ${(Buffer.byteLength(one)/1048576).toFixed(1)} Mo`);
+}
+
 // 3) Archive
 execFileSync("zip", ["-qr9X", "LabelPackStudio.zip", "LabelPackStudio"], {cwd:DIST});
 const size = fs.statSync(path.join(DIST, "LabelPackStudio.zip")).size;
