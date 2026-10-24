@@ -28,6 +28,9 @@ Configurateur d'emballage en une page (`index.html`) pour l'imprimerie Label Pac
 - **Devis instantané en TND** (imposition feuille ou laize, coûts détaillés, paliers, TVA) ; **devis PDF**, **BAT PDF** avec case « bon pour accord », **mail client**.
 - **Projets** en colonnes de statut (brouillon → livré), **paramètres tarifaires** de l'imprimerie, **lien client 3D** en lecture seule.
 
+## Guide de l'infographiste
+Bouton **Guide** : 10 chapitres (démarrer, cotes et matière, visuel, vérification, 3D, exports, validation client, projets, Illustrator, check-list prépresse), recherche, bouton « Me montrer » qui met en évidence l'élément réel de l'interface, visite guidée par chapitre ou complète (41 étapes, clavier ← → Échap), suivi de progression. Proposé automatiquement au premier lancement.
+
 ## Version installable (hors ligne) et panneau Illustrator
 Le fichier `dist/LabelPackStudio.zip` contient l'application complète, sans serveur ni connexion Internet :
 - **Windows** : extraire le ZIP, double-cliquer sur « 1 - Installer sur ce PC (Windows).bat » (raccourcis Bureau et menu Démarrer, aucun droit administrateur) ou « 2 - Ouvrir sans installer ».

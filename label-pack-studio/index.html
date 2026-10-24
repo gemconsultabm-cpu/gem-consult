@@ -244,6 +244,38 @@ details > :not(summary){margin-top:8px}
 .scene-tools select{padding:3px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font-size:12px}
 .scene-tools input[type=range]{width:80px}
 .client #compoBtn{display:none}
+.client #guideBtn,.client .guide-hello{display:none}
+.guide{width:min(1040px,100%)}
+.dialog.guide .body{display:grid;grid-template-columns:240px minmax(0,1fr);gap:18px;padding:0}
+.gnav{border-right:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:4px;max-height:72vh;overflow:auto}
+.gnav button{display:flex;gap:8px;align-items:center;text-align:left;padding:7px 9px;border:0;border-radius:5px;background:none;font:inherit;font-size:13px;color:var(--ink);cursor:pointer}
+.gnav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.gnav button .gdot{flex:none;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:10px;font-family:var(--f-mono)}
+.gnav button.done .gdot{background:var(--ok);border-color:var(--ok);color:#fff}
+.gprog{font-size:12px;color:var(--muted);margin:2px 0 8px}
+.gprog i{display:block;height:4px;border-radius:2px;background:var(--line);margin-top:5px;overflow:hidden}
+.gprog i b{display:block;height:100%;background:var(--ok)}
+.gmain{padding:14px 18px 18px 0;max-height:72vh;overflow:auto;min-width:0}
+.dialog.guide .gmain h3{font-family:var(--f-display);font-size:20px;margin:0 0 4px;text-transform:none;letter-spacing:-.01em;color:var(--ink);font-weight:700}
+.gmain .gintro{color:var(--muted);margin:0 0 12px;font-size:13.5px}
+.gsteps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;counter-reset:gs}
+.gsteps li{border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:4px 10px;align-items:start;counter-increment:gs}
+.gsteps li::before{content:counter(gs);width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:12px;font-weight:700;font-family:var(--f-mono)}
+.gsteps b{display:block;font-size:14px}
+.gsteps p{margin:2px 0 0;font-size:13px;color:var(--muted);line-height:1.45}
+.gsteps p kbd,.gtip p kbd{font-family:var(--f-mono);font-size:11.5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 4px;background:var(--surface-2);color:var(--ink)}
+.gcheck{margin:0;padding-left:18px;font-size:13.5px;line-height:1.6}
+.gsearch{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:5px;background:var(--surface-2);font:inherit;font-size:13px;color:var(--ink)}
+.ghole{position:fixed;z-index:60;border-radius:8px;box-shadow:0 0 0 3px var(--accent),0 0 0 9999px rgba(10,12,15,.55);pointer-events:none;transition:all .25s ease}
+.gtip{position:fixed;z-index:61;width:min(360px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:12px 14px;transition:top .25s ease,left .25s ease}
+.gtip small{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.gtip h4{margin:2px 0 4px;font-size:15px}
+.gtip p{margin:0 0 10px;font-size:13px;line-height:1.5;color:var(--muted)}
+.gtip .row{justify-content:flex-end}
+.guide-hello{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:35;width:min(330px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;box-shadow:var(--shadow);padding:12px 14px;font-size:13px}
+.guide-hello b{display:block;font-size:14px;margin-bottom:3px}
+@media (max-width:760px){.dialog.guide .body{grid-template-columns:1fr}.gnav{border-right:0;border-bottom:1px solid var(--line);max-height:30vh}.gmain{padding:0 14px 14px}}
+@media (prefers-reduced-motion: reduce){.ghole,.gtip{transition:none}}
 .gsw{display:inline-flex;align-items:center;gap:4px;font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-radius:4px;padding:2px 6px}
 .gsw i{width:14px;height:14px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.15)}
 .bg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px;margin:6px 0 10px}
@@ -300,6 +332,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
     <button class="btn" id="catBtn" type="button">Catalogue</button>
     <button class="btn" id="boardBtn" type="button">Projets</button>
     <button class="btn" id="newBtn" type="button">Nouveau</button>
+    <button class="btn" id="guideBtn" type="button" aria-haspopup="dialog">Guide</button>
     <button class="btn" id="settingsBtn" type="button">Paramètres</button>
   </div>
 </header>
@@ -673,6 +706,18 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
     </div>
   </div>
 </div>
+<div class="overlay" id="guideDlg" hidden role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+  <div class="dialog guide">
+    <header><h2 id="guideTitle">Guide de l'infographiste</h2><div class="row"><button class="btn small primary" type="button" id="guideTourAll">Visite complète</button><button class="btn small ghost" type="button" data-close>Fermer</button></div></header>
+    <div class="body">
+      <nav class="gnav" aria-label="Chapitres du guide"><input type="search" class="gsearch" id="guideSearch" placeholder="Rechercher dans le guide" aria-label="Rechercher dans le guide"><div class="gprog" id="guideProg"></div><div id="guideNav"></div></nav>
+      <section class="gmain" id="guideMain" aria-live="polite"></section>
+    </div>
+  </div>
+</div>
+<div class="ghole" id="tourHole" hidden></div>
+<div class="gtip" id="tourTip" hidden role="dialog" aria-live="polite" aria-labelledby="tourTitle"><small id="tourCount"></small><h4 id="tourTitle"></h4><p id="tourText"></p><div class="row"><button class="btn small ghost" type="button" id="tourQuit">Quitter</button><button class="btn small" type="button" id="tourPrev">Précédent</button><button class="btn small primary" type="button" id="tourNext">Suivant</button></div></div>
+<div class="guide-hello" id="guideHello" hidden role="status"><b>Bienvenue dans Label Pack Studio</b>Une visite guidée de 3 minutes présente toutes les étapes, du gabarit au fichier d'impression.<div class="row" style="margin-top:8px"><button class="btn small primary" type="button" id="helloGo">Commencer la visite</button><button class="btn small" type="button" id="helloLater">Plus tard</button></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -2876,6 +2921,7 @@ document.addEventListener("keydown", e => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement && document.activeElement.tagName);
   if ((e.ctrlKey || e.metaKey) && !typing && e.key.toLowerCase() === "z"){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if ((e.ctrlKey || e.metaKey) && !typing && e.key.toLowerCase() === "y"){ e.preventDefault(); redo(); return; }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s" && !clientMode){ e.preventDefault(); $("#saveBtn").click(); return; }
   if (typing || edTab !== "els" || !curEl() || clientMode) return;
   const el = curEl(), st = e.shiftKey ? 10 : 1;
   const mv = {ArrowLeft:[-st,0], ArrowRight:[st,0], ArrowUp:[0,st], ArrowDown:[0,-st]}[e.key];
@@ -3965,6 +4011,167 @@ async function deleteKit(){
 }
 $("#kitSel").addEventListener("change", renderKits); $("#kitSave").addEventListener("click", saveKit); $("#kitApply").addEventListener("click", applyKit); $("#kitDel").addEventListener("click", deleteKit);
 
+/* ================= Guide interactif de l'infographiste ================= */
+const gq = sel => () => document.querySelector(sel);
+const gup = (sel, up) => () => { const e = document.querySelector(sel); return e && (up ? e.closest(up) : e); };
+const G = {
+  studio(){ if ($("#studio").hidden) showStudio(); document.querySelectorAll(".overlay:not([hidden])").forEach(o => { if (o.id !== "guideDlg") closeDlg("#" + o.id); }); togglePop(false); },
+  lib(tab){ return () => { G.studio(); setLibTab(tab); }; },
+  ed(tab){ return () => { G.studio(); const b = $("#et-" + tab); if (b && b.getAttribute("aria-selected") !== "true") b.click(); }; },
+  view(v){ return () => { G.studio(); const b = $(v === "2d" ? "#tab2d" : "#tab3d"); if (b && b.getAttribute("aria-selected") !== "true") b.click(); }; },
+  pop(){ G.studio(); togglePop(true); },
+  dlg(id, fn){ return () => { G.studio(); if (fn) fn(); else $(id === "#shootDlg" ? "#shootBtn" : "#compoBtn").click(); }; },
+};
+const GUIDE = [
+  {id:"start", title:"Démarrer un projet", intro:"Choisissez la structure de l'emballage : un gabarit paramétrique, un modèle type déjà habillé, ou le plan fourni par le client.", steps:[
+    {t:"Bibliothèque de gabarits", d:"22 structures paramétriques (étuis, boîtes, coffrets, sacs, présentoirs, étiquettes, contenants). Un clic charge le gabarit ; les cotes se règlent ensuite.", el:gq("#tpls"), prep:G.lib("tpl")},
+    {t:"Filtrer et rechercher", d:"Filtrez par famille ou tapez un mot (« pyramide », « suspente »…).", el:gq("#cats"), prep:G.lib("tpl")},
+    {t:"Modèles types", d:"Projets prêts à l'emploi par secteur (huile, pâtisserie, cosmétique…) : gabarit, cotes, matière et décor d'exemple. Idéal pour démarrer vite puis personnaliser.", el:gq("#presetGrid"), prep:G.lib("pre")},
+    {t:"Importer le plan du client", d:"Un plan SVG ou DXF (Illustrator, ArtiosCAD, table de découpe) est reconstruit en faces et plié en 3D. Coupes : traits pleins ou calque COUPE/CUT ; rainages : pointillés, bleu ou calque RAINAGE/CREASE.", el:gup("#dieImport", "label"), prep:G.lib("tpl")},
+    {t:"Nommer le projet", d:"Nom du projet et client apparaissent sur le BAT, le devis, le PDF d'impression et les noms de fichiers. Choisissez aussi le statut (brouillon → livré).", el:gup("#pName", ".proj, .top > div"), prep:G.studio},
+  ]},
+  {id:"dims", title:"Cotes et matière", intro:"Réglez les dimensions du produit et le support : le plan compense automatiquement l'épaisseur du carton.", steps:[
+    {t:"Cotes du gabarit", d:"Saisissez les cotes en millimètres. Pour les étuis et boîtes, choisissez cotes intérieures (produit) ou extérieures (encombrement).", el:gq("#dims"), prep:G.studio},
+    {t:"Support, impression, finition", d:"Le support fixe l'épaisseur prise en compte dans le plan (affichée dans « e = … mm »). L'impression et la finition (pelliculage, vernis) modifient le devis et le rendu 3D.", el:gup("#mat", ".sec"), prep:G.studio},
+    {t:"Dorure, vernis sélectif, gaufrage", d:"Activez la dorure (or, argent, cuivre, or rose, holographique), le vernis sélectif et le relief de la marque. Chaque finition produit son masque dans le PDF d'impression.", el:gup("#foil", ".checks"), prep:G.studio},
+    {t:"Impression intérieure", d:"Couleur unie ou visuel intérieur (fichier verso fourni dans le pack). Disponible sur les boîtes.", el:gq("#insideRow"), prep:G.studio},
+  ]},
+  {id:"visuel", title:"Créer le visuel", intro:"Quatre façons d'habiller l'emballage, combinables : décor automatique, éléments libres, réglages par face, ou création complète importée.", steps:[
+    {t:"Décor automatique", d:"Marque, produit, mention et texte réglementaire se placent seuls sur les bonnes faces, dans le bon sens de lecture une fois plié.", el:gq("#brand"), prep:G.ed("auto")},
+    {t:"Couleurs, motif, logo", d:"Fond, accent et motif (zellige, rayures, points). Importez le logo en PNG transparent ou SVG.", el:gup("#bg", ".colors"), prep:G.ed("auto")},
+    {t:"Charte graphique client", d:"Enregistrez marque, couleurs, logo et dorure sous le nom du client pour les réappliquer en un clic à toute sa gamme.", el:gup("#kitSel", ".field"), prep:G.ed("auto")},
+    {t:"Déclinaisons de gamme", d:"Parfums, variétés, contenances : chaque déclinaison reprend le design en changeant produit et couleurs, avec maquettes, BAT et devis par version.", el:gq("#varBox"), prep:() => { G.ed("auto")(); $("#varBox").open = true; }},
+    {t:"Éléments libres", d:"Ajoutez textes (français et arabe), images et formes, puis glissez-les directement sur le plan 2D. Chaque élément peut recevoir dorure, vernis ou relief.", el:gup("#addText", ".row"), prep:G.ed("els")},
+    {t:"Réglages par face", d:"Choisissez une face pour lui donner sa propre couleur ou image, avec zoom, rotation et décalage.", el:gq("#faceSel"), prep:G.ed("face")},
+    {t:"Création complète", d:"Pour un visuel fait dans Illustrator : exportez le gabarit graphiste (SVG) ou le script Illustrator, créez le visuel sur le calque prévu, puis importez-le ici en PNG/JPG 300 dpi au format du plan avec fond perdu.", el:gup("#fullImg", "label"), prep:G.ed("full")},
+  ]},
+  {id:"check", title:"Vérifier plan et prépresse", intro:"Avant tout envoi : contrôlez le plan à plat, les zones de sécurité et les couleurs.", steps:[
+    {t:"Plan de découpe", d:"Trait rouge : coupe. Pointillé bleu : rainage. Bande claire : fond perdu (3 mm, 2 mm pour les étiquettes). Hachures : zones de collage.", el:gq("#v2d"), prep:G.view("2d")},
+    {t:"Visuel et zone de sécurité", d:"Masquez le visuel pour lire le plan seul ; la zone de sécurité (3 mm à l'intérieur des plis) doit contenir tous les textes.", el:gup("#showSafe", "label"), prep:G.view("2d")},
+    {t:"Contrôle prépresse", d:"Résolution des images, corps minimum, textes trop près d'un pli, code-barres EAN-13, fenêtre, format feuille. Un point rouge bloque le BAT : corrigez-le avant envoi.", el:gq("#pfSec"), prep:G.studio},
+    {t:"Couleurs imprimables (CMJN)", d:"Les couleurs hors gamut quadri sont signalées avec une teinte imprimable proche. Cochez l'aperçu pour voir le rendu imprimé à l'écran.", el:gup("#softProof", "label"), prep:G.studio},
+    {t:"Informations du plan", d:"Format à plat, épaisseur du support et état prépresse en un coup d'œil.", el:gq("#chips"), prep:G.studio},
+  ]},
+  {id:"present", title:"Présenter en 3D", intro:"La maquette 3D sert à valider le volume avec le client et à produire les visuels de présentation.", steps:[
+    {t:"Maquette 3D", d:"Faites glisser pour tourner, molette pour zoomer. Les vues Face, 3/4, Dessus et Dos se choisissent en un clic.", el:gq("#v3d"), prep:G.view("3d")},
+    {t:"Pliage et animation", d:"Le curseur montre le montage étape par étape : utile pour expliquer le pliage à l'atelier ou au client.", el:gup("#fold", ".foldbar, .fold, div"), prep:G.view("3d")},
+    {t:"Scènes, lumière, cotes", d:"Choisissez une scène (studio, bois, marbre…), orientez la lumière et affichez les cotes sur la maquette.", el:gq(".scene-tools"), prep:G.view("3d")},
+    {t:"Prise de vue", d:"Mise en situation sur photo, fonds illustrés aux couleurs de la marque, objectif, rayon de magasin.", el:gq("#bgPresets"), prep:G.dlg("#shootDlg")},
+    {t:"Composition de gamme", d:"Jusqu'à 8 emballages réunis à l'échelle réelle, alignés, en arc ou en quinconce.", el:gq("#compoList"), prep:G.dlg("#compoDlg")},
+  ]},
+  {id:"export", title:"Exporter pour l'impression", intro:"Tous les fichiers de fabrication partent du menu Exporter.", steps:[
+    {t:"Menu Exporter", d:"Tous les formats en un endroit : PDF, SVG, DXF, images, vidéos, Illustrator, packs ZIP.", el:gq("#expBtn"), prep:G.studio},
+    {t:"PDF d'impression", d:"Visuel 300 dpi avec fond perdu et repères, forme de découpe vectorielle sur une page séparée (coupe magenta, rainage cyan), puis un masque par finition.", el:gq('[data-exp="printpdf"]'), prep:G.pop},
+    {t:"Gabarit graphiste (SVG)", d:"Calques COUPE, RAINAGE, FOND_PERDU, SECURITE à l'échelle 1:1 : la base de travail dans Illustrator.", el:gq('[data-exp="tplsvg"]'), prep:G.pop},
+    {t:"Illustrator", d:"Le script recrée le gabarit dans Illustrator : calques Visuel, Fond perdu, Rainage, Coupe et tons directs CutContour / Rainage. Dans le panneau Illustrator, « Envoyer vers Illustrator » le fait directement.", el:() => document.querySelector('[data-exp="ai-send"]:not([hidden])') || document.querySelector('[data-exp="aijsx"]'), prep:G.pop},
+    {t:"Pack fabrication", d:"Tout pour l'atelier en un ZIP : PDF d'impression, plan PDF/SVG/DXF, visuel, maquette, BAT et devis.", el:gq('[data-exp="zip"]'), prep:G.pop},
+    {t:"Images et vidéos", d:"Résolution HD, 4K ou 8K et format (4:3, 16:9, carré, portrait) pour les maquettes ; pack e-commerce multi-vues ; vidéos MP4 de pliage ou 360°.", el:gq("#expRes"), prep:G.pop},
+  ]},
+  {id:"client", title:"Valider avec le client", intro:"Devis, BAT signé et lien de maquette : le circuit de validation complet.", steps:[
+    {t:"Devis instantané", d:"Prix unitaire et total selon la quantité, paliers dégressifs, TVA. Le détail des coûts reste interne.", el:gq("#qMain"), prep:G.studio},
+    {t:"Quantité", d:"Saisissez la quantité ou choisissez un palier : le devis et le BAT se mettent à jour.", el:gq("#qty"), prep:G.studio},
+    {t:"Devis PDF et mail", d:"Devis PDF à en-tête de l'imprimerie et texte de mail prêt à copier.", el:gq("#devisPdf"), prep:G.studio},
+    {t:"Bon à tirer (BAT)", d:"Maquette, visuel avec traits, contrôle prépresse et case « Bon pour accord » à faire signer avant impression.", el:gq('[data-exp="bat"]'), prep:G.pop},
+    {t:"BAT et devis de toute la gamme", d:"Un BAT et un devis par produit (projet, déclinaisons, composition) et un devis récapitulatif.", el:gq('[data-exp="allbat"]'), prep:G.pop},
+  ]},
+  {id:"data", title:"Projets et données", intro:"Retrouvez vos dossiers, suivez leur avancement et protégez vos données.", steps:[
+    {t:"Enregistrer", d:"Enregistre le projet (gabarit, cotes, visuel, quantité). Raccourci : Ctrl+S. Annuler / rétablir : Ctrl+Z / Ctrl+Y.", el:gq("#saveBtn"), prep:G.studio},
+    {t:"Projets", d:"Tableau par statut (brouillon, BAT envoyé, validé, en production, livré), recherche par client.", el:gq("#boardBtn"), prep:G.studio},
+    {t:"Catalogue", d:"Toutes les structures avec visuels et prix indicatifs ; catalogue PDF à envoyer aux prospects.", el:gq("#catBtn"), prep:G.studio},
+    {t:"Paramètres et sauvegarde", d:"Tarifs de l'imprimerie, coordonnées, conditions. Pensez à « Sauvegarder les données » régulièrement (fichier .json) ; « Restaurer » sur un autre poste.", el:gq("#settingsBtn"), prep:G.studio},
+  ]},
+  {id:"illustrator", title:"Travailler avec Illustrator", intro:"Le circuit conseillé entre le studio et Illustrator.", check:[
+    "Dans le studio : gabarit, cotes et matière validés (le plan compense l'épaisseur).",
+    "Exporter › « Script Illustrator » (ou « Envoyer vers Illustrator » depuis le panneau) : document CMJN à l'échelle, calques Visuel, Fond perdu, Rainage, Coupe.",
+    "Créez le visuel sur le calque « Visuel » en débordant jusqu'au bord du fond perdu ; laissez les calques Coupe et Rainage intacts (non imprimables, tons directs CutContour et Rainage).",
+    "Textes importants dans la zone de sécurité (3 mm à l'intérieur des plis et coupes) ; corps minimum 6 pt, 5 pt pour les mentions légales.",
+    "Images à 300 dpi à l'échelle 1:1 ; noirs de texte en 100 % K ; aplats riches en noir 40C 30M 30Y 100K.",
+    "Exportez le visuel à plat en PNG ou JPG 300 dpi, au format exact du plan avec fond perdu, et importez-le dans l'onglet « Création » pour la 3D, le BAT et le PDF d'impression.",
+    "Si vous modifiez le plan dans Illustrator : exportez-le en SVG (ou DXF) et utilisez « Importer un plan » ou « Importer le document Illustrator » (panneau).",
+  ]},
+  {id:"prepresse", title:"Check-list prépresse", intro:"À vérifier avant chaque BAT.", check:[
+    "Fond perdu : 3 mm (2 mm pour les étiquettes) sur tout le pourtour du visuel.",
+    "Zone de sécurité : aucun texte ni logo à moins de 3 mm d'une coupe ou d'un pli.",
+    "Résolution : 300 dpi minimum à l'échelle 1:1 (le contrôle prépresse le vérifie).",
+    "Couleurs : aucune couleur hors gamut CMJN non validée ; Pantone de marque confirmé sur épreuve.",
+    "Code-barres EAN-13 : clé de contrôle valide, taille ≥ 80 %, zone claire respectée, barres noires sur fond clair.",
+    "Finitions : dorure, vernis sélectif, gaufrage et blanc de soutien sur leurs masques séparés (pages du PDF d'impression).",
+    "Plan : gabarit validé sur échantillon (table de découpe ou maquette blanche) avant la première production.",
+    "BAT signé par le client, référence identique sur le BAT, le devis et le PDF d'impression.",
+  ]},
+];
+let guideState = {done:{}}; try { guideState = Object.assign(guideState, JSON.parse(localStorage.getItem("lp-guide") || "{}")); } catch (e) {}
+const saveGuide = () => { try { localStorage.setItem("lp-guide", JSON.stringify(guideState)); } catch (e) {} };
+let guideCur = "start";
+function renderGuide(){
+  const q = $("#guideSearch").value.trim().toLowerCase(), match = c => !q || (c.title + " " + c.intro + " " + (c.steps || []).map(x => x.t + " " + x.d).join(" ") + " " + (c.check || []).join(" ")).toLowerCase().includes(q);
+  const list = GUIDE.filter(match), n = GUIDE.filter(c => guideState.done[c.id]).length;
+  if (!list.some(c => c.id === guideCur) && list.length) guideCur = list[0].id;
+  $("#guideProg").innerHTML = `${n} / ${GUIDE.length} chapitres parcourus<i><b style="width:${Math.round(n/GUIDE.length*100)}%"></b></i>`;
+  $("#guideNav").innerHTML = list.map((c, i) => `<button type="button" data-gc="${c.id}" class="${guideState.done[c.id] ? "done" : ""}" aria-current="${c.id === guideCur}"><span class="gdot">${guideState.done[c.id] ? "✓" : GUIDE.indexOf(c) + 1}</span>${esc(c.title)}</button>`).join("") || `<p class="hint">Aucun résultat.</p>`;
+  const c = GUIDE.find(x => x.id === guideCur); if (!c){ $("#guideMain").innerHTML = ""; return; }
+  const hl = txt => { const e = esc(txt); return q ? e.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), m => `<mark>${m}</mark>`) : e; };
+  $("#guideMain").innerHTML = `<h3>${esc(c.title)}</h3><p class="gintro">${hl(c.intro)}</p>` +
+    (c.steps ? `<ol class="gsteps">${c.steps.map((st, i) => `<li><span><b>${hl(st.t)}</b><p>${hl(st.d)}</p></span><button class="btn small" type="button" data-gshow="${i}">Me montrer</button></li>`).join("")}</ol>
+      <div class="row" style="margin-top:12px"><button class="btn primary" type="button" data-gtour>Visite guidée de ce chapitre</button>${guideNext(c)}</div>`
+      : `<ul class="gcheck">${c.check.map(x => `<li>${hl(x)}</li>`).join("")}</ul><div class="row" style="margin-top:12px"><button class="btn" type="button" data-gdone>${guideState.done[c.id] ? "Lu ✓" : "Marquer comme lu"}</button>${guideNext(c)}</div>`);
+}
+function guideNext(c){ const i = GUIDE.indexOf(c); return i < GUIDE.length - 1 ? `<button class="btn" type="button" data-gc="${GUIDE[i + 1].id}">Chapitre suivant : ${esc(GUIDE[i + 1].title)} →</button>` : ""; }
+function openGuide(id){ if (id) guideCur = id; $("#guideHello").hidden = true; renderGuide(); openDlg("#guideDlg"); }
+$("#guideBtn").addEventListener("click", () => openGuide());
+$("#guideSearch").addEventListener("input", renderGuide);
+$("#guideDlg").addEventListener("click", e => {
+  const c = e.target.closest("[data-gc]"); if (c){ guideCur = c.dataset.gc; renderGuide(); $("#guideMain").scrollTop = 0; return; }
+  const ch = GUIDE.find(x => x.id === guideCur);
+  const sh = e.target.closest("[data-gshow]"); if (sh){ startTour(ch.steps.map(st => ({...st, ch:ch.id})), +sh.dataset.gshow, true); return; }
+  if (e.target.closest("[data-gtour]")){ startTour(ch.steps.map(st => ({...st, ch:ch.id})), 0); return; }
+  if (e.target.closest("[data-gdone]")){ guideState.done[ch.id] = true; saveGuide(); renderGuide(); }
+});
+$("#guideTourAll").addEventListener("click", () => startTour(GUIDE.filter(c => c.steps).flatMap(c => c.steps.map((st, i) => ({...st, ch:c.id, chTitle: i ? "" : c.title})))));
+// Visite : met en évidence l'élément réel de l'interface et explique l'étape.
+let tour = null;
+function startTour(steps, i = 0, single){ closeDlg("#guideDlg"); tour = {steps, i, single}; document.body.classList.add("touring"); showTourStep(); }
+function endTour(completed){
+  if (!tour) return; const t = tour; tour = null; $("#tourHole").hidden = $("#tourTip").hidden = true; document.body.classList.remove("touring"); togglePop(false);
+  document.querySelectorAll(".overlay:not([hidden])").forEach(o => closeDlg("#" + o.id));
+  if (completed && !t.single){ [...new Set(t.steps.map(x => x.ch))].forEach(id => guideState.done[id] = true); saveGuide(); toast("Visite terminée : retrouvez le guide à tout moment via le bouton « Guide »"); }
+  if (t.single) openGuide();
+}
+function showTourStep(){
+  if (!tour) return; const st = tour.steps[tour.i];
+  try { st.prep && st.prep(); } catch (e) {}
+  setTimeout(() => {
+    if (!tour) return; const el = st.el && st.el(), vis = el && el.getClientRects().length && !el.closest("[hidden]");
+    if (vis) el.scrollIntoView({block:"center", inline:"nearest", behavior:reduce ? "auto" : "smooth"});
+    $("#tourCount").textContent = tour.single ? "Guide" : `Étape ${tour.i + 1} / ${tour.steps.length}${st.chTitle ? " · " + st.chTitle : ""}`;
+    $("#tourTitle").textContent = st.t; $("#tourText").textContent = st.d + (vis ? "" : " (élément non visible dans cette configuration ou cette version.)");
+    $("#tourPrev").hidden = tour.single || tour.i === 0; $("#tourNext").textContent = tour.single ? "Retour au guide" : tour.i === tour.steps.length - 1 ? "Terminer" : "Suivant";
+    $("#tourTip").hidden = false; tour.el = vis ? el : null;
+    setTimeout(placeTour, reduce ? 0 : 320); $("#tourNext").focus({preventScroll:true});
+  }, 230);
+}
+function placeTour(){
+  if (!tour) return; const tip = $("#tourTip"), hole = $("#tourHole"), vw = innerWidth, vh = innerHeight, tw = tip.offsetWidth, th = tip.offsetHeight;
+  if (!tour.el){ hole.hidden = true; tip.style.left = Math.max(12, (vw - tw)/2) + "px"; tip.style.top = Math.max(12, (vh - th)/2) + "px"; return; }
+  const r = tour.el.getBoundingClientRect(), pad = 6, R = {l:Math.max(4, r.left - pad), t:Math.max(4, r.top - pad), w:Math.min(vw - 8, r.width + 2*pad), h:Math.min(vh - 8, r.height + 2*pad)};
+  hole.hidden = false; Object.assign(hole.style, {left:R.l + "px", top:R.t + "px", width:R.w + "px", height:R.h + "px"});
+  let left, top;
+  if (R.t + R.h + th + 14 <= vh){ top = R.t + R.h + 10; left = R.l; }
+  else if (R.t - th - 14 >= 0){ top = R.t - th - 10; left = R.l; }
+  else if (R.l + R.w + tw + 14 <= vw){ left = R.l + R.w + 10; top = R.t; }
+  else if (R.l - tw - 14 >= 0){ left = R.l - tw - 10; top = R.t; }
+  else { left = (vw - tw)/2; top = vh - th - 12; }
+  tip.style.left = clamp(left, 12, vw - tw - 12) + "px"; tip.style.top = clamp(top, 12, vh - th - 12) + "px";
+}
+$("#tourNext").addEventListener("click", () => { if (!tour) return; if (tour.single || tour.i >= tour.steps.length - 1) endTour(true); else { tour.i++; showTourStep(); } });
+$("#tourPrev").addEventListener("click", () => { if (tour && tour.i > 0){ tour.i--; showTourStep(); } });
+$("#tourQuit").addEventListener("click", () => endTour(false));
+addEventListener("resize", () => tour && placeTour()); addEventListener("scroll", () => tour && placeTour(), true);
+addEventListener("keydown", e => { if (!tour) return; if (e.key === "Escape"){ e.preventDefault(); endTour(false); } else if (e.key === "ArrowRight") $("#tourNext").click(); else if (e.key === "ArrowLeft" && !$("#tourPrev").hidden) $("#tourPrev").click(); }, true);
+$("#helloGo").addEventListener("click", () => { $("#guideHello").hidden = true; try { localStorage.setItem("lp-guide-seen", "1"); } catch (e) {} $("#guideTourAll").click(); });
+$("#helloLater").addEventListener("click", () => { $("#guideHello").hidden = true; try { localStorage.setItem("lp-guide-seen", "1"); } catch (e) {} toast("Le guide reste disponible via le bouton « Guide »"); });
+function maybeHello(){ let seen = null; try { seen = localStorage.getItem("lp-guide-seen"); } catch (e) {} if (!seen && !clientMode && !catalogMode()) setTimeout(() => { if (!clientMode && !tour) $("#guideHello").hidden = false; }, 2500); }
+
 /* ================= Démarrage ================= */
 function onCapsReady(){
   $("#modeTag").textContent = cloud() ? "Équipe · partagé" : "Ce navigateur";
@@ -3975,6 +4182,7 @@ function onCapsReady(){
   const m = /^#s-([A-Za-z0-9]+)$/.exec(location.hash);
   if (m){ bootClient(m[1]); return; }
   if (catalogMode()){ bootCatalog(); return; }
+  maybeHello();
   if (cloud()){
     if (unsubSettings) unsubSettings();
     unsubSettings = cap.db.doc("settings/main").onSnapshot(s => { if (s.exists){ settings = merge(DEFAULT_SETTINGS, s.data()); if (layout){ renderControls(); refresh("geo"); } } }, () => {});
