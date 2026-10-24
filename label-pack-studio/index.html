@@ -244,6 +244,8 @@ details > :not(summary){margin-top:8px}
 .scene-tools select{padding:3px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font-size:12px}
 .scene-tools input[type=range]{width:80px}
 .client #compoBtn{display:none}
+.gsw{display:inline-flex;align-items:center;gap:4px;font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-radius:4px;padding:2px 6px}
+.gsw i{width:14px;height:14px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.15)}
 .bg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px;margin:6px 0 10px}
 .bg-grid button{display:flex;flex-direction:column;gap:4px;padding:4px;border:1px solid var(--line);border-radius:5px;background:var(--surface);cursor:pointer;font:inherit;font-size:12px;color:var(--ink);text-align:left}
 .bg-grid button:hover,.bg-grid button:focus-visible{border-color:var(--accent)}
@@ -362,6 +364,8 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <div class="field"><label for="foilColor">Couleur de dorure</label><select id="foilColor"></select></div>
           <div class="field"><label for="relief">Relief de la marque</label><select id="relief"></select></div>
         </div>
+        <label class="check"><input type="checkbox" id="softProof"> Aperçu des couleurs imprimées (CMJN simulé)</label>
+        <div id="gamutBox" class="field" hidden><p class="hint" id="gamutTxt"></p><div class="row" id="gamutSw"></div><div class="row"><button type="button" class="btn small" id="gamutFix">Remplacer par les teintes imprimables</button></div></div>
         <div class="row" id="insideRow"><label class="check"><input type="checkbox" id="insideOn"> Impression intérieure</label> <input type="color" id="insideColor" aria-label="Couleur intérieure">
           <label class="btn small file-btn">Visuel intérieur<input type="file" id="insideImg" accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>
           <img class="thumb" id="insideThumb" alt="Visuel intérieur" hidden><button type="button" class="btn small" id="insideClear" hidden>Retirer</button></div>
@@ -503,7 +507,8 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
     </div>
     <div class="pop" id="expPop" hidden>
       <div class="row between"><b>Exporter</b><button class="btn small ghost" id="expClose" type="button">Fermer</button></div>
-      <button class="exp" data-exp="zip" type="button"><b>Pack fabrication</b><small>Plan PDF/SVG/DXF, visuel, maquette, BAT, devis</small><span>.zip</span></button>
+      <button class="exp" data-exp="zip" type="button"><b>Pack fabrication</b><small>PDF d'impression, plan PDF/SVG/DXF, visuel, maquette, BAT, devis</small><span>.zip</span></button>
+      <button class="exp" data-exp="printpdf" type="button"><b>PDF d'impression</b><small>300 dpi, fond perdu, traits de coupe ; forme de découpe et calques de finition sur pages séparées</small><span>.pdf</span></button>
       <button class="exp" data-exp="diepdf" type="button"><b>Plan de découpe</b><small>Échelle 1:1, coupe / rainage, cartouche</small><span>.pdf</span></button>
       <button class="exp" data-exp="tplsvg" type="button"><b>Gabarit graphiste</b><small>Calques COUPE, RAINAGE, FOND_PERDU, SECURITE</small><span>.svg</span></button>
       <button class="exp" data-exp="bat" type="button"><b>Bon à tirer (BAT)</b><small>Maquette, visuel, contrôle prépresse, accord</small><span>.pdf</span></button>
@@ -844,7 +849,7 @@ const DEFAULT = {
   window:{on:false, w:30, h:60, y:5, r:4},
   mat:{box:"gc1", label:"couche", cup:"pe"}, print:{box:"cmjn", label:"num", cup:"cmjn"}, lam:{box:"mat", label:"vernis", cup:"none"},
   varnish:false, foil:true, foilColor:"or", relief:"none", raw:false, inside:{on:false, color:"#e2b25a"},
-  importData:null, focal:42, bgBlur:0, shelf:{cols:4, rows:2}, variants:[], scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
+  importData:null, softProof:false, focal:42, bgBlur:0, shelf:{cols:4, rows:2}, variants:[], scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
   design:{bg:"#123c3a", accent:"#e2b25a", brand:"Néroli", product:"Crème mains à la fleur d'oranger", mention:"75 ml · Fabriqué en Tunisie", pattern:"zellige", legal:"", ean:""},
   images:{logo:null, full:null, inside:null, bg:null}, faces:{}, fullHide:false, elements:[],
   qty:2500, fold:1, showArt:true, showSafe:true
@@ -1744,6 +1749,134 @@ function proofCanvas(maxPx){
   return cv;
 }
 
+/* ================= Couleurs : gamut CMJN (offset couché, approximation FOGRA39) ================= */
+const D65 = [.95047, 1, 1.08883];
+function rgbToLab(r, g, b){
+  const li = c => { c /= 255; return c <= .04045 ? c/12.92 : ((c + .055)/1.055)**2.4; };
+  const R = li(r), G = li(g), B = li(b), X = (.4124*R + .3576*G + .1805*B)/D65[0], Y = .2126*R + .7152*G + .0722*B, Z = (.0193*R + .1192*G + .9505*B)/D65[2];
+  const f = t => t > .008856 ? Math.cbrt(t) : 7.787*t + 16/116, fx = f(X), fy = f(Y), fz = f(Z);
+  return [116*fy - 16, 500*(fx - fy), 200*(fy - fz)];
+}
+function labToRgb(L, a, b){
+  const fy = (L + 16)/116, fx = fy + a/500, fz = fy - b/200, fi = t => t**3 > .008856 ? t**3 : (t - 16/116)/7.787;
+  const X = fi(fx)*D65[0], Y = fi(fy), Z = fi(fz)*D65[2];
+  const R = 3.2406*X - 1.5372*Y - .4986*Z, G = -.9689*X + 1.8758*Y + .0415*Z, B = .0557*X - .2040*Y + 1.0570*Z;
+  const gm = c => Math.round(255*clamp(c <= .0031308 ? 12.92*c : 1.055*c**(1/2.4) - .055, 0, 1));
+  return [gm(R), gm(G), gm(B)];
+}
+// Primaires et secondaires du papier couché offset : [teinte°, chroma max, clarté du maximum]
+const GAMUT_HUES = [[-2,74,48],[35,83,47],[93,93,89],[157,70,50],[233,62,55],[296,51,24],[358,74,48],[395,83,47]];
+function gamutPeak(h){
+  if (h < -2) h += 360; if (h > 395) h -= 360; if (h < -2) h += 360;
+  let i = 0; while (i < GAMUT_HUES.length - 2 && h > GAMUT_HUES[i + 1][0]) i++;
+  const [h0, c0, l0] = GAMUT_HUES[i], [h1, c1, l1] = GAMUT_HUES[i + 1], t = clamp((h - h0)/(h1 - h0), 0, 1);
+  return [c0 + (c1 - c0)*t, l0 + (l1 - l0)*t];
+}
+function gamutLimit(L, h){ const [cm, lp] = gamutPeak(h), f = L < lp ? L/lp : (100 - L)/(100 - lp); return cm*Math.pow(clamp(f, 0, 1), .8); }
+// Teinte imprimable la plus proche : même teinte, clarté rapprochée du maximum de saturation du papier (comme le fait l'impression), chroma ramené dans le gamut.
+function gamutMap(L, A, B){
+  const C = Math.hypot(A, B); let h = Math.atan2(B, A)*180/Math.PI; if (h < -2) h += 360;
+  const [cm, lp] = gamutPeak(h), want = Math.min(C, cm)*.98; let L2 = L, lim = gamutLimit(L2, h);
+  for (let i = 0; i < 80 && lim < want && Math.abs(L2 - lp) > .5; i++){ L2 += Math.sign(lp - L2); lim = gamutLimit(L2, h); }
+  const k = C > 0 ? Math.min(1, lim*.96/C) : 1;
+  return labToRgb(L2, A*k, B*k);
+}
+function gamutCheck(hex){
+  const [r, g, b] = hexRgb(hex), [L, A, B] = rgbToLab(r, g, b), C = Math.hypot(A, B), h = Math.atan2(B, A)*180/Math.PI, lim = gamutLimit(L, h < -2 ? h + 360 : h);
+  if (C <= lim + 6) return null;
+  const rgb = gamutMap(L, A, B);
+  return "#" + rgb.map(v => v.toString(16).padStart(2, "0")).join("");
+}
+function gamutIssues(){
+  const out = [], seen = new Set(), chk = (hex, where, set) => { if (!/^#[0-9a-f]{6}$/i.test(hex || "")) return; const key = hex.toLowerCase() + where; if (seen.has(key)) return; seen.add(key); const fix = gamutCheck(hex); if (fix) out.push({hex:hex.toLowerCase(), fix, where, set}); };
+  const d = state.design, k = kind();
+  if (!state.raw) chk(d.bg, "fond", v => d.bg = v);
+  chk(d.accent, "accent", v => d.accent = v);
+  state.elements.forEach((el, i) => { if (el.type !== "image" && !el.foil) chk(el.color, `élément ${i + 1}`, v => el.color = v); });
+  Object.entries(state.faces || {}).forEach(([id, f]) => { if (f && f.bg){ const p = layout && layout.byId[id]; chk(f.bg, `face « ${p ? p.name : id} »`, v => f.bg = v); } });
+  if (k === "box" && state.inside.on) chk(state.inside.color, "intérieur", v => state.inside.color = v);
+  return out;
+}
+let gamutLUT = null;
+function buildLUT(){
+  if (gamutLUT) return gamutLUT;
+  const N = 64, lut = new Uint8Array(N*N*N*4), st = 255/(N - 1);
+  for (let ri = 0; ri < N; ri++) for (let gi = 0; gi < N; gi++) for (let bi = 0; bi < N; bi++){
+    const r = ri*st, g = gi*st, b = bi*st, [L, A, B] = rgbToLab(r, g, b), C = Math.hypot(A, B), h = Math.atan2(B, A)*180/Math.PI, lim = gamutLimit(L, h < -2 ? h + 360 : h), o = ((ri*N + gi)*N + bi)*4;
+    if (C > lim + 2){ const q = gamutMap(L*.985, A, B); lut[o] = q[0]; lut[o + 1] = q[1]; lut[o + 2] = q[2]; lut[o + 3] = C > lim + 6 ? 1 : 0; }
+    else { const q = labToRgb(L*.985, A*.97, B*.97); lut[o] = q[0]; lut[o + 1] = q[1]; lut[o + 2] = q[2]; lut[o + 3] = 0; }
+  }
+  return gamutLUT = {N, lut};
+}
+// Épreuvage écran : ramène les couleurs dans le gamut et simule le léger tassement de l'impression.
+function softView(cv){
+  if (!state.softProof || !cv) return cv;
+  const {N, lut} = buildLUT(), c = document.createElement("canvas"); c.width = cv.width; c.height = cv.height;
+  const x = c.getContext("2d"); x.drawImage(cv, 0, 0); const im = x.getImageData(0, 0, c.width, c.height), d = im.data, q = (N - 1)/255;
+  for (let i = 0; i < d.length; i += 4){ const o = ((Math.round(d[i]*q)*N + Math.round(d[i + 1]*q))*N + Math.round(d[i + 2]*q))*4; d[i] = lut[o]; d[i + 1] = lut[o + 1]; d[i + 2] = lut[o + 2]; }
+  x.putImageData(im, 0, 0); return c;
+}
+function gamutArea(cv){
+  const {N, lut} = buildLUT(), w = 160, h = Math.max(1, Math.round(160*cv.height/cv.width)), c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d"); x.drawImage(cv, 0, 0, w, h); const d = x.getImageData(0, 0, w, h).data, q = (N - 1)/255; let n = 0, tot = 0;
+  for (let i = 0; i < d.length; i += 4){ if (d[i + 3] < 128) continue; tot++; const o = ((Math.round(d[i]*q)*N + Math.round(d[i + 1]*q))*N + Math.round(d[i + 2]*q))*4; if (lut[o + 3]) n++; }
+  return tot ? n/tot : 0;
+}
+function renderGamut(){
+  const g = gamutIssues(); $("#gamutBox").hidden = !g.length; if (!g.length) return;
+  $("#gamutTxt").textContent = `${g.length} couleur(s) hors gamut CMJN : elles ne peuvent pas être reproduites en quadrichromie et sortiront plus ternes.`;
+  $("#gamutSw").innerHTML = g.map(x => `<span class="gsw" title="${esc(x.where)}"><i style="background:${x.hex}"></i>${x.hex} → <i style="background:${x.fix}"></i>${x.fix}</span>`).join("");
+}
+$("#softProof").addEventListener("change", e => { state.softProof = e.target.checked; changed("art"); });
+$("#gamutFix").addEventListener("click", () => { const g = gamutIssues(); g.forEach(x => x.set(x.fix)); renderControls(); changed("art"); toast(`${g.length} couleur(s) remplacée(s) par une teinte imprimable`); });
+
+/* ================= PDF d'impression ================= */
+// Page 1 : visuel 300 dpi (fond perdu, repères de coupe) ; page 2 : forme de découpe vectorielle ; pages suivantes : masques de finition.
+function printPDF(){
+  const {jsPDF} = window.jspdf, L = computeLayout(), bb = L.bb, cb = L.cbb, M = 15, W = bb.w + 2*M, H = bb.h + 2*M + 8, t = TPL(), k = kind();
+  let s = 300/25.4; s = Math.min(s, Math.sqrt(70e6/(bb.w*bb.h)), 14000/Math.max(bb.w, bb.h)); const dpi = Math.round(s*25.4);
+  const doc = new jsPDF({unit:"mm", format:[W, H], orientation: W > H ? "l" : "p", compress:true});
+  const X = x => M + (x - bb.minX), Y = y => M + (bb.maxY - y), ref = quoteNo();
+  const raster = (draw) => { const c = document.createElement("canvas"); c.width = Math.ceil(bb.w*s); c.height = Math.ceil(bb.h*s); const x = c.getContext("2d"); draw(x, c); return c; };
+  const T = x => x.setTransform(s, 0, 0, -s, -bb.minX*s, bb.maxY*s);
+  const shape = (x, withBleed) => { T(x); x.lineJoin = "round"; x.lineWidth = L.bleed*2; x.beginPath(); for (const p of L.panels){ p.gpoly.forEach(([a, b], i) => i ? x.lineTo(a, b) : x.moveTo(a, b)); x.closePath(); } x.fill(); if (withBleed){ for (const p of L.panels){ x.beginPath(); p.gpoly.forEach(([a, b], i) => i ? x.lineTo(a, b) : x.moveTo(a, b)); x.closePath(); x.stroke(); } } x.setTransform(1, 0, 0, 1, 0, 0); };
+  const marks = (title) => {
+    doc.setLineDashPattern([], 0); doc.setLineWidth(.2); doc.setDrawColor(0, 0, 0, 1);
+    for (const [cx, cy, sx, sy] of [[cb.minX, cb.minY, -1, -1], [cb.maxX, cb.minY, 1, -1], [cb.minX, cb.maxY, -1, 1], [cb.maxX, cb.maxY, 1, 1]]){
+      const px = X(cx), py = Y(cy); doc.line(px + sx*(L.bleed + 2), py, px + sx*(L.bleed + 9), py); doc.line(px, py - sy*(L.bleed + 2), px, py - sy*(L.bleed + 9)); }
+    doc.setFont("helvetica", "normal"); doc.setFontSize(6.5); doc.setTextColor(0, 0, 0, 1);
+    doc.text(pdfTxt(`${title} · ${ref} · ${meta.client || ""} ${meta.name ? "· " + meta.name : ""} · ${t.name} · format ${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm + fond perdu ${L.bleed} mm · ${new Date().toLocaleDateString("fr-FR")}`), M, H - 6, {maxWidth:W - 2*M});
+  };
+  // page 1 : visuel
+  const art = drawArt(L, s);
+  const p1 = raster((x, c) => { x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); const m = document.createElement("canvas"); m.width = c.width; m.height = c.height; const mx = m.getContext("2d"); mx.fillStyle = mx.strokeStyle = "#000"; shape(mx, true); mx.globalCompositeOperation = "source-in"; mx.drawImage(art, 0, 0); x.drawImage(m, 0, 0); });
+  doc.addImage(p1, "JPEG", M, M, bb.w, bb.h, undefined, "FAST");
+  marks(`IMPRESSION QUADRI · ${dpi} dpi · RVB sRGB, conversion CMJN au RIP (profil conseillé : FOGRA39 couché / FOGRA47 non couché)`);
+  // page 2 : forme de découpe
+  doc.addPage([W, H], W > H ? "l" : "p");
+  doc.setLineWidth(.25); doc.setDrawColor(0, 1, 0, 0); doc.setLineDashPattern([], 0); L.cuts.forEach(([a, b]) => doc.line(X(a[0]), Y(a[1]), X(b[0]), Y(b[1])));
+  doc.setDrawColor(1, 0, 0, 0); doc.setLineDashPattern([2, 1.2], 0); L.creases.forEach(([a, b]) => doc.line(X(a[0]), Y(a[1]), X(b[0]), Y(b[1])));
+  marks("FORME DE DÉCOUPE · coupe : magenta 100 % trait plein · rainage : cyan 100 % pointillé · ne pas imprimer");
+  // masques de finition
+  const pbr = drawArt(L, s, "pbr"), pd = pbr.getContext("2d").getImageData(0, 0, pbr.width, pbr.height).data, base = pbrBaseG;
+  const plates = [];
+  const has = f => { for (let i = 0; i < pd.length; i += 16) if (pd[i + 3] > 128 && f(pd[i], pd[i + 1], pd[i + 2])) return true; return false; };
+  const isFoil = (r, g, b) => b > 128, isVarn = (r, g, b) => b < 128 && Math.abs(g - 20) < 6 && Math.abs(base - 20) > 12, isRel = (r, g, b) => Math.abs(r - 128) > 40;
+  if (has(isFoil)) plates.push([`DORURE À CHAUD (${(FOILS[state.foilColor] || FOILS.or).name}) · cliché`, isFoil]);
+  if (has(isVarn)) plates.push(["VERNIS SÉLECTIF UV · écran / cliché", isVarn]);
+  if (has(isRel)) plates.push(["GAUFRAGE · cliché mâle / femelle", isRel]);
+  for (const [title, test] of plates){
+    const c = raster((x, cv) => { const im = x.createImageData(cv.width, cv.height), o = im.data; for (let i = 0; i < pd.length; i += 4){ const on = pd[i + 3] > 128 && test(pd[i], pd[i + 1], pd[i + 2]); o[i] = o[i + 1] = o[i + 2] = on ? 0 : 255; o[i + 3] = 255; } x.putImageData(im, 0, 0); });
+    doc.addPage([W, H], W > H ? "l" : "p"); doc.addImage(c, "JPEG", M, M, bb.w, bb.h, undefined, "FAST"); marks(`${title} · noir 100 % = zone traitée · ${dpi} dpi`);
+  }
+  if (k === "label" && (state.print.label === "numb" || state.mat.label === "ppt")){
+    const wart = state.raw ? art : null;
+    const c = raster((x, cv) => { x.fillStyle = "#fff"; x.fillRect(0, 0, cv.width, cv.height); if (wart){ const m = document.createElement("canvas"); m.width = cv.width; m.height = cv.height; const mx = m.getContext("2d"); mx.drawImage(wart, 0, 0); mx.globalCompositeOperation = "source-in"; mx.fillStyle = "#000"; mx.fillRect(0, 0, cv.width, cv.height); x.drawImage(m, 0, 0); } else { x.fillStyle = "#000"; shape(x, false); } });
+    doc.addPage([W, H], W > H ? "l" : "p"); doc.addImage(c, "JPEG", M, M, bb.w, bb.h, undefined, "FAST"); marks("BLANC DE SOUTIEN · noir 100 % = encre blanche sous la quadri");
+  }
+  return doc.output("blob");
+}
+
 /* ================= Scène 3D ================= */
 const v3d = $("#v3d");
 const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true, alpha:true});
@@ -2289,6 +2422,8 @@ const hasRelief = () => state.relief !== "none" || state.elements.some(x => x.re
 function preflight(q){
   const out = [], add = (level, msg) => out.push({level, msg}), t = TPL(), d = state.design, L = layout;
   if (q && q.error) add("error", q.error);
+  for (const g of gamutIssues()) add("warn", `Couleur ${g.hex} (${g.where}) hors gamut CMJN : elle sortira plus terne à l'impression. Teinte imprimable proche : ${g.fix}.`);
+  if (artCanvas){ const r = gamutArea(artCanvas); if (r > .03) add("warn", `${fmt0.format(r*100)} % de la surface du visuel (images comprises) est hors gamut CMJN : vérifiez le rendu avec « Aperçu des couleurs imprimées ».`); }
   if (hasRelief()){
     if (["micro","ondB"].includes(state.mat.box) && t.kind === "box") add("warn", "Gaufrage déconseillé sur carton ondulé : le relief écrase les cannelures. Préférez un carton compact.");
     else if (t.kind === "cup") add("warn", "Gaufrage non réalisable sur la jupe de gobelet après formage : à valider avec l'atelier.");
@@ -2478,6 +2613,7 @@ function renderControls(){
   $("#focalSel").value = state.focal || 42; $("#bgBlur").value = state.bgBlur || 0; $("#shelfCols").value = state.shelf.cols; $("#shelfRows").value = state.shelf.rows;
   const bgi = state.images.bg; $("#bgThumb").hidden = !bgi; if (bgi) $("#bgThumb").src = bgi.src; $("#bgClear").hidden = !bgi; renderVariants();
   $("#sceneSel").value = state.scene in SCENES ? state.scene : "studio"; $("#lightAz").value = state.lightAz ?? 35; $("#lightPow").value = state.lightPow ?? 100; applyScene();
+  $("#softProof").checked = !!state.softProof; renderGamut();
   $("#foilColor").value = state.foilColor in FOILS ? state.foilColor : "or"; $("#relief").value = state.relief in RELIEFS ? state.relief : "none";
   $("#varnish").checked = state.varnish; $("#foil").checked = state.foil; $("#raw").checked = state.raw; $("#fullHide").checked = state.fullHide;
   $("#qty").value = state.qty; $("#showArt").checked = state.showArt; $("#showSafe").checked = state.showSafe;
@@ -2536,10 +2672,10 @@ function refresh(level = "geo", full){
   pending = requestAnimationFrame(() => {
     pending = 0; const lvl = pendLevel, fl = pendFull; pendLevel = "art"; pendFull = false;
     if (lvl === "geo" || !layout || !texture){
-      layout = computeLayout(); artCanvas = drawArt(layout); pbrCanvas = drawArt(layout, null, "pbr");
+      layout = computeLayout(); artCanvas = softView(drawArt(layout)); pbrCanvas = drawArt(layout, null, "pbr");
       build3D(); applyFold(state.fold); syncShelf();
     } else {
-      artCanvas = drawArt(layout); pbrCanvas = drawArt(layout, null, "pbr");
+      artCanvas = softView(drawArt(layout)); pbrCanvas = drawArt(layout, null, "pbr");
       texture.image = artCanvas; texture.needsUpdate = true; pbrTex.image = pbrCanvas; pbrTex.needsUpdate = true;
     }
     if (fl){ autoFrame = true; frame(true); }
@@ -2966,6 +3102,7 @@ async function runExport(kindName){
     else if (kindName === "multiview") await exportMultiView(base);
     else if (kindName === "range") await exportRange(base, bg);
     else if (kindName === "allbat") await exportAllBat(base);
+    else if (kindName === "printpdf"){ toast("Calcul du fichier d'impression…"); await new Promise(r => setTimeout(r, 30)); await saveFile(`${base}_impression.pdf`, printPDF()); }
     else if (kindName === "flat") await saveFile(`${base}_visuel-a-plat.png`, await new Promise(r => proofCanvas(4000).toBlob(r, "image/png")));
     else if (kindName === "tplsvg") await saveFile(`${base}_gabarit.svg`, dielineSVG(true));
     else if (kindName === "diepdf") await saveFile(`${base}_plan-decoupe.pdf`, dielinePDF());
@@ -2978,12 +3115,13 @@ async function runExport(kindName){
       zip.file(`${base}_plan-decoupe.pdf`, dielinePDF());
       zip.file(`${base}_plan-decoupe.svg`, dielineSVG(true));
       zip.file(`${base}_plan-decoupe.dxf`, dielineDXF());
+      zip.file(`${base}_impression.pdf`, printPDF());
       zip.file(`${base}_visuel-a-plat.png`, await new Promise(r => proofCanvas(4000).toBlob(r, "image/png")));
       zip.file(`${base}_maquette.png`, dataURLtoBlob(captureMockup(2000, 1500, bg)));
       zip.file(`${base}_BAT.pdf`, batPDF(captureMockup(1200, 1200, "white", true)));
       zip.file(`${base}_devis.pdf`, devisPDF(captureMockup(1000, 1000, "white", true)));
       if (kind() === "box" && state.inside.on && state.images.inside){ const vc = versoCanvas(); if (vc) zip.file(`${base}_impression-interieure-verso.png`, await new Promise(r => vc.toBlob(r, "image/png"))); }
-      zip.file("LISEZ-MOI.txt", `Pack fabrication ${quoteNo()} — ${meta.client || ""} ${meta.name || ""}\r\n\r\n` + specRows().map(([a,b]) => `${a} : ${b}`).join("\r\n") + `\r\nQuantité : ${state.qty}\r\n\r\nContrôle prépresse :\r\n` + pfItems.map(x => `- [${x.level}] ${x.msg}`).join("\r\n") + `\r\n\r\nFichiers :\r\n- plan-decoupe.pdf / .svg : échelle 1:1, calques COUPE (rouge) et RAINAGE (bleu), épaisseur du support compensée\r\n- plan-decoupe.dxf : pour table de découpe / CAO (mm)\r\n- visuel-a-plat.png : contrôle visuel avec traits\r\n- BAT.pdf : à faire signer par le client\r\n- devis.pdf : offre de prix\r\n\r\nGabarit à valider sur échantillon (table de découpe ou maquette blanche) avant la première production.\r\n`);
+      zip.file("LISEZ-MOI.txt", `Pack fabrication ${quoteNo()} — ${meta.client || ""} ${meta.name || ""}\r\n\r\n` + specRows().map(([a,b]) => `${a} : ${b}`).join("\r\n") + `\r\nQuantité : ${state.qty}\r\n\r\nContrôle prépresse :\r\n` + pfItems.map(x => `- [${x.level}] ${x.msg}`).join("\r\n") + `\r\n\r\nFichiers :\r\n- impression.pdf : visuel 300 dpi avec fond perdu et traits de coupe (page 1), forme de découpe vectorielle (page 2), puis un masque par finition (dorure, vernis sélectif, gaufrage, blanc de soutien)\r\n- plan-decoupe.pdf / .svg : échelle 1:1, calques COUPE (rouge) et RAINAGE (bleu), épaisseur du support compensée\r\n- plan-decoupe.dxf : pour table de découpe / CAO (mm)\r\n- visuel-a-plat.png : contrôle visuel avec traits\r\n- BAT.pdf : à faire signer par le client\r\n- devis.pdf : offre de prix\r\n\r\nGabarit à valider sur échantillon (table de découpe ou maquette blanche) avant la première production.\r\n`);
       await saveFile(`${base}_pack-fabrication.zip`, await zip.generateAsync({type:"blob"}));
     }
   } catch (e) { console.error(e); toast("L'export a échoué. Réessayez."); }

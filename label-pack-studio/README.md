@@ -22,6 +22,8 @@ Configurateur d'emballage en une page (`index.html`) pour l'imprimerie Label Pac
 - **Éditeur d'éléments** : textes (français et arabe), images et formes à glisser sur le plan, dorure / vernis par élément, annuler / rétablir.
 - **Contrôle prépresse** : résolution des images, corps minimum, zone de sécurité de 3 mm, plis, collage, fenêtre, code-barres EAN-13 (clé de contrôle et taille minimale 80 %).
 - **Visuel** : décor automatique (marque, produit, mention, couleurs, motifs, logo, dorure), édition **par face** (couleur, image, zoom, rotation) ou **création complète** importée sur le gabarit.
+- **PDF d'impression** : visuel 300 dpi avec fond perdu et repères de coupe, forme de découpe vectorielle (coupe magenta, rainage cyan) sur page séparée, puis un masque par finition (dorure, vernis sélectif, gaufrage, blanc de soutien) au même repérage.
+- **Couleurs CMJN** : détection des couleurs hors gamut quadri (offset couché, approximation FOGRA39) avec teinte imprimable proposée et correction en un clic, part du visuel hors gamut, aperçu écran des couleurs imprimées.
 - **Plan de découpe** : coupe, rainage, fond perdu, cotes ; exports PDF 1:1 avec cartouche, SVG à calques, DXF (dans le pack .zip).
 - **Devis instantané en TND** (imposition feuille ou laize, coûts détaillés, paliers, TVA) ; **devis PDF**, **BAT PDF** avec case « bon pour accord », **mail client**.
 - **Projets** en colonnes de statut (brouillon → livré), **paramètres tarifaires** de l'imprimerie, **lien client 3D** en lecture seule.
