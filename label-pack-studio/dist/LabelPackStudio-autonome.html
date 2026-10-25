@@ -425,6 +425,30 @@ input[type=range]{accent-color:var(--accent);width:100%}
 .ai-sw{width:38px;height:38px;border-radius:4px;position:relative;overflow:hidden}
 .ai-sw i{position:absolute;right:0;bottom:0;width:45%;height:45%}
 .ai-card small{display:block;color:var(--muted)}
+.die-opts{border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--surface-2)}
+.die-opts > summary{cursor:pointer;font-size:13px;font-weight:600}
+.die-opts[open] > summary{margin-bottom:10px}
+.linelist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:220px;overflow:auto}
+.linelist li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;font-size:12px}
+.linelist li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.linelist select{max-width:150px}
+.linelist select,.addmore{font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface);max-width:100%}
+.badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;background:var(--surface);border:1px solid var(--line);white-space:nowrap}
+.badge.ok{color:var(--ok);border-color:currentColor}
+.badge.warn{color:var(--warn);background:var(--warn-soft);border-color:transparent}
+.hist{margin:4px 0 0;padding-left:16px;font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.card details summary{cursor:pointer;font-size:12px;color:var(--muted)}
+.board-list{display:block}
+.ctable-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+.ctable{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+.ctable th,.ctable td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.ctable th{font-size:12px;color:var(--muted);font-weight:600;background:var(--surface-2)}
+.ctable .num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.ctable .sts{display:flex;flex-wrap:wrap;gap:4px}
+.card .badge{white-space:normal}
+.linkbtn{all:unset;cursor:pointer;font-weight:600}
+.linkbtn:hover,.linkbtn:focus-visible{color:var(--accent);text-decoration:underline}
+.appr{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--surface-2)}
 .ellist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:180px;overflow:auto}
 .ellist button{width:100%;display:flex;gap:8px;align-items:center;text-align:left;padding:6px 8px;border:1px solid var(--line);border-radius:5px;background:var(--surface-2);cursor:pointer;font-size:12.5px;min-width:0}
 .ellist button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
@@ -703,7 +727,23 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
         </div>
       </div>
       <p class="hint" id="dimNote"></p>
-      <div class="field" id="grainRow"><label for="grainSel">Sens des fibres du carton</label><select id="grainSel"><option value="h">Horizontal sur le plan (perpendiculaire aux plis du corps, conseillé)</option><option value="v">Vertical sur le plan</option></select></div>
+      <details class="die-opts" id="dieBox"><summary>Forme de découpe, montage et traits spéciaux</summary>
+        <div class="ed">
+        <div class="field" id="grainRow"><label for="grainSel">Sens des fibres du carton</label><select id="grainSel"><option value="h">Horizontal sur le plan (perpendiculaire aux plis du corps, conseillé)</option><option value="v">Vertical sur le plan</option></select></div>
+        <div class="grid2">
+          <div class="field"><label for="sheetGrain">Fibres de la feuille</label><select id="sheetGrain"><option value="auto">Automatique (le plus de poses)</option><option value="W">Parallèles au grand côté</option><option value="H">Parallèles au petit côté</option></select></div>
+          <div class="field"><label for="nickN">Attaches par pose</label><select id="nickN"><option value="0">Aucune</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="6">6</option><option value="8">8</option></select></div>
+          <div class="field"><label for="nickW">Largeur des attaches</label><select id="nickW"><option value="0.3">0,3 mm</option><option value="0.4">0,4 mm</option><option value="0.5">0,5 mm</option><option value="0.8">0,8 mm</option><option value="1">1 mm</option></select></div>
+        </div>
+        <label class="check" id="grainLockRow"><input type="checkbox" id="grainLock"> Respecter le sens des fibres au montage</label>
+        <label class="check"><input type="checkbox" id="ejectOn"> Proposer des filets d'éjection entre les poses</label>
+        <p class="hint" id="montageNote"></p>
+        <div class="ed" id="linesBox"><h3 class="eyebrow">Plis et traits spéciaux</h3><p class="hint">Survolez une ligne pour la repérer sur le plan.</p><ul class="linelist" id="lineList"></ul>
+          <label class="check" id="tearRow"><input type="checkbox" id="tearOn"> Bande d'ouverture facile (zipper) autour du corps</label>
+          <div class="grid2" id="tearFields"><div class="field"><label for="tearY">Hauteur depuis le bas</label><div class="unit" data-unit="mm"><input type="number" id="tearY" min="3" step="1"></div></div><div class="field"><label for="tearW">Largeur de la bande</label><div class="unit" data-unit="mm"><input type="number" id="tearW" min="2" max="12" step="0.5"></div></div></div>
+        </div>
+        </div>
+      </details>
     </section>
 
     <section class="sec" id="secMat">
@@ -774,6 +814,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <button type="button" class="btn small" id="addText">+ Texte</button>
           <button type="button" class="btn small" id="addShape">+ Forme</button>
           <label class="btn small file-btn">+ Image<input type="file" id="addImg" accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>
+          <select id="addMore" class="addmore" aria-label="Ajouter un code-barres, du braille, un pictogramme ou un kit de mentions"><option value="">+ Code, braille, picto…</option><optgroup label="Codes-barres"><option value="ean">Code EAN-13 (vente)</option><option value="gs1">Code GS1-128 (lot, date, logistique)</option></optgroup><optgroup label="Réglementaire"><option value="braille">Braille (médicaments)</option><option value="picto">Pictogramme</option><option value="zone">Zone de marquage lot / date</option></optgroup><optgroup label="Kits de mentions"><option value="kit-cosmetique">Cosmétique : PAO, ℮, recyclage, lot</option><option value="kit-alimentaire">Alimentaire : contact alimentaire, ℮, DDM</option><option value="kit-pharma">Pharmacie : braille, lot, péremption</option><option value="kit-transport">Transport : haut, fragile, humidité</option></optgroup></select>
         </div>
         <ul class="ellist" id="elList"></ul>
         <div class="props" id="elProps" hidden>
@@ -786,13 +827,21 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
             <label class="check"><input type="checkbox" id="elBold"> Gras</label>
             <select id="elAlign" aria-label="Alignement" style="padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)"><option value="center">Centré</option><option value="left">Gauche</option><option value="right">Droite</option></select>
           </div>
+          <div class="grid2" data-for="barcode">
+            <div class="field"><label for="elSym">Symbologie</label><select id="elSym"><option value="ean13">EAN-13 (vente au détail)</option><option value="gs1">GS1-128 (lot, date, logistique)</option></select></div>
+            <div class="field" id="elMagF"><label for="elMag">Grossissement</label><div class="unit" data-unit="%"><input type="number" id="elMag" min="80" max="200" step="5"></div></div>
+          </div>
+          <div class="field" data-for="barcode"><label for="elCode">Données du code</label><input type="text" id="elCode" spellcheck="false" autocomplete="off"><p class="hint" id="elCodeHint"></p></div>
+          <div class="field" data-for="braille"><label for="elBraille">Texte transcrit en braille (français)</label><textarea id="elBraille" rows="2"></textarea><p class="hint" id="elBrHint"></p></div>
+          <div class="field" data-for="picto"><label for="elPic">Pictogramme</label><select id="elPic"></select></div>
+          <div class="field" data-for="picto" id="elPicTxtF"><label for="elPicTxt">Durée après ouverture</label><input type="text" id="elPicTxt" maxlength="4" placeholder="12M"></div>
           <div class="field" data-for="shape"><label for="elShape">Forme</label><select id="elShape"><option value="rect">Rectangle</option><option value="ellipse">Ellipse</option></select></div>
-          <div class="row" data-for="text shape"><label class="swatch"><input type="color" id="elColor"> Couleur</label></div>
+          <div class="row" data-for="text shape picto zone"><label class="swatch"><input type="color" id="elColor"> Couleur</label></div>
           <div class="grid2">
             <div class="field"><label for="elX">Position X</label><div class="unit" data-unit="mm"><input type="number" id="elX" step="0.5"></div></div>
             <div class="field"><label for="elY">Position Y</label><div class="unit" data-unit="mm"><input type="number" id="elY" step="0.5"></div></div>
-            <div class="field" data-for="image shape"><label for="elW">Largeur</label><div class="unit" data-unit="mm"><input type="number" id="elW" min="1" step="0.5"></div></div>
-            <div class="field" data-for="shape"><label for="elH">Hauteur</label><div class="unit" data-unit="mm"><input type="number" id="elH" min="1" step="0.5"></div></div>
+            <div class="field" data-for="image shape picto zone barcode"><label for="elW">Largeur</label><div class="unit" data-unit="mm"><input type="number" id="elW" min="1" step="0.5"></div></div>
+            <div class="field" data-for="shape zone barcode"><label for="elH">Hauteur</label><div class="unit" data-unit="mm"><input type="number" id="elH" min="1" step="0.5"></div></div>
             <div class="field"><label for="elRot">Rotation</label><div class="unit" data-unit="°"><input type="number" id="elRot" step="1"></div></div>
             <div class="field"><label for="elOpacity">Opacité</label><input type="range" id="elOpacity" min="10" max="100"></div>
           </div>
@@ -866,7 +915,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <button class="exp" data-exp="zip" type="button"><b>Pack fabrication</b><small>PDF d'impression, plan PDF/SVG/DXF, visuel, maquette, BAT, devis</small><span>.zip</span></button>
       <button class="exp" data-exp="ai-send" type="button" hidden><b>Envoyer vers Illustrator</b><small>Nouveau document : calques Visuel, Fond perdu, Rainage, Coupe (tons directs CutContour et Rainage)</small><span>AI</span></button>
       <button class="exp" data-exp="aijsx" type="button"><b>Script Illustrator</b><small>Recrée le gabarit dans Illustrator avec calques et tons directs (Fichier › Scripts › Autre script)</small><span>.zip</span></button>
-      <button class="exp" data-exp="printpdf" type="button"><b>PDF d'impression</b><small>300 dpi, fond perdu, traits de coupe ; forme de découpe et calques de finition sur pages séparées</small><span>.pdf</span></button>
+      <button class="exp" data-exp="printpdf" type="button"><b>PDF d'impression (PDF/X-3)</b><small>300 dpi, fond perdu, repères, intention de sortie FOGRA ; forme de découpe et calques de finition sur pages séparées</small><span>.pdf</span></button>
       <button class="exp" data-exp="formiste" type="button"><b>Dossier formiste</b><small>Forme 1 pose et montage feuille en DXF / PDF, vrais arcs, calques normalisés, filets, sens des fibres, contrôle du tracé</small><span>.zip</span></button>
       <button class="exp" data-exp="diepdf" type="button"><b>Plan de découpe</b><small>Échelle 1:1, coupe / rainage, cartouche</small><span>.pdf</span></button>
       <button class="exp" data-exp="tplsvg" type="button"><b>Gabarit graphiste</b><small>Calques COUPE, RAINAGE, FOND_PERDU, SECURITE</small><span>.svg</span></button>
@@ -946,6 +995,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
 <main class="boardview gutter" id="boardView" hidden>
   <div class="board-head">
     <h2>Projets</h2>
+    <div class="seg" role="tablist" aria-label="Affichage des dossiers"><button type="button" role="tab" id="bvStatus" aria-selected="true">Par statut</button><button type="button" role="tab" id="bvClients" aria-selected="false">Par client</button></div>
     <input type="search" class="search" id="boardSearch" placeholder="Client, projet…" aria-label="Rechercher un projet">
     <button class="btn" id="boardBack" type="button">Retour au studio</button>
     <button class="btn primary" id="boardNew" type="button">Nouveau projet</button>
@@ -985,6 +1035,18 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
   <div class="dialog">
     <header><h2 id="shareTitle">Lien client 3D</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
     <div class="body" id="shareBody"></div>
+  </div>
+</div>
+<div class="overlay" id="apprDlg" hidden role="dialog" aria-modal="true" aria-labelledby="apprTitle">
+  <div class="dialog">
+    <header><h2 id="apprTitle">Réponse du client au BAT</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body">
+      <p class="hint" id="apprFor"></p>
+      <div class="field"><label for="apprDecision">Décision</label><select id="apprDecision"><option value="ok">BAT validé (bon pour accord)</option><option value="modif">Correction demandée</option></select></div>
+      <div class="grid2"><div class="field"><label for="apprName">Nom du signataire</label><input type="text" id="apprName" autocomplete="off"></div><div class="field"><label for="apprDate">Date</label><input type="date" id="apprDate"></div></div>
+      <div class="field"><label for="apprNote">Commentaire ou corrections demandées</label><textarea id="apprNote" rows="3"></textarea></div>
+      <button class="btn primary" type="button" id="apprSave">Enregistrer dans le dossier</button>
+    </div>
   </div>
 </div>
 <div class="overlay" id="compoDlg" hidden role="dialog" aria-modal="true" aria-labelledby="compoTitle">
@@ -2660,6 +2722,18 @@ const PRINT = {box:{cmjn:"Offset quadri CMJN", cmjnp:"Quadri + 1 Pantone", noir:
 const LAM = {box:{none:"Sans pelliculage", mat:"Pelliculage mat", brillant:"Pelliculage brillant", soft:"Soft-touch"}, label:{none:"Sans finition", vernis:"Vernis brillant", lam:"Lamination mate"}, cup:{none:"Sans vernis", vernis:"Vernis acrylique alimentaire"}};
 const ROUGH = {none:.82, mat:.72, brillant:.26, soft:.92, vernis:.3, lam:.68};
 const STATUSES = [["brouillon","Brouillon"],["devis","Devis envoyé"],["bat","BAT envoyé"],["valide","BAT validé"],["production","En production"],["livre","Livré"]];
+// Types de traits de la forme de découpe (calque DXF, couleur AutoCAD, rendu à l'écran et en PDF).
+const LINE_TYPES = {
+  rainage:{name:"Rainage", layer:"RAINAGE", aci:5, hex:"#0050FF", rgb:[0,80,255], cmyk:[1,0,0,0], dash:[2,1.2], knife:false},
+  contre:{name:"Contre-rainage (pli inversé)", layer:"CONTRE_RAINAGE", aci:4, hex:"#00A3A3", rgb:[0,163,163], cmyk:[.8,0,.4,0], dash:[3,1,.6,1], knife:false},
+  cr:{name:"Coupe-rainage (alterné)", layer:"COUPE_RAINAGE", aci:6, hex:"#A000C8", rgb:[160,0,200], cmyk:[.4,1,0,0], dash:[3,1.5], knife:true},
+  perfo:{name:"Perforation", layer:"PERFORATION", aci:30, hex:"#F07800", rgb:[240,120,0], cmyk:[0,.6,1,0], dash:[.8,.8], knife:true},
+  zip:{name:"Bande d'ouverture (zipper)", layer:"ZIPPER", aci:40, hex:"#C87800", rgb:[200,120,0], cmyk:[0,.4,1,.1], dash:[1.6,.6], knife:true},
+};
+const DIE_DEFAULT = {nicks:4, nickW:.5, eject:false, sheetGrain:"auto", grainLock:true};
+const EL_TYPES = {text:"TEXTE", image:"IMAGE", shape:"FORME", barcode:"CODE", braille:"BRAILLE", picto:"PICTO", zone:"ZONE"};
+function elName(el){ return el.type === "text" ? `Texte « ${String(el.text).slice(0, 20)} »` : el.type === "image" ? "Image ajoutée" : el.type === "barcode" ? (el.sym === "gs1" ? "Code GS1-128" : "Code EAN-13") : el.type === "braille" ? `Braille « ${String(el.text || "").slice(0, 20)} »` : el.type === "picto" ? `Pictogramme « ${PICTOS[el.pic] || el.pic} »` : el.type === "zone" ? "Zone de marquage lot / date" : "Forme"; }
+let hiLine = null, approvals = [], unsubAppr = null, applying = false, boardMode = "status", apprTarget = null, shareId = null;
 const TIERS = [500, 1000, 2500, 5000, 10000];
 
 const DEFAULT_SETTINGS = {
@@ -2689,7 +2763,7 @@ const DEFAULT = {
   window:{on:false, w:30, h:60, y:5, r:4},
   mat:{box:"gc1", label:"couche", cup:"pe"}, print:{box:"cmjn", label:"num", cup:"cmjn"}, lam:{box:"mat", label:"vernis", cup:"none"},
   varnish:false, foil:true, foilColor:"or", relief:"none", raw:false, inside:{on:false, color:"#e2b25a"},
-  importData:null, grain:"h", softProof:false, focal:42, bgBlur:0, shelf:{cols:4, rows:2}, variants:[], scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
+  importData:null, grain:"h", lineTypes:{}, tear:{on:false, y:25, w:4}, die:{nicks:4, nickW:.5, eject:false, sheetGrain:"auto", grainLock:true}, softProof:false, focal:42, bgBlur:0, shelf:{cols:4, rows:2}, variants:[], scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
   design:{bg:"#123c3a", accent:"#e2b25a", brand:"Néroli", product:"Crème mains à la fleur d'oranger", mention:"75 ml · Fabriqué en Tunisie", pattern:"zellige", legal:"", ean:""},
   images:{logo:null, full:null, inside:null, bg:null}, faces:{}, fullHide:false, elements:[],
   qty:2500, fold:1, showArt:true, showSafe:true
@@ -2708,7 +2782,7 @@ try {
 function sanitizeState(){ state.fold = 1; if (!TEMPLATES.some(t => t.id === state.model) || (state.model === "import" && !(state.importData && state.importData.segs && state.importData.segs.length))) state.model = "rte"; if (!Array.isArray(state.elements)) state.elements = []; fixMat(); }
 function fixMat(){ const t = TPL(), k = t.kind; if (!t.mats.includes(state.mat[k])) state.mat[k] = t.mats[0]; }
 sanitizeState();
-const saveDraft = () => { try { localStorage.setItem("lp-studio-v3", JSON.stringify({state, meta})); } catch (e) {} };
+const saveDraft = () => { if (clientMode) return; try { localStorage.setItem("lp-studio-v3", JSON.stringify({state, meta})); } catch (e) {} };
 
 /* ================= Capacités claude.ai ================= */
 const cap = {db:null, user:null, assets:null, downloads:null, sample:null, uid:null, admin:false, ready:false};
@@ -3339,16 +3413,18 @@ function computeLayout(){
     p.gpoly = tf(p.poly);
     p.gholes = (p.holes || []).map(tf);
   }
-  const hinges = [];
+  const hinges = [], hingeIds = [];
   for (const p of panels){
     if (!p.parent) continue;
     const vert = p.axis === "right" || p.axis === "left";
     let lo, hi;
     if (p.hinge) [lo, hi] = p.hinge;
     else { const on = p.poly.filter(([x,y]) => Math.abs(vert ? x : y) < 1e-6).map(([x,y]) => vert ? y : x); lo = Math.min(...on); hi = Math.max(...on); }
-    hinges.push((vert ? [[0, lo],[0, hi]] : [[lo, 0],[hi, 0]]).map(pt => applyT(p.T, pt)));
+    hinges.push((vert ? [[0, lo],[0, hi]] : [[lo, 0],[hi, 0]]).map(pt => applyT(p.T, pt))); hingeIds.push("h:" + p.id);
   }
-  const extra = panels.flatMap(p => (p.creases || []).map(seg => seg.map(pt => applyT(p.T, pt)))), hingesAll = [...hinges, ...extra];
+  const extra = [], extraIds = [];
+  for (const p of panels) for (const seg of (p.creases || [])){ extra.push(seg.map(pt => applyT(p.T, pt))); extraIds.push("x:" + p.id); }
+  const hingesAll = [...hinges, ...extra];
   const cuts = [], seen = new Set();
   const push = s => { const k = s.map(([x,y]) => `${x.toFixed(2)},${y.toFixed(2)}`).sort().join("|"); if (!seen.has(k)){ seen.add(k); cuts.push(s); } };
   for (const p of panels){
@@ -3360,8 +3436,22 @@ function computeLayout(){
   const segLen = arr => arr.reduce((s,[a,b]) => s + Math.hypot(b[0]-a[0], b[1]-a[1]), 0);
   const cbb = polyBox(panels.flatMap(p => p.gpoly)), bleed = kind() === "label" ? 2 : 3;
   const bb = {minX:cbb.minX-bleed, minY:cbb.minY-bleed, maxX:cbb.maxX+bleed, maxY:cbb.maxY+bleed, w:cbb.w+2*bleed, h:cbb.h+2*bleed};
-  const creases = [...hinges, ...extra];
-  return {panels, byId, hinges, creases, cuts, cutLen:segLen(cuts), creaseLen:segLen(creases), cbb, bb, bleed, e, inner:d};
+  const LT = state.lineTypes || {}, ids = [...hingeIds, ...extraIds];
+  const lines = hingesAll.map((seg, i) => ({id:ids[i], type:LINE_TYPES[LT[ids[i]]] ? LT[ids[i]] : "rainage", seg}));
+  for (const seg of tearSegs(byId)) lines.push({id:"tear", type:"zip", seg});
+  const creases = lines.filter(l => l.type === "rainage").map(l => l.seg), specials = lines.filter(l => l.type !== "rainage");
+  return {panels, byId, hinges, creases, specials, lines, cuts, cutLen:segLen(cuts), creaseLen:segLen(lines.filter(l => !LINE_TYPES[l.type].knife).map(l => l.seg)), knifeLen:segLen(specials.filter(l => LINE_TYPES[l.type].knife).map(l => l.seg)), cbb, bb, bleed, e, inner:d};
+}
+// Bande d'ouverture facile : deux lignes « zipper » horizontales autour du corps (faces, côtés, patte de collage).
+function tearSegs(byId){
+  const T = state.tear; if (!T || !T.on || kind() !== "box" || !["front","s1","back","s2"].every(id => byId[id])) return [];
+  const out = [];
+  for (const y of [+T.y, +T.y + +T.w]) for (const p of ["front","s1","back","s2","glue"].map(id => byId[id]).filter(Boolean)){
+    const xs = [], q = p.poly;
+    for (let i = 0; i < q.length; i++){ const [x0, y0] = q[i], [x1, y1] = q[(i + 1) % q.length]; if ((y0 > y) !== (y1 > y)) xs.push(x0 + (x1 - x0)*(y - y0)/(y1 - y0)); }
+    if (xs.length >= 2) out.push([[Math.min(...xs), y], [Math.max(...xs), y]].map(pt => applyT(p.T, pt)));
+  }
+  return out;
 }
 
 /* ================= Images ================= */
@@ -3410,6 +3500,110 @@ function drawEAN(ctx, x, y, w, h, code){
   ctx.font = `500 ${h*.12}px "IBM Plex Mono", monospace`; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
   ctx.fillText(code[0], x + qz*.5, y + h*.97); ctx.fillText(code.slice(1, 7), x + qz + mw*24, y + h*.97); ctx.fillText(code.slice(7), x + qz + mw*70, y + h*.97);
 }
+/* ---- GS1-128 (Code 128 avec FNC1), braille français (Marburg Medium), pictogrammes réglementaires ---- */
+const C128 = "212222 222122 222221 121223 121322 131222 122213 122312 132212 221213 221312 231212 112232 122132 122231 113222 123122 123221 223211 221132 221231 213212 223112 312131 311222 321122 321221 312212 322112 322211 212123 212321 232121 111323 131123 131321 112313 132113 132311 211313 231113 231311 112133 112331 132131 113123 113321 133121 313121 211331 231131 213113 213311 213131 311123 311321 331121 312113 312311 332111 314111 221411 431111 111224 111422 121124 121421 141122 141221 112214 112412 122114 122411 142112 142211 241211 221114 413111 241112 134111 111242 121142 121241 114212 124112 124211 411212 421112 421211 212141 214121 412121 111143 111341 131141 114113 114311 411113 411311 113141 114131 311141 411131 211412 211214 211232 2331112".split(" ");
+// Longueur totale (AI compris) des AI à longueur fixe, d'après les deux premiers chiffres : pas de séparateur FNC1 après eux.
+const GS1_FIXED = {"00":20,"01":16,"02":16,"03":16,"04":18,"11":8,"12":8,"13":8,"14":8,"15":8,"16":8,"17":8,"18":8,"19":8,"20":4,"31":10,"32":10,"33":10,"34":10,"35":10,"36":10,"41":16};
+const gs1Check = data => { let s = 0; for (let i = 0; i < data.length; i++) s += +data[data.length - 1 - i]*(i % 2 ? 1 : 3); return (10 - s % 10) % 10; };
+function parseGS1(str){
+  const s = String(str || "").replace(/\s+/g, ""), items = [], re = /\((\d{2,4})\)([^()]*)/g; let m, pos = 0;
+  if (!s) return {error:"Saisissez les données, par exemple (01)06191234567897(17)271231(10)LOT42."};
+  while ((m = re.exec(s))){ if (m.index !== pos) return {error:"Format attendu : (AI)données(AI)données…"}; items.push({ai:m[1], data:m[2]}); pos = re.lastIndex; }
+  if (pos !== s.length || !items.length) return {error:"Format attendu : (AI)données(AI)données…"};
+  for (const {ai, data} of items){
+    if (!data) return {error:`AI (${ai}) sans données.`};
+    if (!/^[A-Za-z0-9!"%&'*+,\-./:;<=>?_]+$/.test(data)) return {error:`AI (${ai}) : caractère non autorisé par GS1.`};
+    const fx = GS1_FIXED[ai.slice(0, 2)];
+    if (fx && ai.length + data.length !== fx) return {error:`AI (${ai}) : ${fx - ai.length} caractères attendus.`};
+    if (fx && !/^\d+$/.test(data)) return {error:`AI (${ai}) : chiffres uniquement.`};
+    if ((ai === "01" || ai === "02" || ai === "00") && gs1Check(data.slice(0, -1)) !== +data.slice(-1)) return {error:`AI (${ai}) : clé de contrôle fausse (attendue ${gs1Check(data.slice(0, -1))}).`};
+    if (/^1[1-7]$/.test(ai)){ const mo = +data.slice(2, 4), d = +data.slice(4, 6); if (mo < 1 || mo > 12 || d > 31) return {error:`AI (${ai}) : date AAMMJJ invalide.`}; }
+    if (!fx && data.length > 30) return {error:`AI (${ai}) : 30 caractères maximum.`};
+  }
+  return {items};
+}
+// Valeurs Code 128 : départ, données (jeu C pour les paires de chiffres, jeu B sinon), FNC1, clé, arrêt.
+function code128Vals(items){
+  const seq = ["F"];
+  items.forEach((it, i) => { for (const ch of it.ai + it.data) seq.push(ch); if (!GS1_FIXED[it.ai.slice(0, 2)] && i < items.length - 1) seq.push("F"); });
+  const digits = k => { let n = 0; while (k + n < seq.length && /\d/.test(seq[k + n])) n++; return n; };
+  const vals = []; let set = digits(1) >= 2 ? "C" : "B"; vals.push(set === "C" ? 105 : 104);
+  for (let i = 0; i < seq.length;){
+    if (seq[i] === "F"){ vals.push(102); i++; continue; }
+    const n = digits(i);
+    if (set === "C"){ if (n >= 2){ vals.push(+(seq[i] + seq[i + 1])); i += 2; } else { vals.push(100); set = "B"; } continue; }
+    if (n >= 4){ if (n % 2){ vals.push(seq[i].charCodeAt(0) - 32); i++; } vals.push(99); set = "C"; continue; }
+    vals.push(seq[i].charCodeAt(0) - 32); i++;
+  }
+  vals.push(vals.reduce((s, v, i) => s + v*(i || 1), 0) % 103, 106);
+  return vals;
+}
+function gs1Model(el){
+  const r = parseGS1(el.value); if (r.error) return {error:r.error};
+  const vals = code128Vals(r.items), mods = vals.reduce((s, v) => s + (v === 106 ? 13 : 11), 0), dataLen = r.items.reduce((s, it) => s + it.ai.length + it.data.length, 0);
+  return {vals, mods, X:el.w/(mods + 20), hri:r.items.map(it => `(${it.ai})${it.data}`).join(""), dataLen};
+}
+function drawCode128(ctx, x, y, w, h, m){
+  const X = w/(m.mods + 20), th = Math.min(h*.18, Math.max(1.8, X*9)), bh = h - th*1.35;
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(x, y, w, h); ctx.fillStyle = "#000000";
+  let cx = x + 10*X;
+  for (const v of m.vals){ const pat = C128[v]; for (let i = 0; i < pat.length; i++){ const bw = +pat[i]*X; if (i % 2 === 0) ctx.fillRect(cx, y, bw, bh); cx += bw; } }
+  ctx.font = `500 ${th}px "IBM Plex Mono", monospace`; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(fitText(ctx, m.hri, w - 4*X), x + w/2, y + h - th*.15);
+}
+// Braille français intégral : lettres, accents, chiffres (notation Antoine, préfixe point 6), majuscules (points 4-6).
+const BRAILLE = {dot:1.5, dp:2.5, cell:6.0, line:10.0};
+const BR_MAP = {a:"1",b:"12",c:"14",d:"145",e:"15",f:"124",g:"1245",h:"125",i:"24",j:"245",k:"13",l:"123",m:"134",n:"1345",o:"135",p:"1234",q:"12345",r:"1235",s:"234",t:"2345",u:"136",v:"1236",w:"2456",x:"1346",y:"13456",z:"1356",
+  "à":"12356","â":"16","ç":"12346","è":"2346","é":"123456","ê":"126","ë":"1246","î":"146","ï":"12456","ô":"1456","ù":"23456","û":"156","ü":"1256","œ":"246",
+  ",":"2",";":"23",":":"25",".":"256","?":"26","!":"235","\"":"2356","(":"236",")":"356","'":"3","’":"3","-":"36","/":"34","+":"235","=":"2356","%":"5346"};
+const BR_DIG = {"1":"16","2":"126","3":"146","4":"1456","5":"156","6":"1246","7":"12456","8":"1256","9":"246","0":"3456"};
+function brailleCells(text){
+  const bad = new Set(), lines = [];
+  for (const raw of String(text || "").split("\n")){
+    const cells = [], chars = [...raw];
+    for (let i = 0; i < chars.length; i++){
+      const ch = chars[i], lo = ch.toLowerCase();
+      if (/\s/.test(ch)){ cells.push(""); continue; }
+      if (BR_DIG[ch]){ if (!(i > 0 && (BR_DIG[chars[i - 1]] || (chars[i - 1] === "," && BR_DIG[chars[i - 2] || ""])))) cells.push("6"); cells.push(BR_DIG[ch]); continue; }
+      if (BR_MAP[lo] && ch !== lo){
+        const isL = c => /[A-Za-zÀ-ÖØ-öø-ÿŒœ]/.test(c || ""); let s0 = i, e0 = i; while (isL(chars[s0 - 1])) s0--; while (isL(chars[e0 + 1])) e0++;
+        const word = chars.slice(s0, e0 + 1).join(""), caps = word.length > 1 && word === word.toUpperCase();
+        if (!caps) cells.push("46"); else if (i === s0) cells.push("46", "46");
+        cells.push(BR_MAP[lo]); continue;
+      }
+      if (BR_MAP[ch]){ cells.push(BR_MAP[ch]); continue; }
+      bad.add(ch); cells.push("");
+    }
+    lines.push(cells);
+  }
+  return {lines, bad};
+}
+function brailleLayout(el){
+  const {lines, bad} = brailleCells(el.text), n = Math.max(1, ...lines.map(l => l.length)), B = BRAILLE;
+  const w = (n - 1)*B.cell + B.dp + B.dot, h = (lines.length - 1)*B.line + 2*B.dp + B.dot, dots = [];
+  lines.forEach((cells, li) => cells.forEach((c, ci) => { for (const dg of c){ const d = +dg, col = d >= 4 ? 1 : 0, row = (d - 1) % 3; dots.push([-w/2 + B.dot/2 + ci*B.cell + col*B.dp, -h/2 + B.dot/2 + li*B.line + row*B.dp]); } }));
+  return {w, h, dots, bad, cells:n, lines:lines.length};
+}
+// Pictogrammes vectoriels, dessinés dans une boîte de 100 × 100 (y vers le bas).
+const PICTOS = {recycle:"Recyclable (flèches)", pap21:"Carton plat PAP 21", pap20:"Carton ondulé PAP 20", pap22:"Papier PAP 22", tidyman:"Jeter à la poubelle", pao:"Période après ouverture (PAO)", hourglass:"À utiliser avant (sablier)", emark:"℮ quantité estimée", food:"Contact alimentaire (verre et fourchette)", fragile:"Fragile", up:"Haut (ce côté vers le haut)", dry:"Craint l'humidité"};
+function drawPicto(ctx, id, w, fill, txt){
+  const k = w/100; ctx.save(); ctx.scale(k, k); ctx.fillStyle = ctx.strokeStyle = fill; ctx.lineCap = ctx.lineJoin = "round";
+  const arrows = (r, th, dy) => { for (let i = 0; i < 3; i++){ ctx.save(); ctx.translate(0, dy); ctx.rotate(i*2*Math.PI/3); ctx.beginPath(); ctx.moveTo(-r*.62, r*.5 - th/2); ctx.lineTo(r*.3, r*.5 - th/2); ctx.lineTo(r*.3, r*.5 - th*1.3); ctx.lineTo(r*.66, r*.5); ctx.lineTo(r*.3, r*.5 + th*1.3); ctx.lineTo(r*.3, r*.5 + th/2); ctx.lineTo(-r*.62, r*.5 + th/2); ctx.closePath(); ctx.fill(); ctx.restore(); } };
+  const glass = (x, s) => { ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(x - 16*s, -44*s); ctx.lineTo(x + 16*s, -44*s); ctx.quadraticCurveTo(x + 18*s, -6*s, x, -2*s); ctx.quadraticCurveTo(x - 18*s, -6*s, x - 16*s, -44*s); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, -2*s); ctx.lineTo(x, 34*s); ctx.moveTo(x - 13*s, 36*s); ctx.lineTo(x + 13*s, 36*s); ctx.stroke(); };
+  const bold = (size, t, y) => { ctx.font = `700 ${size}px ${BODY}`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(t, 0, y); };
+  if (id === "recycle") arrows(46, 10, 8);
+  else if (/^pap/.test(id)){ arrows(40, 6, 0); bold(24, id.slice(3), 8); bold(17, "PAP", 44); }
+  else if (id === "tidyman"){ ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(-22, -34, 8, 0, 2*Math.PI); ctx.fill(); ctx.beginPath(); ctx.moveTo(-24, -24); ctx.lineTo(-27, 8); ctx.moveTo(-27, 8); ctx.lineTo(-38, 42); ctx.moveTo(-27, 8); ctx.lineTo(-14, 42); ctx.moveTo(-24, -18); ctx.lineTo(-2, -8); ctx.lineTo(8, -20); ctx.stroke(); ctx.fillRect(10, -30, 9, 9); ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(44, 0); ctx.moveTo(14, 6); ctx.lineTo(40, 6); ctx.lineTo(36, 44); ctx.lineTo(18, 44); ctx.closePath(); ctx.stroke(); }
+  else if (id === "pao"){ ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-36, -4); ctx.lineTo(-32, 44); ctx.lineTo(32, 44); ctx.lineTo(36, -4); ctx.closePath(); ctx.stroke(); ctx.save(); ctx.translate(-34, -14); ctx.rotate(-.38); ctx.fillRect(0, -12, 70, 12); ctx.restore(); bold(26, txt || "12M", 22); }
+  else if (id === "hourglass"){ ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-30, -46); ctx.lineTo(30, -46); ctx.moveTo(-30, 46); ctx.lineTo(30, 46); ctx.stroke(); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-24, -40); ctx.lineTo(24, -40); ctx.lineTo(4, 0); ctx.lineTo(24, 40); ctx.lineTo(-24, 40); ctx.lineTo(-4, 0); ctx.closePath(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-16, 38); ctx.lineTo(16, 38); ctx.lineTo(0, 18); ctx.closePath(); ctx.fill(); }
+  else if (id === "emark"){ ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(0, 0, 36, .3*Math.PI, 2.04*Math.PI); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-26, 0); ctx.lineTo(36, 0); ctx.stroke(); }
+  else if (id === "food"){ glass(-18, 1); ctx.lineWidth = 6; ctx.beginPath(); for (const x of [16, 24, 32, 40]){ ctx.moveTo(x, -44); ctx.lineTo(x, -20); } ctx.moveTo(16, -20); ctx.quadraticCurveTo(28, -4, 40, -20); ctx.moveTo(28, -10); ctx.lineTo(28, 40); ctx.stroke(); }
+  else if (id === "fragile"){ glass(0, 1.15); ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-4, -50); ctx.lineTo(4, -38); ctx.lineTo(-4, -28); ctx.lineTo(5, -18); ctx.stroke(); }
+  else if (id === "up"){ ctx.lineWidth = 7; for (const x of [-18, 18]){ ctx.beginPath(); ctx.moveTo(x, 32); ctx.lineTo(x, -20); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x - 13, -16); ctx.lineTo(x, -42); ctx.lineTo(x + 13, -16); ctx.closePath(); ctx.fill(); } ctx.beginPath(); ctx.moveTo(-36, 44); ctx.lineTo(36, 44); ctx.stroke(); }
+  else if (id === "dry"){ ctx.beginPath(); ctx.moveTo(-42, 4); ctx.arc(0, 4, 42, Math.PI, 2*Math.PI); for (let i = 0; i < 3; i++) ctx.arc(28 - i*28, 4, 14, 0, Math.PI, true); ctx.fill(); ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 4); ctx.lineTo(0, 36); ctx.arc(-7, 36, 7, 0, Math.PI); ctx.stroke(); ctx.lineWidth = 4; ctx.beginPath(); for (const [x, y] of [[-30, -46], [-8, -48], [14, -46], [34, -42]]){ ctx.moveTo(x, y); ctx.lineTo(x - 3, y + 7); } ctx.stroke(); }
+  ctx.restore();
+}
+function drawBadCode(ctx, w, h){ ctx.fillStyle = "#ffffff"; ctx.fillRect(-w/2, -h/2, w, h); ctx.strokeStyle = "#e30613"; ctx.lineWidth = Math.max(.3, w/120); ctx.strokeRect(-w/2, -h/2, w, h); ctx.beginPath(); ctx.moveTo(-w/2, -h/2); ctx.lineTo(w/2, h/2); ctx.moveTo(w/2, -h/2); ctx.lineTo(-w/2, h/2); ctx.stroke(); }
 function fitFont(ctx, text, maxW, size, weight, fam){ let s = size; ctx.font = `${weight} ${s}px ${fam}`; const w = ctx.measureText(text).width; if (w > maxW){ s = s*maxW/w; ctx.font = `${weight} ${s}px ${fam}`; } return s; }
 function fitText(ctx, text, maxW){ if (ctx.measureText(text).width <= maxW) return text; let t = text; while (t.length > 1 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1); return t + "…"; }
 function wrapLines(ctx, text, maxW, maxLines){
@@ -3456,7 +3650,7 @@ function drawArt(L, pxPerMm, mode = "color"){
   const ctx = cv.getContext("2d");
   const T = () => ctx.setTransform(s, 0, 0, -s, -bb.minX*s, bb.maxY*s);
   T();
-  if (!pbr) metrics = {imgs:[], texts:[], ean:null, legalCut:false, whiteInk:false, scale:s};
+  if (!pbr) metrics = {imgs:[], texts:[], ean:null, legalCut:false, whiteInk:false, scale:s, codes:[], pictos:[]};
   const rawColor = MAT[k][state.mat[k]].raw, transparentRaw = state.raw && rawColor === null;
   const ground = state.raw ? (rawColor || "#ffffff") : d.bg;
   if (pbr){ pbrBaseG = Math.round((ROUGH[state.lam[k]] ?? .8)*255); ctx.fillStyle = `rgb(128,${pbrBaseG},0)`; ctx.fillRect(bb.minX, bb.minY, bb.w, bb.h); if (state.varnish && !state.raw) drawPattern(ctx, bb, d.pattern, VARN, 1); }
@@ -3568,7 +3762,7 @@ function drawElements(ctx, mode){
   const pbr = mode === "pbr";
   for (const el of state.elements){
     ctx.save(); ctx.translate(el.x, el.y); ctx.scale(1, -1); ctx.rotate((el.rot || 0)*Math.PI/180);
-    if (!pbr) ctx.globalAlpha = (el.opacity ?? 100)/100;
+    if (!pbr) ctx.globalAlpha = (["barcode","braille","zone"].includes(el.type) ? 100 : el.opacity ?? 100)/100;
     const pf = pbr ? finPBR(el.foil, el.varnish, el.relief) : null;
     if (el.type === "text"){
       const f = FONTS[el.font] || FONTS.plex, fz = el.size*PT;
@@ -3591,6 +3785,26 @@ function drawElements(ctx, mode){
         if (!pbr){ ctx.drawImage(im, -w/2, -h/2, w, h); metrics.imgs.push({label:"Image ajoutée", dpi: im.naturalWidth/(w/25.4)}); }
         else if (pf) ctx.drawImage(maskImage(im, pf), -w/2, -h/2, w, h);
       }
+    } else if (el.type === "barcode"){
+      let w, h;
+      if (el.sym === "gs1"){ w = el.w || 80; h = el.h || 25; const m = gs1Model(el); if (!pbr){ if (m.error) drawBadCode(ctx, w, h); else drawCode128(ctx, -w/2, -h/2, w, h, m); metrics.codes.push({el, sym:"gs1", m}); } }
+      else { const mag = (el.mag || 100)/100, ok = eanValid(el.value || ""); w = EAN_W*mag; h = EAN_H*mag; if (!pbr){ if (ok) drawEAN(ctx, -w/2, -h/2, w, h, el.value); else drawBadCode(ctx, w, h); metrics.codes.push({el, sym:"ean13", mag, ok}); } }
+      el._w = w; el._h = h;
+      if (pbr){ ctx.fillStyle = `rgb(128,${pbrBaseG},0)`; ctx.fillRect(-w/2, -h/2, w, h); }
+    } else if (el.type === "braille"){
+      const B = brailleLayout(el); el._w = B.w; el._h = B.h;
+      if (pbr || mode === "color"){
+        ctx.fillStyle = pbr ? finPBR(false, false, "emboss") : "rgba(255,255,255,.6)"; ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = .15;
+        for (const [u, v] of B.dots){ ctx.beginPath(); ctx.arc(u, v, BRAILLE.dot/2, 0, 2*Math.PI); ctx.fill(); if (!pbr) ctx.stroke(); }
+      }
+    } else if (el.type === "picto"){
+      const w = el.w || 12; el._w = w; el._h = w;
+      const fill = pbr ? pf : (el.foil ? foilGrad(ctx, -w/2, w) : el.color || "#1b1d20");
+      if (fill) drawPicto(ctx, el.pic || "recycle", w, fill, el.text);
+      if (!pbr) metrics.pictos.push({el, w});
+    } else if (el.type === "zone"){
+      const w = el.w || 40, h = el.h || 12; el._w = w; el._h = h;
+      ctx.fillStyle = pbr ? `rgb(128,${Math.round(ROUGH.none*255)},0)` : (el.color || "#ffffff"); ctx.fillRect(-w/2, -h/2, w, h);
     } else {
       const w = el.w, h = el.h; el._w = w; el._h = h;
       const fill = pbr ? pf : (el.foil ? foilGrad(ctx, -w/2, w) : el.color);
@@ -3615,6 +3829,7 @@ function proofCanvas(maxPx){
   ctx.clip("evenodd"); ctx.setTransform(1,0,0,1,0,0); ctx.drawImage(art, 0, 0); ctx.restore();
   T(ctx); ctx.lineWidth = Math.max(.3, 1.6/s); ctx.lineCap = "round";
   ctx.strokeStyle = "#0050ff"; ctx.setLineDash([2, 1.2]); ctx.beginPath(); L.creases.forEach(([a,b]) => { ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); }); ctx.stroke();
+  for (const [ty, d] of Object.entries(LINE_TYPES)){ const segs = L.specials.filter(l => l.type === ty); if (!segs.length) continue; ctx.strokeStyle = d.hex; ctx.setLineDash(d.dash); ctx.beginPath(); segs.forEach(({seg:[a, b]}) => { ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }); ctx.stroke(); }
   ctx.strokeStyle = "#e30613"; ctx.setLineDash([]); ctx.beginPath(); L.cuts.forEach(([a,b]) => { ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); }); ctx.stroke();
   return cv;
 }
@@ -3716,7 +3931,7 @@ function chainSegs(segs){
 }
 // Visuel imprimable (fond perdu inclus, blanc hors gabarit), au même cadrage que le PDF d'impression.
 function printArtCanvas(L, s){
-  const bb = L.bb, art = drawArt(L, s), c = document.createElement("canvas"); c.width = Math.ceil(bb.w*s); c.height = Math.ceil(bb.h*s);
+  const bb = L.bb, art = drawArt(L, s, "print"), c = document.createElement("canvas"); c.width = Math.ceil(bb.w*s); c.height = Math.ceil(bb.h*s);
   const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
   const m = document.createElement("canvas"); m.width = c.width; m.height = c.height; const mx = m.getContext("2d");
   mx.setTransform(s, 0, 0, -s, -bb.minX*s, bb.maxY*s); mx.fillStyle = mx.strokeStyle = "#000"; mx.lineJoin = "round"; mx.lineWidth = L.bleed*2;
@@ -3728,7 +3943,7 @@ const jsxAscii = str => str.replace(/[\u007f-￿]/g, c => "\\u" + c.charCodeAt(0
 function illustratorJSX(img, abs){
   const L = computeLayout(), bb = L.bb, cb = L.cbb, t = TPL();
   const D = {W:+(bb.w + 20).toFixed(3), H:+(bb.h + 26).toFixed(3), M:10, minX:+bb.minX.toFixed(3), maxY:+bb.maxY.toFixed(3), bw:+bb.w.toFixed(3), bh:+bb.h.toFixed(3), bleed:L.bleed,
-    cuts:chainSegs(L.cuts), creases:chainSegs(L.creases), panels:L.panels.map(p => p.gpoly.map(q => [+q[0].toFixed(3), +q[1].toFixed(3)])), img:img || "", abs:!!abs,
+    cuts:chainSegs(L.cuts), creases:chainSegs(L.creases), special:Object.entries(LINE_TYPES).filter(([ty]) => ty !== "rainage").map(([ty, d]) => ({n:asciiTxt(d.name), spot:d.layer, c:d.cmyk.map(v => v*100), dash:d.dash, ch:chainSegs(L.specials.filter(l => l.type === ty).map(l => l.seg))})).filter(x => x.ch.length), braille:brailleDots().map(c => [+c.x.toFixed(3), +c.y.toFixed(3)]), panels:L.panels.map(p => p.gpoly.map(q => [+q[0].toFixed(3), +q[1].toFixed(3)])), img:img || "", abs:!!abs,
     info:pdfTxt(`Label Pack Studio · ${quoteNo()} · ${meta.client || ""} ${meta.name ? "· " + meta.name : ""} · ${t.name} · ${dimsText()} · format ${fmt1.format(cb.w)} x ${fmt1.format(cb.h)} mm + fond perdu ${L.bleed} mm · ${kind() === "box" ? "e = " + fmt2.format(L.e) + " mm" : ""}`)};
   return jsxAscii(`#target illustrator
 // Label Pack Studio : gabarit ${pdfTxt(t.name).normalize("NFD").replace(/[\u0300-\u036f]/g, "")} (${quoteNo()}). Fichier > Scripts > Autre script... ; garder ce script a cote du visuel PNG.
@@ -3751,6 +3966,8 @@ function illustratorJSX(img, abs){
   for (i = 0; i < D.panels.length; i++) { p = path(lBleed, D.panels[i], true); p.filled = true; p.fillColor = cmyk(35, 0, 0, 0); p.strokeColor = cmyk(35, 0, 0, 0); p.strokeWidth = D.bleed * 2 * MM; p.strokeJoin = StrokeJoin.ROUNDENDJOIN; p.opacity = 30; }
   for (i = 0; i < D.creases.length; i++) { p = path(lCrease, D.creases[i].p, D.creases[i].c); p.strokeColor = tint(spCrease); p.strokeWidth = 0.25 * MM; p.strokeDashes = [2 * MM, 1.2 * MM]; p.strokeOverprint = true; }
   for (i = 0; i < D.cuts.length; i++) { p = path(lCut, D.cuts[i].p, D.cuts[i].c); p.strokeColor = tint(spCut); p.strokeWidth = 0.25 * MM; p.strokeOverprint = true; }
+  for (var si = 0; si < D.special.length; si++) { var S = D.special[si], spS = spot(S.spot, cmyk(S.c[0], S.c[1], S.c[2], S.c[3])), lS = layer(S.n); for (i = 0; i < S.ch.length; i++) { p = path(lS, S.ch[i].p, S.ch[i].c); p.strokeColor = tint(spS); p.strokeWidth = 0.25 * MM; p.strokeDashes = [S.dash[0] * MM, S.dash[1] * MM]; p.strokeOverprint = true; } lS.printable = false; }
+  if (D.braille.length) { var lBr = layer("Braille"), spBr = spot("Braille", cmyk(0, 0, 0, 60)); for (i = 0; i < D.braille.length; i++) { var dot = lBr.pathItems.ellipse(Y(D.braille[i][1]) + 0.75 * MM, X(D.braille[i][0]) - 0.75 * MM, 1.5 * MM, 1.5 * MM); dot.filled = true; dot.fillColor = tint(spBr); dot.stroked = false; } lBr.printable = false; }
   if (D.img) {
     var f = D.abs ? new File(D.img) : new File(File($.fileName).parent.fsName + "/" + D.img);
     if (f.exists) { var pl = lArt.placedItems.add(); pl.file = f; pl.width = D.bw * MM; pl.height = D.bh * MM; pl.position = [X(D.minX), Y(D.maxY)]; try { pl.embed(); } catch (e) {} }
@@ -3793,11 +4010,78 @@ if (CEP){
 }
 
 /* ================= PDF d'impression ================= */
-// Page 1 : visuel 300 dpi (fond perdu, repères de coupe) ; page 2 : forme de découpe vectorielle ; pages suivantes : masques de finition.
+// Profil ICC sRGB (v2, matrice + courbes) incorporé pour calibrer les images RVB du PDF/X-3.
+function srgbICC(){
+  if (srgbICC.c) return srgbICC.c;
+  const s15 = v => Math.round(v*65536);
+  const xyz = (x, y, z) => { const b = new Uint8Array(20), v = new DataView(b.buffer); v.setUint32(0, 0x58595A20); v.setInt32(8, s15(x)); v.setInt32(12, s15(y)); v.setInt32(16, s15(z)); return b; };
+  const text = str => { const b = new Uint8Array(8 + str.length + 1); new DataView(b.buffer).setUint32(0, 0x74657874); for (let i = 0; i < str.length; i++) b[8 + i] = str.charCodeAt(i); return b; };
+  const desc = str => { const n = str.length + 1, b = new Uint8Array(12 + n + 78), v = new DataView(b.buffer); v.setUint32(0, 0x64657363); v.setUint32(8, n); for (let i = 0; i < str.length; i++) b[12 + i] = str.charCodeAt(i); return b; };
+  const N = 1024, trc = new Uint8Array(12 + 2*N), tv = new DataView(trc.buffer); tv.setUint32(0, 0x63757276); tv.setUint32(8, N);
+  for (let i = 0; i < N; i++){ const c = i/(N - 1); tv.setUint16(12 + 2*i, Math.round((c <= .04045 ? c/12.92 : Math.pow((c + .055)/1.055, 2.4))*65535)); }
+  const list = [["desc", desc("sRGB IEC61966-2.1")], ["cprt", text("No copyright, use freely")], ["wtpt", xyz(.9642, 1, .8249)], ["rXYZ", xyz(.4360747, .2225045, .0139322)], ["gXYZ", xyz(.3850649, .7168786, .0971045)], ["bXYZ", xyz(.1430804, .0606169, .7141733)], ["rTRC", trc], ["gTRC", trc], ["bTRC", trc]];
+  let off = 128 + 4 + 12*list.length; const offs = new Map();
+  for (const [, data] of list){ if (offs.has(data)) continue; off += (4 - off % 4) % 4; offs.set(data, off); off += data.length; }
+  const size = off + (4 - off % 4) % 4, out = new Uint8Array(size), v = new DataView(out.buffer), d = new Date();
+  v.setUint32(0, size); v.setUint32(8, 0x02100000); v.setUint32(12, 0x6D6E7472); v.setUint32(16, 0x52474220); v.setUint32(20, 0x58595A20);
+  [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()].forEach((x, i) => v.setUint16(24 + 2*i, x));
+  v.setUint32(36, 0x61637370); v.setInt32(68, s15(.9642)); v.setInt32(72, s15(1)); v.setInt32(76, s15(.8249)); v.setUint32(128, list.length);
+  list.forEach(([sig, data], i) => { const o = 132 + 12*i; for (let k = 0; k < 4; k++) out[o + k] = sig.charCodeAt(k); v.setUint32(o + 4, offs.get(data)); v.setUint32(o + 8, data.length); });
+  for (const [data, o] of offs) out.set(data, o);
+  return srgbICC.c = out;
+}
+const pdfStr = t => pdfTxt(t).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\x20-\x7e]/g, " ").replace(/[()\\]/g, m => "\\" + m);
+// Conditions d'impression de référence (registre ICC) selon le support.
+function outputCondition(){
+  const k = kind(), m = state.mat[k], unc = ["kraft","kraftp","whitep","micro","ondB","verge"].includes(m);
+  return unc ? {id:"FOGRA47", name:"Offset, papier non couche", info:"Uncoated FOGRA47L (ISO 12647-2:2013)"} : {id:"FOGRA39", name:"Offset, papier couche", info:"Coated FOGRA39 (ISO 12647-2:2004)"};
+}
+// Réécrit le PDF de jsPDF en PDF/X-3:2003 : TrimBox / BleedBox, intention de sortie, images RVB en ICCBased sRGB, polices retirées (aucun texte vectoriel).
+function pdfX3(ab, o){
+  const bytes = new Uint8Array(ab); let s = "";
+  for (let i = 0; i < bytes.length; i += 8192) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+  const xo = parseInt(s.slice(s.lastIndexOf("startxref") + 9)), xr = s.slice(xo), m = /^xref\s+0\s+(\d+)\s*/.exec(xr), N = +m[1];
+  const offs = xr.slice(m[0].length).split(/\r?\n/).slice(0, N).map((l, i) => [i, l.trim().split(/\s+/)]).filter(([, p]) => p[2] === "n").map(([i, p]) => [i, +p[0]]).sort((a, b) => a[1] - b[1]);
+  const objs = new Map(); offs.forEach(([n, a], k) => objs.set(n, s.slice(a, k + 1 < offs.length ? offs[k + 1][1] : xo)));
+  const trailer = s.slice(s.indexOf("trailer", xo)), rootN = +/\/Root (\d+) 0 R/.exec(trailer)[1], infoN = +/\/Info (\d+) 0 R/.exec(trailer)[1];
+  const idM = /\/ID\s*\[[^\]]*\]/.exec(trailer), hex = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("");
+  let next = N; const iccN = next++, oiN = next++, pt = v => (v*72/25.4).toFixed(3);
+  for (const [n, txt] of objs){
+    const at = txt.indexOf("stream"), dict = at < 0 ? txt : txt.slice(0, at), rest = at < 0 ? "" : txt.slice(at);
+    let d = dict;
+    if (/\/Type \/Font\b/.test(d)){ objs.set(n, `${n} 0 obj\nnull\nendobj\n`); continue; }
+    d = d.replace(/\/Font <<[^>]*>>/, "");
+    if (/\/Type \/Page[\s/>]/.test(d)) d = d.replace(/\/MediaBox \[[^\]]*\]/, mb => `${mb}\n/BleedBox [${o.bleedBox.map(pt).join(" ")}]\n/TrimBox [${o.trimBox.map(pt).join(" ")}]`);
+    if (/\/Subtype \/Image/.test(d)) d = d.replace("/ColorSpace /DeviceRGB", `/ColorSpace [/ICCBased ${iccN} 0 R]`);
+    if (/\/Type \/Catalog/.test(d)) d = d.replace(/>>\s*endobj/, `/OutputIntents [${oiN} 0 R]\n>>\nendobj`);
+    if (n === infoN){ const cd = (/\/CreationDate (\([^)]*\))/.exec(d) || [, "(D:20260101000000)"])[1]; d = d.replace(/>>\s*endobj/, `${/\/ModDate/.test(d) ? "" : `/ModDate ${cd}\n`}/Trapped /False\n/GTS_PDFXVersion (PDF/X-3:2003)\n>>\nendobj`); }
+    objs.set(n, d + rest);
+  }
+  const icc = srgbICC(); let iccS = ""; for (let i = 0; i < icc.length; i++) iccS += String.fromCharCode(icc[i]);
+  objs.set(iccN, `${iccN} 0 obj\n<<\n/N 3\n/Alternate /DeviceRGB\n/Length ${icc.length}\n>>\nstream\n${iccS}\nendstream\nendobj\n`);
+  objs.set(oiN, `${oiN} 0 obj\n<<\n/Type /OutputIntent\n/S /GTS_PDFX\n/OutputCondition (${o.oc.name})\n/OutputConditionIdentifier (${o.oc.id})\n/RegistryName (http://www.color.org)\n/Info (${o.oc.info})\n>>\nendobj\n`);
+  let out = s.slice(0, offs[0][1]); const pos = [];
+  for (const n of [...objs.keys()].sort((a, b) => a - b)){ pos[n] = out.length; const t = objs.get(n); out += t.endsWith("\n") ? t : t + "\n"; }
+  const xs = out.length;
+  out += `xref\n0 ${next}\n0000000000 65535 f \n` + Array.from({length:next - 1}, (_, i) => pos[i + 1] != null ? `${String(pos[i + 1]).padStart(10, "0")} 00000 n \n` : "0000000000 65535 f \n").join("");
+  out += `trailer\n<<\n/Size ${next}\n/Root ${rootN} 0 R\n/Info ${infoN} 0 R\n${idM ? idM[0] : `/ID [<${hex()}> <${hex()}>]`}\n>>\nstartxref\n${xs}\n%%EOF\n`;
+  const b = new Uint8Array(out.length); for (let i = 0; i < out.length; i++) b[i] = out.charCodeAt(i) & 255;
+  return new Blob([b], {type:"application/pdf"});
+}
+// Texte des repères rendu en image (le PDF/X ne contient ainsi aucune police à incorporer).
+function rasterLine(doc, text, x, y, maxW, sizePt = 6.5){
+  const px = 16, hmm = sizePt*PT*1.5, c = document.createElement("canvas"), cx = c.getContext("2d"), font = `400 ${sizePt*PT*px}px Helvetica, Arial, sans-serif`;
+  cx.font = font; const wmm = Math.min(maxW, cx.measureText(text).width/px + 1);
+  c.width = Math.ceil(wmm*px); c.height = Math.ceil(hmm*px);
+  cx.fillStyle = "#fff"; cx.fillRect(0, 0, c.width, c.height); cx.font = font; cx.fillStyle = "#000"; cx.textBaseline = "middle"; cx.fillText(fitText(cx, text, c.width), 0, c.height/2);
+  doc.addImage(c, "JPEG", x, y - hmm*.65, wmm, hmm, undefined, "FAST");
+}
+// Page 1 : visuel 300 dpi (fond perdu, repères de coupe) ; page 2 : forme de découpe vectorielle ; pages suivantes : masques de finition. Fichier PDF/X-3.
 function printPDF(){
-  const {jsPDF} = window.jspdf, L = computeLayout(), bb = L.bb, cb = L.cbb, M = 15, W = bb.w + 2*M, H = bb.h + 2*M + 8, t = TPL(), k = kind();
+  const {jsPDF} = window.jspdf, L = computeLayout(), bb = L.bb, cb = L.cbb, M = 15, W = bb.w + 2*M, H = bb.h + 2*M + 8, t = TPL(), k = kind(), oc = outputCondition();
   let s = 300/25.4; s = Math.min(s, Math.sqrt(70e6/(bb.w*bb.h)), 14000/Math.max(bb.w, bb.h)); const dpi = Math.round(s*25.4);
   const doc = new jsPDF({unit:"mm", format:[W, H], orientation: W > H ? "l" : "p", compress:true});
+  doc.setProperties({title:pdfStr(`${quoteNo()} ${meta.client || ""} ${meta.name || t.name} - impression`), subject:"PDF/X-3:2003", creator:"Label Pack Studio"});
   const X = x => M + (x - bb.minX), Y = y => M + (bb.maxY - y), ref = quoteNo();
   const raster = (draw) => { const c = document.createElement("canvas"); c.width = Math.ceil(bb.w*s); c.height = Math.ceil(bb.h*s); const x = c.getContext("2d"); draw(x, c); return c; };
   const T = x => x.setTransform(s, 0, 0, -s, -bb.minX*s, bb.maxY*s);
@@ -3806,19 +4090,20 @@ function printPDF(){
     doc.setLineDashPattern([], 0); doc.setLineWidth(.2); doc.setDrawColor(0, 0, 0, 1);
     for (const [cx, cy, sx, sy] of [[cb.minX, cb.minY, -1, -1], [cb.maxX, cb.minY, 1, -1], [cb.minX, cb.maxY, -1, 1], [cb.maxX, cb.maxY, 1, 1]]){
       const px = X(cx), py = Y(cy); doc.line(px + sx*(L.bleed + 2), py, px + sx*(L.bleed + 9), py); doc.line(px, py - sy*(L.bleed + 2), px, py - sy*(L.bleed + 9)); }
-    doc.setFont("helvetica", "normal"); doc.setFontSize(6.5); doc.setTextColor(0, 0, 0, 1);
-    doc.text(pdfTxt(`${title} · ${ref} · ${meta.client || ""} ${meta.name ? "· " + meta.name : ""} · ${t.name} · format ${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm + fond perdu ${L.bleed} mm · ${new Date().toLocaleDateString("fr-FR")}`), M, H - 6, {maxWidth:W - 2*M});
+    rasterLine(doc, pdfTxt(`${title} · ${ref} · ${meta.client || ""} ${meta.name ? "· " + meta.name : ""} · ${t.name} · format ${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm + fond perdu ${L.bleed} mm · ${new Date().toLocaleDateString("fr-FR")}`), M, H - 6, W - 2*M);
   };
   // page 1 : visuel
-  const art = drawArt(L, s);
+  const art = drawArt(L, s, "print");
   const p1 = raster((x, c) => { x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); const m = document.createElement("canvas"); m.width = c.width; m.height = c.height; const mx = m.getContext("2d"); mx.fillStyle = mx.strokeStyle = "#000"; shape(mx, true); mx.globalCompositeOperation = "source-in"; mx.drawImage(art, 0, 0); x.drawImage(m, 0, 0); });
   doc.addImage(p1, "JPEG", M, M, bb.w, bb.h, undefined, "FAST");
-  marks(`IMPRESSION QUADRI · ${dpi} dpi · RVB sRGB, conversion CMJN au RIP (profil conseillé : FOGRA39 couché / FOGRA47 non couché)`);
+  marks(`IMPRESSION QUADRI · PDF/X-3 · ${dpi} dpi · images RVB sRGB calibrées, conversion CMJN au RIP vers ${oc.id}`);
   // page 2 : forme de découpe
   doc.addPage([W, H], W > H ? "l" : "p");
   doc.setLineWidth(.25); doc.setDrawColor(0, 1, 0, 0); doc.setLineDashPattern([], 0); L.cuts.forEach(([a, b]) => doc.line(X(a[0]), Y(a[1]), X(b[0]), Y(b[1])));
   doc.setDrawColor(1, 0, 0, 0); doc.setLineDashPattern([2, 1.2], 0); L.creases.forEach(([a, b]) => doc.line(X(a[0]), Y(a[1]), X(b[0]), Y(b[1])));
-  marks("FORME DE DÉCOUPE · coupe : magenta 100 % trait plein · rainage : cyan 100 % pointillé · ne pas imprimer");
+  for (const [ty, d] of Object.entries(LINE_TYPES)){ const segs = L.specials.filter(l => l.type === ty); if (!segs.length) continue; doc.setDrawColor(...d.cmyk); doc.setLineDashPattern(d.dash, 0); segs.forEach(({seg:[a, b]}) => doc.line(X(a[0]), Y(a[1]), X(b[0]), Y(b[1]))); }
+  const sp = [...new Set(L.specials.map(l => l.type))].map(ty => LINE_TYPES[ty].name.toLowerCase());
+  marks(`FORME DE DÉCOUPE · coupe : magenta 100 % trait plein · rainage : cyan 100 % pointillé${sp.length ? " · " + sp.join(", ") + " : couleurs propres" : ""} · ne pas imprimer`);
   // masques de finition
   const pbr = drawArt(L, s, "pbr"), pd = pbr.getContext("2d").getImageData(0, 0, pbr.width, pbr.height).data, base = pbrBaseG;
   const plates = [];
@@ -3826,7 +4111,7 @@ function printPDF(){
   const isFoil = (r, g, b) => b > 128, isVarn = (r, g, b) => b < 128 && Math.abs(g - 20) < 6 && Math.abs(base - 20) > 12, isRel = (r, g, b) => Math.abs(r - 128) > 40;
   if (has(isFoil)) plates.push([`DORURE À CHAUD (${(FOILS[state.foilColor] || FOILS.or).name}) · cliché`, isFoil]);
   if (has(isVarn)) plates.push(["VERNIS SÉLECTIF UV · écran / cliché", isVarn]);
-  if (has(isRel)) plates.push(["GAUFRAGE · cliché mâle / femelle", isRel]);
+  if (has(isRel)) plates.push([`GAUFRAGE${state.elements.some(x => x.type === "braille") ? " ET BRAILLE" : ""} · cliché mâle / femelle`, isRel]);
   for (const [title, test] of plates){
     const c = raster((x, cv) => { const im = x.createImageData(cv.width, cv.height), o = im.data; for (let i = 0; i < pd.length; i += 4){ const on = pd[i + 3] > 128 && test(pd[i], pd[i + 1], pd[i + 2]); o[i] = o[i + 1] = o[i + 2] = on ? 0 : 255; o[i + 3] = 255; } x.putImageData(im, 0, 0); });
     doc.addPage([W, H], W > H ? "l" : "p"); doc.addImage(c, "JPEG", M, M, bb.w, bb.h, undefined, "FAST"); marks(`${title} · noir 100 % = zone traitée · ${dpi} dpi`);
@@ -3836,7 +4121,8 @@ function printPDF(){
     const c = raster((x, cv) => { x.fillStyle = "#fff"; x.fillRect(0, 0, cv.width, cv.height); if (wart){ const m = document.createElement("canvas"); m.width = cv.width; m.height = cv.height; const mx = m.getContext("2d"); mx.drawImage(wart, 0, 0); mx.globalCompositeOperation = "source-in"; mx.fillStyle = "#000"; mx.fillRect(0, 0, cv.width, cv.height); x.drawImage(m, 0, 0); } else { x.fillStyle = "#000"; shape(x, false); } });
     doc.addPage([W, H], W > H ? "l" : "p"); doc.addImage(c, "JPEG", M, M, bb.w, bb.h, undefined, "FAST"); marks("BLANC DE SOUTIEN · noir 100 % = encre blanche sous la quadri");
   }
-  return doc.output("blob");
+  const trim = [M + (cb.minX - bb.minX), H - (M + (bb.maxY - cb.minY)), M + (cb.maxX - bb.minX), H - (M + (bb.maxY - cb.maxY))];
+  return pdfX3(doc.output("arraybuffer"), {trimBox:trim, bleedBox:[trim[0] - L.bleed, trim[1] - L.bleed, trim[2] + L.bleed, trim[3] + L.bleed], oc});
 }
 
 /* ================= Scène 3D ================= */
@@ -4227,6 +4513,9 @@ function dielineSVG(forExport){
     s += `<g id="SECURITE" style="pointer-events:none">${L.panels.filter(p => p.role).map(p => { const b = polyBox(p.gpoly); return b.w > 8 && b.h > 8 ? `<rect x="${f2(b.minX + 3)}" y="${f2(-b.maxY + 3)}" width="${f2(b.w - 6)}" height="${f2(b.h - 6)}" style="fill:none;stroke:${C.safe};stroke-width:${forExport ? .15 : .8};stroke-dasharray:${forExport ? "1 1" : "3 3"};opacity:.8"${vef}/>` : ""; }).join("")}</g>`;
   }
   s += `<g id="RAINAGE" style="pointer-events:none">${L.creases.map(([a,b]) => `<line x1="${f2(a[0])}" y1="${f2(-a[1])}" x2="${f2(b[0])}" y2="${f2(-b[1])}" style="stroke:${C.crease};stroke-width:${sw};stroke-dasharray:${forExport ? "2 1.2" : "6 4"}"${vef}/>`).join("")}</g>`;
+  for (const [ty, d] of Object.entries(LINE_TYPES)){ const segs = L.specials.filter(l => l.type === ty); if (segs.length) s += `<g id="${d.layer}" style="pointer-events:none">${segs.map(({seg:[a, b]}) => `<line x1="${f2(a[0])}" y1="${f2(-a[1])}" x2="${f2(b[0])}" y2="${f2(-b[1])}" style="stroke:${d.hex};stroke-width:${sw};stroke-dasharray:${(forExport ? d.dash : d.dash.map(v => v*3)).join(" ")}"${vef}/>`).join("")}</g>`; }
+  { const brd = brailleDots(); if (brd.length) s += `<g id="BRAILLE" style="pointer-events:none">${brd.map(c => `<circle cx="${f2(c.x)}" cy="${f2(-c.y)}" r="${f2(c.r)}" style="fill:none;stroke:${forExport ? "#5A5A5A" : "var(--muted)"};stroke-width:${forExport ? .1 : .6}"${vef}/>`).join("")}</g>`; }
+  if (!forExport && hiLine) s += `<g style="pointer-events:none">${L.lines.filter(l => l.id === hiLine).map(({seg:[a, b]}) => `<line x1="${f2(a[0])}" y1="${f2(-a[1])}" x2="${f2(b[0])}" y2="${f2(-b[1])}" style="stroke:var(--accent);stroke-width:7;opacity:.5;stroke-linecap:round" vector-effect="non-scaling-stroke"/>`).join("")}</g>`;
   s += `<g id="COUPE" style="pointer-events:none"><path d="${L.cuts.map(([a,b]) => `M${f2(a[0])} ${f2(-a[1])}L${f2(b[0])} ${f2(-b[1])}`).join("")}" style="fill:none;stroke:${C.cut};stroke-width:${sw};stroke-linecap:round"${vef}/></g>`;
   if (!forExport && edTab === "face" && L.byId[faceSel]) s += `<path d="${pathOf(L.byId[faceSel])}" style="fill:none;stroke:var(--accent);stroke-width:3;pointer-events:none"${vef}/>`;
   s += `<g id="COTES" style="font-family:IBM Plex Mono,monospace;fill:${C.text};pointer-events:none">`;
@@ -4262,7 +4551,8 @@ function dielineSVG(forExport){
   }
   return s + "</svg>";
 }
-function render2D(){ if (!layout || $("#v2d").hidden) return; const box = $("#v2d"); box.querySelectorAll("svg[role=img]").forEach(n => n.remove()); box.insertAdjacentHTML("beforeend", dielineSVG(false)); }
+function render2D(){ if (!layout || $("#v2d").hidden) return; const box = $("#v2d"), lg = box.querySelector(".legend");
+  if (lg) lg.innerHTML = `<span class="lg-cut"><i></i>Coupe</span><span class="lg-crease"><i></i>Rainage</span><span class="lg-bleed"><i></i>Fond perdu</span>` + [...new Set(layout.specials.map(l => l.type))].map(t => `<span><i style="border-top-style:dashed;border-color:${LINE_TYPES[t].hex}"></i>${LINE_TYPES[t].name}</span>`).join("") + (state.elements.some(e => e.type === "braille") ? `<span><i style="border-top-style:dotted;border-color:var(--muted)"></i>Braille</span>` : ""); box.querySelectorAll("svg[role=img]").forEach(n => n.remove()); box.insertAdjacentHTML("beforeend", dielineSVG(false)); }
 let drag = null;
 function svgPoint(e){ const svg = $("#v2d svg[role=img]"); if (!svg) return null; const m = svg.getScreenCTM(); if (!m) return null; const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()); return {x:p.x, y:-p.y}; }
 $("#v2d").addEventListener("pointerdown", e => {
@@ -4290,6 +4580,9 @@ $("#v2d").addEventListener("pointermove", e => {
     const u = Math.abs(dx*Math.cos(r) + dy*Math.sin(r)), vv = Math.abs(-dx*Math.sin(r) + dy*Math.cos(r));
     if (el.type === "text") el.size = +clamp(o.size*(2*u)/Math.max(o.w, .1), 4, 200).toFixed(1);
     else if (el.type === "image") el.w = +Math.max(2, 2*u).toFixed(1);
+    else if (el.type === "barcode" && el.sym !== "gs1") el.mag = clamp(Math.round(200*u/EAN_W), 80, 200);
+    else if (el.type === "braille") return;
+    else if (el.type === "picto") el.w = +Math.max(3, 2*u).toFixed(1);
     else { el.w = +Math.max(1, 2*u).toFixed(1); el.h = +Math.max(1, 2*vv).toFixed(1); }
   }
   changed("art", true);
@@ -4303,13 +4596,13 @@ function quote(qty){
   const add = (label, detail, amount) => { if (amount > 0) lines.push({label, detail, amount}); };
   if (k === "box"){
     const B = Pr.box, cb = layout.cbb, pw = cb.w + B.gap, ph = cb.h + B.gap, SW = B.sheetW - 2*B.grip, SH = B.sheetH - 2*B.grip, e = layout.e, d = layout.inner;
-    const poses = Math.max(Math.floor(SW/pw)*Math.floor(SH/ph), Math.floor(SW/ph)*Math.floor(SH/pw));
+    const M = montage(), poses = M ? M.n : 0;
     const roots = layout.panels.filter(p => !p.parent).length;
     tech.push(["Cotes", dimsText(d)]);
     if (STD_DIMS.includes(state.model)) tech.push(["Cotes extérieures (≈)", `${fmt1.format(d.L + 2*e)} × ${fmt1.format(d.W + 2*e)} × ${fmt1.format(d.H + 2*e)} mm`]);
     if (roots > 1) tech.push(["Pièces par boîte", `${roots} (imposées ensemble)`]);
     tech.push(["Épaisseur du support", `${fmt2.format(e)} mm`], ["Développé à plat", `${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm`], ["Format feuille", `${B.sheetH/10} × ${B.sheetW/10} cm`]);
-    if (poses < 1) return {error:`Le développé (${fmt0.format(cb.w)} × ${fmt0.format(cb.h)} mm) dépasse la feuille ${B.sheetH/10} × ${B.sheetW/10} cm : réduisez le format ou changez de format de feuille dans les paramètres.`, tech};
+    if (poses < 1) return {error: M && M.lock && montageFor(false, "W").n ? `Avec le sens des fibres imposé, le développé (${fmt0.format(cb.w)} × ${fmt0.format(cb.h)} mm) ne tient pas sur la feuille ${B.sheetH/10} × ${B.sheetW/10} cm : choisissez l'autre sens des fibres sur le plan ou décochez « Respecter le sens des fibres au montage » (section Format).` : `Le développé (${fmt0.format(cb.w)} × ${fmt0.format(cb.h)} mm) dépasse la feuille ${B.sheetH/10} × ${B.sheetW/10} cm : réduisez le format ou changez de format de feuille dans les paramètres.`, tech};
     const sheets = Math.ceil(Math.ceil(qty/poses)*(1 + Pr.gache/100)) + B.sheetsCal;
     const pr = state.print.box, lam = state.lam.box, cutM = layout.cutLen/1000;
     add("Support", `${fmt0.format(sheets)} feuilles × ${fmt3.format(B.sheet[state.mat.box])}`, sheets*B.sheet[state.mat.box]);
@@ -4321,16 +4614,16 @@ function quote(qty){
     if (state.varnish) add("Vernis sélectif UV", "calage + passages", B.varnishCal + sheets*B.varnishSheet);
     if (state.foil || state.elements.some(x => x.foil)) add("Dorure à chaud", "cliché, calage + passages", B.foilCal + sheets*B.foilSheet);
     if (hasRelief()) add("Gaufrage", "cliché mâle/femelle, calage + passages", B.embossCal + sheets*B.embossSheet);
-    add("Forme de découpe", `${poses} pose(s) × ${fmt1.format(cutM)} m de filet`, B.dieBase + poses*cutM*B.diePerM);
+    const kM = cutM + layout.knifeLen/1000; add("Forme de découpe", `${poses} pose(s) × ${fmt1.format(kM)} m de filet`, B.dieBase + poses*kM*B.diePerM);
     add("Découpe & rainage", `calage + ${fmt0.format(sheets)} feuilles`, B.cutCal + sheets*B.cutSheet);
     if (layout.panels.some(p => p.film)) add("Fenêtre (film PET + pose)", `${fmt0.format(qty)} pièces`, B.windowCal + qty*B.windowPc);
     const nGlue = TPL().bag ? 0 : state.model === "import" ? (state.importData && state.importData.glue ? 1 : 0) : new Set(layout.panels.filter(p => p.glue).map(p => p.root)).size;
     if (TPL().bag){ add("Façonnage du sac (collage, fond)", `${fmt0.format(qty)} sacs`, qty*B.bagPc); add("Poignées torsadées posées", `${fmt0.format(qty)} paires`, qty*B.handlePc); }
     if (nGlue) add("Collage", `${fmt0.format(qty)} boîtes${nGlue > 1 ? ` × ${nGlue} pièces` : ""}`, B.glueCal + qty*nGlue*B.gluePc);
-    tech.push(["Poses par feuille (imposition rectangulaire)", poses], ["Feuilles (gâche incluse)", fmt0.format(sheets)], ["Longueur de coupe", `${fmt2.format(cutM)} m / pose`], ["Longueur de rainage", `${fmt2.format(layout.creaseLen/1000)} m / pose`], ["Fond perdu", `${layout.bleed} mm`]);
+    tech.push(["Imposition", montageText(M)], ["Rendement matière", `${fmt0.format(M.util*100)} % de la feuille (chute ${fmt0.format(M.waste*100)} %, soit ≈ ${fmt0.format(sheets*M.waste*B.sheet[state.mat.box])} TND de carton)`], ["Feuilles (gâche incluse)", fmt0.format(sheets)], ["Longueur de coupe", `${fmt2.format(cutM)} m / pose`], ["Longueur de rainage", `${fmt2.format(layout.creaseLen/1000)} m / pose`], ["Fond perdu", `${layout.bleed} mm`]);
   } else if (k === "cup"){
     const B = Pr.box, cb = layout.cbb, pw = cb.w + B.gap, ph = cb.h + B.gap, SW = B.sheetW - 2*B.grip, SH = B.sheetH - 2*B.grip, c = layout.panels[0].cup;
-    const poses = Math.max(Math.floor(SW/pw)*Math.floor(SH/ph), Math.floor(SW/ph)*Math.floor(SH/pw));
+    const M = montage(), poses = M ? M.n : 0;
     tech.push(["Gobelet", dimsText()], ["Rayons du développé", `${fmt1.format(c.Ri)} / ${fmt1.format(c.Ro)} mm`], ["Angle du secteur", `${fmt1.format(c.thT*180/Math.PI)}° (dont recouvrement ${c.ov} mm)`], ["Développé à plat", `${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm`]);
     if (poses < 1) return {error:"La jupe dépasse la feuille : réduisez le gobelet ou changez de format de feuille.", tech};
     const sheets = Math.ceil(Math.ceil(qty/poses)*(1 + Pr.gache/100)) + B.sheetsCal, pr = state.print.cup, cutM = layout.cutLen/1000;
@@ -4340,9 +4633,9 @@ function quote(qty){
     if (state.lam.cup === "vernis") add("Vernis acrylique", `${fmt0.format(sheets)} feuilles`, sheets*Pr.cup.varnishSheet);
     if (state.foil || state.elements.some(x => x.foil)) add("Dorure à chaud", "cliché, calage + passages", B.foilCal + sheets*B.foilSheet);
     if (hasRelief()) add("Gaufrage", "cliché mâle/femelle, calage + passages", B.embossCal + sheets*B.embossSheet);
-    add("Forme de découpe", `${poses} pose(s) × ${fmt1.format(cutM)} m de filet`, B.dieBase + poses*cutM*B.diePerM);
+    const kM = cutM + layout.knifeLen/1000; add("Forme de découpe", `${poses} pose(s) × ${fmt1.format(kM)} m de filet`, B.dieBase + poses*kM*B.diePerM);
     add("Découpe", `calage + ${fmt0.format(sheets)} feuilles`, B.cutCal + sheets*B.cutSheet);
-    tech.push(["Poses par feuille", poses], ["Feuilles (gâche incluse)", fmt0.format(sheets)], ["Formage", "par le fabricant de gobelets (non inclus)"]);
+    tech.push(["Imposition", montageText(M)], ["Rendement matière", `${fmt0.format(M.util*100)} % de la feuille (chute ${fmt0.format(M.waste*100)} %)`], ["Feuilles (gâche incluse)", fmt0.format(sheets)], ["Formage", "par le fabricant de gobelets (non inclus)"]);
   } else {
     const Lb = Pr.label, {lw, lh, shape} = state.dims[state.model], across = Math.floor((Lb.web - 10)/(lw + Lb.gap));
     tech.push(["Format étiquette", `${fmt1.format(lw)} × ${fmt1.format(lh)} mm`], ["Laize machine", `${Lb.web} mm`]);
@@ -4388,7 +4681,7 @@ function inPoly(pt, poly){ let c = false; for (let i = 0, j = poly.length - 1; i
 function elCorners(el){ const {w, h} = elBox(el), r = (el.rot || 0)*Math.PI/180, c = Math.cos(r), s = Math.sin(r); return [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([u, vv]) => [el.x + u*c - vv*s, el.y - (u*s + vv*c)]); }
 function segRectDist(a, b, q){ for (let i = 0; i < 4; i++) if (segX(a, b, q[i], q[(i+1)%4])) return 0; if (inPoly(a, q) || inPoly(b, q)) return 0; return Math.min(...q.map(p => distPtSeg(p, a, b)), ...[a, b].flatMap(p => q.map((c, i) => distPtSeg(p, c, q[(i+1)%4])))); }
 let pfItems = [];
-const hasRelief = () => state.relief !== "none" || state.elements.some(x => x.relief && x.relief !== "none");
+const hasRelief = () => state.relief !== "none" || state.elements.some(x => (x.relief && x.relief !== "none") || x.type === "braille");
 function preflight(q){
   const out = [], add = (level, msg) => out.push({level, msg}), t = TPL(), d = state.design, L = layout;
   if (q && q.error) add("error", q.error);
@@ -4420,14 +4713,64 @@ function preflight(q){
   if (metrics.whiteInk) add("warn", "Texte clair sur support brut ou transparent : prévoir un blanc de soutien, sinon il ne sera pas visible.");
   if (d.legal && d.legal.trim() && !L.panels.some(p => p.role && p.role.type === "back")) add("info", "Le texte réglementaire s'imprime sur la face arrière des étuis et boîtes ; ajoutez-le en élément texte pour ce gabarit.");
   for (const el of state.elements){
-    const q4 = elCorners(el), name = el.type === "text" ? `Texte « ${String(el.text).slice(0, 20)} »` : el.type === "image" ? "Image ajoutée" : "Forme";
+    const q4 = elCorners(el), name = elName(el);
     const anyIn = q4.some(c => L.panels.some(p => inPoly(c, p.gpoly)));
     const nearCut = Math.min(...L.cuts.map(([a, b]) => segRectDist(a, b, q4)));
     if (!anyIn && nearCut > 0) add("error", `${name} : hors du gabarit, il ne sera pas imprimé.`);
-    else if (nearCut < 3 && el.type !== "shape") add("warn", `${name} : à ${fmt1.format(nearCut)} mm d'un trait de coupe (zone de sécurité 3 mm).`);
-    if (el.type === "text" && L.creases.some(([a, b]) => segRectDist(a, b, q4) === 0)) add("warn", `${name} : chevauche un pli, le texte sera coupé en deux faces.`);
+    else if (nearCut < 3 && !["shape","braille","zone"].includes(el.type)) add("warn", `${name} : à ${fmt1.format(nearCut)} mm d'un trait de coupe (zone de sécurité 3 mm).`);
+    { const hit = ["text","barcode","braille","picto","zone"].includes(el.type) ? L.lines.find(({seg:[a, b]}) => segRectDist(a, b, q4) === 0) : null;
+      if (hit) add(el.type === "barcode" || el.type === "braille" ? "error" : "warn", `${name} : chevauche ${hit.type === "zip" ? "la bande d'ouverture" : hit.type === "perfo" ? "une perforation" : "un pli"}${el.type === "text" && hit.type !== "zip" ? ", le texte sera coupé en deux faces" : el.type === "barcode" ? ", il ne sera pas lisible" : ""}.`); }
     if (L.panels.some(p => p.glue && q4.some(c => inPoly(c, p.gpoly)))) add("warn", `${name} : sur une zone de collage (pas d'encre ni de vernis).`);
   }
+  for (const c of metrics.codes || []){
+    const nm = c.sym === "gs1" ? "Code GS1-128" : "Code EAN-13";
+    if (c.sym === "ean13"){
+      const v = c.el.value || "";
+      if (!c.ok) add("error", `${nm} « ${v} » invalide : ${/^\d{13}$/.test(v) ? `clé de contrôle attendue ${eanCheck(v.slice(0, 12))}` : /^\d{12}$/.test(v) ? `ajoutez la clé de contrôle ${eanCheck(v)}` : "13 chiffres requis"}.`);
+      else if (c.mag < .8 || c.mag > 2) add("error", `${nm} : grossissement ${fmt0.format(c.mag*100)} %, hors de la plage autorisée 80–200 %.`);
+      else add("ok", `${nm} valide, ${fmt0.format(c.mag*100)} % de la taille nominale.`);
+    } else {
+      const m = c.m;
+      if (m.error){ add("error", `${nm} : ${m.error}`); continue; }
+      if (m.X < .25) add("error", `${nm} : module de ${fmt2.format(m.X)} mm, sous le minimum lisible de 0,25 mm : élargissez le code ou réduisez les données.`);
+      else if (m.X < .495) add("info", `${nm} : module de ${fmt2.format(m.X)} mm, lisible en usage courant ; pour les cartons et palettes (logistique), GS1 demande au moins 0,495 mm et 32 mm de hauteur.`);
+      else add("ok", `${nm} : module de ${fmt2.format(m.X)} mm, conforme pour la logistique.`);
+      if ((c.el.w || 0) > 165) add("error", `${nm} : longueur ${fmt0.format(c.el.w)} mm, 165 mm maximum.`);
+      if (m.dataLen > 48) add("error", `${nm} : ${m.dataLen} caractères de données, 48 maximum.`);
+      if ((c.el.h || 25) < 13) add("warn", `${nm} : hauteur de ${fmt1.format(c.el.h)} mm, prévoir au moins 13 mm.`);
+    }
+    if (state.raw && kind() === "box") add("warn", `${nm} : sur carton brut, vérifiez le contraste (barres noires sur fond clair obligatoire).`);
+  }
+  const finEls = state.elements.filter(o => o.foil || o.varnish), overlaps = (a, b) => { const qa = elCorners(a), qb = elCorners(b); return qa.some(c => inPoly(c, qb)) || qb.some(c => inPoly(c, qa)); };
+  for (const el of state.elements){
+    if (el.type === "braille"){
+      const B = brailleLayout(el), q4 = elCorners(el), nm = elName(el);
+      if (!String(el.text || "").trim()){ add("warn", `${nm} : texte vide.`); continue; }
+      if (B.bad.size) add("warn", `${nm} : caractère(s) non transcrit(s) : ${[...B.bad].join(" ")}.`);
+      const host = L.panels.find(p => q4.every(c => inPoly(c, p.gpoly)));
+      if (!host) add("error", `${nm} : doit tenir entièrement sur une seule face, sans pli ni bord.`);
+      else {
+        const dist = Math.min(...L.cuts.concat(L.lines.map(l => l.seg)).map(([a, b]) => segRectDist(a, b, q4)));
+        if (dist < 5) add("warn", `${nm} : à ${fmt1.format(dist)} mm d'un pli ou d'un bord (5 mm minimum conseillés pour un relief net).`);
+        if (host.glue) add("error", `${nm} : sur la patte de collage, il serait caché.`);
+      }
+      if (finEls.some(o => o !== el && overlaps(o, el))) add("warn", `${nm} : dorure ou vernis sous le braille, le relief risque d'être écrasé.`);
+      add("info", kind() === "box" ? `${nm} : ${B.cells} cellule(s) sur ${B.lines} ligne(s), braille Marburg Medium (points Ø 1,5 mm, hauteur 0,2 mm) gaufré avec la forme. Faites relire la transcription par un lecteur braille.` : `${nm} : hors carton, le braille se réalise en sérigraphie (vernis épais) ; à valider avec l'atelier.`);
+    } else if (el.type === "picto"){
+      const min = el.pic === "emark" ? 3 : 6;
+      if ((el.w || 0) < min) add("warn", `${elName(el)} : ${fmt1.format(el.w)} mm, ${min} mm minimum conseillés${el.pic === "emark" ? " (hauteur réglementaire du ℮)" : ""}.`);
+    } else if (el.type === "zone"){
+      if (finEls.some(o => overlaps(o, el))) add("warn", "Zone de marquage lot / date sous une dorure ou un vernis : l'encre de marquage n'y adhérera pas.");
+      if (kind() === "box" && state.lam.box !== "none") add("info", `Zone de marquage lot / date sur ${LAM.box[state.lam.box].toLowerCase()} : prévoir une réserve de pelliculage ou un marquage laser, l'encre jet d'encre adhère mal au film.`);
+    }
+  }
+  if (state.tear && state.tear.on && kind() === "box"){
+    const fr = L.byId.front, h = fr ? polyBox(fr.poly).h : 0;
+    if (!fr || !L.byId.s1) add("info", "Bande d'ouverture facile : disponible sur les étuis et boîtes à corps (4 faces + patte de collage).");
+    else if (+state.tear.y < 5 || +state.tear.y + +state.tear.w > h - 5) add("warn", `Bande d'ouverture à moins de 5 mm d'un pli : placez-la entre 5 et ${fmt0.format(h - 5 - state.tear.w)} mm de hauteur.`);
+    else add("info", `Bande d'ouverture facile de ${fmt1.format(state.tear.w)} mm à ${fmt0.format(state.tear.y)} mm du bas : filets zipper, la tirette part du bord libre de la face avant.`);
+  }
+  if (L.specials.some(l => l.type === "perfo" || l.type === "cr") && ["micro","ondB"].includes(state.mat.box) && kind() === "box") add("warn", "Perforation ou coupe-rainage sur carton ondulé : vérifiez la tenue avec le formiste (filets spécifiques).");
   if (state.window.on && t.window){
     const fr = L.byId.front, hb = fr && fr.gholes[0] && polyBox(fr.gholes[0]), fb = fr && polyBox(fr.gpoly);
     if (hb && Math.min(hb.minX - fb.minX, fb.maxX - hb.maxX, hb.minY - fb.minY, fb.maxY - hb.maxY) < 6) add("error", "Fenêtre à moins de 6 mm d'un pli ou d'un bord : réduisez-la pour garder la rigidité de la face.");
@@ -4467,7 +4810,7 @@ function preflight(q){
     if (state.mat.box === "ondB" && state.print.box !== "noir") add("warn", "Cannelure B : l'offset quadri direct n'est pas possible, prévoir un contre-collage (litho) ou la flexographie.");
   }
   if (!out.some(x => x.level === "error" || x.level === "warn")) add("ok", "Aucun problème bloquant détecté.");
-  return out;
+  return out.filter((x, i) => out.findIndex(y => y.level === x.level && y.msg === x.msg) === i);
 }
 function renderPreflight(q){
   pfItems = preflight(q);
@@ -4616,16 +4959,20 @@ function renderFaceEditor(){
   const bb = layout.bb;
   $("#fullSpec").textContent = `Format attendu : ${fmt1.format(bb.w)} × ${fmt1.format(bb.h)} mm (fond perdu de ${layout.bleed} mm inclus), soit ${fmt0.format(bb.w/25.4*300)} × ${fmt0.format(bb.h/25.4*300)} px à 300 dpi.`;
 }
-function elLabel(el){ return el.type === "text" ? (String(el.text).split("\n")[0] || "Texte vide") : el.type === "image" ? "Image" : el.shape === "ellipse" ? "Ellipse" : "Rectangle"; }
+function elLabel(el){ return ["barcode","braille","picto","zone"].includes(el.type) ? elName(el) : el.type === "text" ? (String(el.text).split("\n")[0] || "Texte vide") : el.type === "image" ? "Image" : el.shape === "ellipse" ? "Ellipse" : "Rectangle"; }
 function renderElEditor(){
-  $("#elList").innerHTML = state.elements.slice().reverse().map(el => `<li><button type="button" data-sel="${el.id}" aria-pressed="${el.id === selEl}"><b>${el.type === "text" ? "TEXTE" : el.type === "image" ? "IMAGE" : "FORME"}</b><span dir="auto">${esc(elLabel(el))}</span></button></li>`).join("") || `<li class="hint">Aucun élément. Ajoutez un texte, une forme ou une image.</li>`;
+  $("#elList").innerHTML = state.elements.slice().reverse().map(el => `<li><button type="button" data-sel="${el.id}" aria-pressed="${el.id === selEl}"><b>${EL_TYPES[el.type] || "FORME"}</b><span dir="auto">${esc(elLabel(el))}</span></button></li>`).join("") || `<li class="hint">Aucun élément. Ajoutez un texte, une forme ou une image.</li>`;
   const el = state.elements.find(x => x.id === selEl);
   $("#elProps").hidden = !el; if (!el) return;
   document.querySelectorAll("#elProps [data-for]").forEach(n => n.hidden = !n.dataset.for.split(" ").includes(el.type));
+  const isEan = el.type === "barcode" && el.sym !== "gs1";
+  if (isEan){ $("#elW").closest(".field").hidden = true; $("#elH").closest(".field").hidden = true; }
+  $("#elMagF").hidden = !isEan; $("#elPicTxtF").hidden = !(el.type === "picto" && el.pic === "pao");
   if (!$("#elFont").options.length) $("#elFont").innerHTML = Object.entries(FONTS).map(([k, f]) => `<option value="${k}">${f.label}</option>`).join("");
   const set = (id, val) => { const n = $("#" + id); if (document.activeElement !== n) n.value = val; };
   set("elText", el.text || ""); set("elFont", el.font || "plex"); set("elSize", el.size || 12); set("elAlign", el.align || "center"); set("elShape", el.shape || "rect");
   set("elColor", el.color || "#000000"); set("elX", el.x); set("elY", el.y); set("elW", el.w || 20); set("elH", el.h || 10); set("elRot", el.rot || 0); set("elOpacity", el.opacity ?? 100);
+  set("elSym", el.sym || "ean13"); set("elMag", el.mag || 100); set("elCode", el.value || ""); set("elBraille", el.type === "braille" ? el.text || "" : ""); set("elPic", el.pic || "recycle"); set("elPicTxt", el.type === "picto" ? el.text || "" : ""); renderElHints(el);
   $("#elBold").checked = !!el.bold; $("#elFoil").checked = !!el.foil; $("#elVarnish").checked = !!el.varnish; $("#elRelief").value = el.relief || "none";
 }
 function setEdTab(tab){
@@ -4652,7 +4999,7 @@ function refresh(level = "geo", full){
       texture.image = artCanvas; texture.needsUpdate = true; pbrTex.image = pbrCanvas; pbrTex.needsUpdate = true;
     }
     if (fl){ autoFrame = true; frame(true); }
-    render2D(); renderQuote();
+    render2D(); renderQuote(); renderDieOpts();
     if (edTab === "face") renderFaceEditor();
     saveDraft();
   });
@@ -4746,6 +5093,98 @@ const curEl = () => state.elements.find(x => x.id === selEl);
 [["elText","text",String],["elFont","font",String],["elSize","size",Number],["elAlign","align",String],["elShape","shape",String],["elColor","color",String],["elX","x",Number],["elY","y",Number],["elW","w",Number],["elH","h",Number],["elRot","rot",Number],["elOpacity","opacity",Number]]
   .forEach(([id, k, conv]) => $("#" + id).addEventListener("input", e => { const el = curEl(); if (!el) return; const val = conv(e.target.value); if (conv === Number && !Number.isFinite(val)) return; el[k] = val; if (k === "text") renderElEditor(); changed("art"); }));
 [["elBold","bold"],["elFoil","foil"],["elVarnish","varnish"]].forEach(([id, k]) => $("#" + id).addEventListener("change", e => { const el = curEl(); if (!el) return; el[k] = e.target.checked; changed("art"); }));
+/* ---- Réglages de la forme : montage, attaches, sens des fibres, plis et traits spéciaux ---- */
+function renderDieOpts(){
+  const k = kind(), D = {...DIE_DEFAULT, ...(state.die || {})}, box = $("#dieBox");
+  box.hidden = k === "label" || !layout; if (box.hidden) return;
+  $("#grainRow").hidden = k !== "box"; $("#grainLockRow").hidden = k !== "box";
+  $("#sheetGrain").value = D.sheetGrain; $("#grainLock").checked = D.grainLock !== false; $("#nickN").value = String(D.nicks); $("#nickW").value = String(D.nickW); $("#ejectOn").checked = !!D.eject;
+  const M = montage(); let note = M ? `Feuille ${P().box.sheetW} × ${P().box.sheetH} mm : ${montageText(M)}${M.n ? `, rendement matière ${fmt0.format(M.util*100)} %` : ""}.` : "";
+  if (M && M.lock && D.sheetGrain === "auto" && M.n) note += ` Commandez des feuilles à ${grainSheetTxt(M.sheetGrain)}.`;
+  if (M && M.lock){ const free = montageFor(false, "W"); if (free.n > M.n) note += ` Sans contrainte de fibres : ${free.n} poses (déconseillé pour la tenue des plis).`; }
+  $("#montageNote").textContent = note;
+  $("#linesBox").hidden = k !== "box";
+  const seen = new Map(); for (const l of layout.lines) if (l.id !== "tear" && !seen.has(l.id)) seen.set(l.id, l.type);
+  const sig = JSON.stringify([...seen]);
+  if ($("#lineList").dataset.sig !== sig){
+    $("#lineList").dataset.sig = sig;
+    $("#lineList").innerHTML = [...seen].map(([id, ty]) => { const p = layout.byId[id.slice(2)], nm = (id[0] === "h" ? "Pli " : "Plis intérieurs ") + (p ? p.name || p.id : id);
+      return `<li data-hl="${esc(id)}"><span>${esc(nm)}</span><select data-line="${esc(id)}" aria-label="Type de trait : ${esc(nm)}">${Object.entries(LINE_TYPES).filter(([t2]) => t2 !== "zip").map(([t2, d]) => `<option value="${t2}"${t2 === ty ? " selected" : ""}>${d.name}</option>`).join("")}</select></li>`; }).join("") || `<li class="hint">Aucun pli sur ce modèle.</li>`;
+  }
+  const ring = ["front","s1","back","s2"].every(id => layout.byId[id]), T = {on:false, y:25, w:4, ...(state.tear || {})};
+  $("#tearRow").hidden = !ring; $("#tearOn").checked = !!T.on; $("#tearFields").hidden = !ring || !T.on;
+  if (document.activeElement !== $("#tearY")) $("#tearY").value = T.y; if (document.activeElement !== $("#tearW")) $("#tearW").value = T.w;
+}
+const setDie = (key, v) => { state.die = {...DIE_DEFAULT, ...(state.die || {}), [key]:v}; changed("art"); };
+$("#sheetGrain").addEventListener("change", e => setDie("sheetGrain", e.target.value));
+$("#grainLock").addEventListener("change", e => setDie("grainLock", e.target.checked));
+$("#nickN").addEventListener("change", e => setDie("nicks", +e.target.value));
+$("#nickW").addEventListener("change", e => setDie("nickW", +e.target.value));
+$("#ejectOn").addEventListener("change", e => setDie("eject", e.target.checked));
+$("#lineList").addEventListener("change", e => { const s = e.target.closest("[data-line]"); if (!s) return; state.lineTypes = {...(state.lineTypes || {}), [s.dataset.line]:s.value}; if (s.value === "rainage") delete state.lineTypes[s.dataset.line]; changed("geo"); });
+const hl = id => { if (hiLine === id) return; hiLine = id; render2D(); };
+$("#lineList").addEventListener("mouseover", e => { const li = e.target.closest("[data-hl]"); hl(li ? li.dataset.hl : null); });
+$("#lineList").addEventListener("mouseleave", () => hl(null));
+$("#lineList").addEventListener("focusin", e => { const li = e.target.closest("[data-hl]"); hl(li ? li.dataset.hl : null); });
+$("#lineList").addEventListener("focusout", () => hl(null));
+$("#tearOn").addEventListener("change", e => { state.tear = {y:25, w:4, ...(state.tear || {}), on:e.target.checked}; changed("geo"); });
+for (const [id, key, mn] of [["tearY", "y", 3], ["tearW", "w", 2]]) $("#" + id).addEventListener("input", e => { const v = parseFloat(e.target.value); if (!Number.isFinite(v) || v < mn) return; state.tear = {on:true, y:25, w:4, ...(state.tear || {}), [key]:v}; changed("geo"); });
+
+/* ---- Éléments réglementaires : codes-barres, braille, pictogrammes, zone de marquage, kits de mentions ---- */
+function hostPanel(type){ return layout.panels.find(p => p.role && p.role.type === type) || mainPanel(); }
+// Position dans le repère d'une face : fx, fy de -0,5 à 0,5 (largeur, hauteur), texte droit dans le sens de lecture de la face.
+function placeOn(p, fx, fy){
+  const b = polyBox(p.gpoly), up = p.upG || [0,1], rt = [up[1], -up[0]], vert = up[0] !== 0, pw = vert ? b.h : b.w, ph = vert ? b.w : b.h;
+  return {x:+(b.minX + b.w/2 + rt[0]*fx*pw + up[0]*fy*ph).toFixed(1), y:+(b.minY + b.h/2 + rt[1]*fx*pw + up[1]*fy*ph).toFixed(1), rot:Math.round(Math.atan2(up[0], up[1])*180/Math.PI)};
+}
+function estSize(el){
+  if (el.type === "barcode") return el.sym === "gs1" ? [el.w || 70, el.h || 22] : [EAN_W*(el.mag || 100)/100, EAN_H*(el.mag || 100)/100];
+  if (el.type === "braille"){ const B = brailleLayout(el); return [B.w, B.h]; }
+  if (el.type === "picto") return [el.w || 12, el.w || 12];
+  if (el.type === "zone") return [el.w || 40, el.h || 12];
+  if (el.type === "text"){ const ls = String(el.text || "").split("\n"); return [Math.max(...ls.map(l => l.length))*el.size*PT*.55, ls.length*el.size*PT*1.25]; }
+  return [el.w || 20, el.h || 10];
+}
+function insertKit(v){
+  const back = hostPanel("back"), main = mainPanel(), side = hostPanel("side"), added = [];
+  // Place l'élément au point voulu, ou à la place libre la plus proche sur la même face.
+  const put = (p, fx, fy, el) => {
+    const o = Object.assign({id:newId(), opacity:100, foil:false, varnish:false, color:"#1b1d20"}, placeOn(p, fx, fy), el), [w, h] = estSize(o); o._w = w; o._h = h;
+    const clash = () => state.elements.some(x => { const a = elCorners(o), b = elCorners(x); return a.some(c => inPoly(c, b)) || b.some(c => inPoly(c, a)); }), fits = () => { const q = elCorners(o); return q.every(c => inPoly(c, p.gpoly)) && !layout.lines.some(({seg:[a, b]}) => segRectDist(a, b, q) < 1); };
+    if (clash() || !fits()){
+      const tries = []; for (let k = 1; k <= 12; k++) for (const sg of [-1, 1]) for (const dx of [0, -.25, .25]) tries.push([fx + dx, fy + sg*k*.06]);
+      for (const [tx, ty] of tries){ if (Math.abs(ty) > .45) continue; Object.assign(o, placeOn(p, tx, ty)); if (!clash() && fits()) break; Object.assign(o, placeOn(p, fx, fy)); }
+    }
+    state.elements.push(o); added.push(o);
+  };
+  const ean = eanValid(state.design.ean || "") ? state.design.ean : "", brl = (state.design.product || state.design.brand || "").toLowerCase().slice(0, 30);
+  if (v === "ean") put(back, 0, -.28, {type:"barcode", sym:"ean13", value:ean, mag:100});
+  else if (v === "gs1") put(back, 0, -.28, {type:"barcode", sym:"gs1", value:"", w:70, h:22});
+  else if (v === "braille") put(main, 0, .3, {type:"braille", text:brl});
+  else if (v === "picto") put(back, 0, -.3, {type:"picto", pic:"recycle", w:12});
+  else if (v === "zone") put(back, 0, -.38, {type:"zone", w:40, h:12, color:"#ffffff"});
+  else if (v === "kit-cosmetique"){ put(back, -.3, -.38, {type:"picto", pic:"pao", w:9, text:"12M"}); put(back, -.12, -.38, {type:"picto", pic:"emark", w:4}); put(back, .22, -.38, {type:"zone", w:30, h:10, color:"#ffffff"}); put(back, -.3, -.24, {type:"picto", pic:"recycle", w:8}); }
+  else if (v === "kit-alimentaire"){ put(back, -.3, -.38, {type:"picto", pic:"food", w:9}); put(back, -.12, -.38, {type:"picto", pic:"emark", w:4}); put(back, .22, -.38, {type:"zone", w:34, h:12, color:"#ffffff"}); put(back, -.3, -.24, {type:"picto", pic:"recycle", w:8}); put(back, .22, -.27, {type:"text", text:"À consommer de préférence avant le : voir ci-dessous", font:"plex", size:6.5, bold:false, align:"center"}); }
+  else if (v === "kit-pharma"){ put(main, 0, .32, {type:"braille", text:brl || "nom 500 mg"}); put(back, .15, -.38, {type:"zone", w:36, h:14, color:"#ffffff"}); put(back, -.3, -.38, {type:"text", text:"Lot :\nEXP :", font:"plex", size:7, bold:true, align:"left"}); }
+  else if (v === "kit-transport"){ put(side, -.28, .3, {type:"picto", pic:"up", w:14}); put(side, 0, .3, {type:"picto", pic:"fragile", w:14}); put(side, .28, .3, {type:"picto", pic:"dry", w:14}); }
+  if (!added.length) return;
+  selEl = added[0].id; setEdTab("els"); renderElEditor(); changed("art"); pushHistory();
+  toast(added.length > 1 ? `${added.length} éléments ajoutés : ajustez leur position sur le plan` : `${elName(added[0])} ajouté`);
+}
+$("#addMore").addEventListener("change", e => { const v = e.target.value; e.target.value = ""; if (v) insertKit(v); });
+$("#elPic").innerHTML = Object.entries(PICTOS).map(([k2, l]) => `<option value="${k2}">${l}</option>`).join("");
+[["elSym","sym",String],["elMag","mag",Number],["elCode","value",String],["elBraille","text",String],["elPic","pic",String],["elPicTxt","text",String]]
+  .forEach(([id, key, conv]) => $("#" + id).addEventListener("input", e => { const el = curEl(); if (!el) return; const val = conv(e.target.value); if (conv === Number && !Number.isFinite(val)) return; el[key] = val;
+    if (key === "sym" && val === "gs1" && !el.w){ el.w = 70; el.h = 22; } if (key === "sym" || key === "pic") renderElEditor(); else renderElHints(el); changed("art"); }));
+function renderElHints(el){
+  if (el.type === "barcode"){
+    let h;
+    if (el.sym === "gs1"){ const m = gs1Model(el); h = m.error || `Module ${fmt2.format(m.X)} mm · ${m.dataLen} caractères · ${m.hri}`; $("#elCode").placeholder = "(01)06191234567897(17)271231(10)LOT42"; }
+    else { const c = el.value || ""; h = eanValid(c) ? "Code valide." : /^\d{12}$/.test(c) ? `Clé de contrôle : ${eanCheck(c)} → ${c}${eanCheck(c)}` : "13 chiffres, clé de contrôle comprise (12 chiffres : la clé est calculée)."; $("#elCode").placeholder = "6191234567897"; }
+    $("#elCodeHint").textContent = h;
+  }
+  if (el.type === "braille"){ const B = brailleLayout(el); $("#elBrHint").textContent = `${B.cells} cellule(s) × ${B.lines} ligne(s) · ${fmt1.format(B.w)} × ${fmt1.format(B.h)} mm · Marburg Medium${B.bad.size ? ` · non transcrit : ${[...B.bad].join(" ")}` : ""}`; }
+}
 function moveEl(dir){ const i = state.elements.findIndex(x => x.id === selEl), j = i + dir; if (i < 0 || j < 0 || j >= state.elements.length) return; const a = state.elements; [a[i], a[j]] = [a[j], a[i]]; renderElEditor(); changed("art"); }
 $("#elUp").addEventListener("click", () => moveEl(1)); $("#elDown").addEventListener("click", () => moveEl(-1));
 $("#elDup").addEventListener("click", () => { const el = curEl(); if (!el) return; const c = structuredClone(el); c.id = newId(); c.x += 4; c.y -= 4; state.elements.push(c); selEl = c.id; renderElEditor(); changed("art"); });
@@ -4791,7 +5230,7 @@ function subscribeProjects(){
   if (unsubProjects) unsubProjects();
   if (cloud()){
     unsubProjects = cap.db.collection("projects").orderBy("updatedAt", "desc").limit(500).onSnapshot(
-      s => { projects = s.docs.map(d => ({id:d.id, ...d.data()})); renderBoard(); },
+      s => { projects = s.docs.map(d => ({id:d.id, ...d.data()})); renderBoard(); applyApprovals(); },
       () => { $("#boardNote").textContent = "Les projets partagés ne sont pas accessibles avec votre niveau d'accès."; });
   } else { projects = localProjects(); renderBoard(); }
 }
@@ -4855,7 +5294,9 @@ async function renderBoard(){
   const list = projects.filter(p => !q || `${p.name} ${p.client} ${p.summary && p.summary.template}`.toLowerCase().includes(q));
   let ps = {};
   if (cap.user){ const ids = [...new Set(list.map(p => p.updatedBy || p.createdBy).filter(Boolean))]; if (ids.length) try { ps = await cap.user.profiles(ids); } catch (e) {} }
-  $("#boardNote").textContent = cloud() ? "Projets partagés avec l'équipe ayant accès à cette page. Le statut se change directement sur la carte." : "Projets enregistrés dans ce navigateur uniquement.";
+  $("#boardNote").textContent = cloud() ? "Projets partagés avec l'équipe ayant accès à cette page. Le statut se change directement sur la carte ; les validations de BAT faites en ligne par les clients s'inscrivent dans l'historique." : "Projets enregistrés dans ce navigateur uniquement.";
+  if (boardMode === "clients"){ $("#board").className = "board-list"; $("#board").innerHTML = renderClients(list); return; }
+  $("#board").className = "board";
   $("#board").innerHTML = STATUSES.map(([sk, sl]) => {
     const items = list.filter(p => (p.status || "brouillon") === sk);
     return `<section class="col st-${sk}" aria-label="${sl}"><div class="col-h">${sl}<span>${items.length}</span></div><div class="col-b">${items.map(p => {
@@ -4864,6 +5305,7 @@ async function renderBoard(){
         <div class="meta">${esc(p.client || "Client non renseigné")}</div>
         <div class="meta">${esc(s.template || "")} · ${esc(s.dims || "")}</div>
         <div class="row between"><span class="num">${s.qty ? fmt0.format(s.qty) + " ex." : ""}</span><span class="num">${s.ht != null ? fmt0.format(s.ht) + " TND HT" : ""}</span></div>
+        ${cardExtras(p)}
         <div class="row between"><select data-status="${esc(p.id)}" aria-label="Statut">${STATUSES.map(([k, l]) => `<option value="${k}"${k === sk ? " selected" : ""}>${l}</option>`).join("")}</select>
         <button type="button" class="btn small ghost" data-del="${esc(p.id)}">${armedDelete === p.id ? "Confirmer" : "Supprimer"}</button></div>
         <div class="who">${who && who.name ? `<img src="${esc(who.avatarUrl)}" alt="">${esc(who.name)} · ` : ""}${p.updatedAt ? new Date(p.updatedAt).toLocaleDateString("fr-FR") : ""}</div></article>`;
@@ -4881,6 +5323,65 @@ function showStudio(){ $("#boardView").hidden = true; $("#catalogView").hidden =
 $("#boardBtn").addEventListener("click", showBoard); $("#boardBack").addEventListener("click", showStudio);
 $("#boardNew").addEventListener("click", () => guardDirty("new", newProject)); $("#newBtn").addEventListener("click", () => guardDirty("new", newProject));
 $("#saveBtn").addEventListener("click", () => saveProject());
+/* ---- Suivi des dossiers : réponses client au BAT, relances, vue par client ---- */
+function needsChase(p){ return ["devis","bat"].includes(p.status) && (Date.now() - new Date(((p.history || []).slice(-1)[0] || {}).at || p.updatedAt || Date.now()))/864e5 > 7; }
+async function recordClientDecision(id, d){
+  const p = projects.find(x => x.id === id); if (!p) return false;
+  const status = d.decision === "ok" ? "valide" : "bat", entry = {status, at:d.at || new Date().toISOString(), by:cap.uid || null, client:d.name || "Client", decision:d.decision, note:d.note || "", source:d.source || "manuel", ...(d.approval ? {approval:d.approval} : {})};
+  const upd = {status, history:[...(p.history || []), entry], updatedAt:new Date().toISOString()};
+  try {
+    if (cloud()) await cap.db.collection("projects").doc(id).update(upd);
+    else { const list = localProjects().map(x => x.id === id ? {...x, ...upd} : x); writeLocalProjects(list); projects = list; renderBoard(); }
+    if (meta.id === id){ meta.status = status; meta.history = upd.history; renderMeta(); }
+    toast(`${d.decision === "ok" ? "BAT validé" : "Correction demandée"} par ${entry.client}${d.source === "en ligne" ? " (en ligne)" : ""} · ${p.name || "projet"}`);
+    return true;
+  } catch (e) { toast("Réponse non enregistrée, réessayez."); return false; }
+}
+function subscribeApprovals(){
+  if (unsubAppr) unsubAppr(); if (!cloud()) return;
+  unsubAppr = cap.db.collection("approvals").orderBy("at", "desc").limit(300).onSnapshot(s => { approvals = s.docs.map(d => ({id:d.id, ...d.data()})); applyApprovals(); }, () => {});
+}
+// Report des validations faites en ligne par les clients dans l'historique du dossier.
+async function applyApprovals(){
+  if (applying || clientMode || !cloud()) return; applying = true;
+  try {
+    for (const a of approvals.filter(x => !x.applied && x.project)){
+      const p = projects.find(x => x.id === a.project); if (!p) continue;
+      if (!(p.history || []).some(h => h.approval === a.id) && !(await recordClientDecision(p.id, {decision:a.decision, name:a.name, note:a.comment, at:a.at, approval:a.id, source:"en ligne"}))) continue;
+      try { await cap.db.doc("approvals/" + a.id).update({applied:true}); } catch (e) {}
+    }
+  } finally { applying = false; }
+}
+function cardExtras(p){
+  const h = p.history || [], appr = [...h].reverse().find(x => x.client), d = x => new Date(x).toLocaleDateString("fr-FR");
+  return `${appr ? `<div><span class="badge ${appr.decision === "ok" ? "ok" : "warn"}">${appr.decision === "ok" ? "✓ BAT validé" : "✎ Correction demandée"} · ${esc(appr.client)} · ${d(appr.at)}</span>${appr.note ? `<div class="meta">« ${esc(appr.note)} »</div>` : ""}</div>` : ""}
+    ${needsChase(p) ? `<div><span class="badge warn">À relancer · sans réponse depuis ${fmt0.format((Date.now() - new Date((h.slice(-1)[0] || {}).at || p.updatedAt))/864e5)} j</span></div>` : ""}
+    ${h.length ? `<details><summary>Historique (${h.length})</summary><ol class="hist">${h.slice().reverse().map(x => `<li>${d(x.at)} · ${esc((STATUSES.find(s => s[0] === x.status) || [0, x.status])[1])}${x.client ? ` · ${esc(x.client)}${x.source ? ` (${esc(x.source)})` : ""}` : ""}${x.note ? ` — ${esc(x.note)}` : ""}</li>`).join("")}</ol></details>` : ""}
+    <button type="button" class="btn small" data-appr="${esc(p.id)}">Réponse client au BAT…</button>`;
+}
+function renderClients(list){
+  const by = new Map();
+  for (const p of list){ const c = (p.client || "").trim() || "Client non renseigné"; if (!by.has(c)) by.set(c, []); by.get(c).push(p); }
+  const rows = [...by].map(([c, ps]) => ({c, ps, ht:ps.reduce((s, p) => s + (p.summary && p.summary.ht || 0), 0), open:ps.filter(p => p.status !== "livre").length, chase:ps.filter(needsChase).length, last:ps.map(p => p.updatedAt || "").sort().pop()})).sort((a, b) => (b.last || "").localeCompare(a.last || ""));
+  if (!rows.length) return `<p class="hint">Aucun dossier.</p>`;
+  return `<div class="ctable-wrap"><table class="ctable"><thead><tr><th>Client</th><th class="num">Dossiers</th><th class="num">En cours</th><th class="num">À relancer</th><th class="num">Montant HT</th><th>Dernière activité</th><th>Statuts</th></tr></thead><tbody>${rows.map(r => `<tr><td><button type="button" class="linkbtn" data-client="${esc(r.c)}">${esc(r.c)}</button></td><td class="num">${r.ps.length}</td><td class="num">${r.open}</td><td class="num">${r.chase ? `<span class="badge warn">${r.chase}</span>` : "—"}</td><td class="num">${fmt0.format(r.ht)}</td><td>${r.last ? new Date(r.last).toLocaleDateString("fr-FR") : ""}</td><td><div class="sts">${STATUSES.map(([k, l]) => { const n = r.ps.filter(p => (p.status || "brouillon") === k).length; return n ? `<span class="badge">${l} ${n}</span>` : ""; }).join("")}</div></td></tr>`).join("")}</tbody></table></div>`;
+}
+function setBoardMode(m){ boardMode = m; $("#bvStatus").setAttribute("aria-selected", m === "status"); $("#bvClients").setAttribute("aria-selected", m === "clients"); renderBoard(); }
+$("#bvStatus").addEventListener("click", () => setBoardMode("status")); $("#bvClients").addEventListener("click", () => setBoardMode("clients"));
+$("#board").addEventListener("click", e => {
+  const c = e.target.closest("[data-client]"); if (c){ $("#boardSearch").value = c.dataset.client === "Client non renseigné" ? "" : c.dataset.client; setBoardMode("status"); return; }
+  const a = e.target.closest("[data-appr]"); if (!a) return;
+  const p = projects.find(x => x.id === a.dataset.appr); if (!p) return; apprTarget = p.id;
+  $("#apprFor").textContent = `${p.name || "Projet"} · ${p.client || "client non renseigné"}`; $("#apprDecision").value = "ok"; $("#apprName").value = ""; $("#apprNote").value = ""; $("#apprDate").value = new Date().toISOString().slice(0, 10);
+  openDlg("#apprDlg");
+});
+$("#apprSave").addEventListener("click", async () => {
+  const name = $("#apprName").value.trim(), dec = $("#apprDecision").value, note = $("#apprNote").value.trim(), dt = $("#apprDate").value;
+  if (!name){ toast("Indiquez le nom de la personne qui a répondu."); $("#apprName").focus(); return; }
+  if (dec === "modif" && !note){ toast("Décrivez les corrections demandées."); $("#apprNote").focus(); return; }
+  if (await recordClientDecision(apprTarget, {decision:dec, name, note, at:dt ? new Date(dt + "T12:00:00").toISOString() : undefined, source:"manuel"})) closeDlg("#apprDlg");
+});
+
 
 /* ================= Paramètres ================= */
 const SETTINGS_FIELDS = [
@@ -4999,7 +5500,7 @@ async function saveFile(filename, data){
 }
 function specRows(){
   const t = TPL(), k = kind(), d = state.dims[state.model], cb = layout.cbb;
-  const fin = [LAM[k][state.lam[k]], state.varnish ? "vernis sélectif UV" : "", state.foil || state.elements.some(x => x.foil) ? `dorure à chaud ${(FOILS[state.foilColor] || FOILS.or).name.toLowerCase()}` : "", hasRelief() ? "gaufrage" : "", state.inside.on && k === "box" ? "impression intérieure" : "", state.window.on && t.window ? "fenêtre PET" : ""].filter(Boolean).join(", ");
+  const fin = [LAM[k][state.lam[k]], state.varnish ? "vernis sélectif UV" : "", state.foil || state.elements.some(x => x.foil) ? `dorure à chaud ${(FOILS[state.foilColor] || FOILS.or).name.toLowerCase()}` : "", hasRelief() ? (state.elements.some(x => x.type === "braille") ? "gaufrage (dont braille)" : "gaufrage") : "", state.tear && state.tear.on && layout.specials.some(l => l.type === "zip") ? "bande d'ouverture facile" : "", state.inside.on && k === "box" ? "impression intérieure" : "", state.window.on && t.window ? "fenêtre PET" : ""].filter(Boolean).join(", ");
   const fmtD = dimsText(layout.inner);
   return [["Modèle", t.name], ["Format", fmtD], ["Développé à plat", `${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm`], ["Support", MAT[k][state.mat[k]].name + (k === "box" ? ` (e = ${fmt2.format(layout.e)} mm)` : "")], ["Impression", PRINT[k][state.print[k]]], ["Finitions", fin]];
 }
@@ -5042,11 +5543,31 @@ function dieEntities(chains){
   }
   return out;
 }
-function dieGeometry(L = layout){ return {cut:dieEntities(dieChains(L.cuts)), crease:dieEntities(dieChains(L.creases))}; }
+// Points de braille (gaufrage) en coordonnées du plan.
+function brailleDots(){
+  return state.elements.filter(el => el.type === "braille").flatMap(el => { const r = (el.rot || 0)*Math.PI/180, c = Math.cos(r), s = Math.sin(r);
+    return brailleLayout(el).dots.map(([u, v]) => ({t:"C", x:el.x + u*c - v*s, y:el.y - (u*s + v*c), r:BRAILLE.dot/2})); });
+}
+function dieGeometry(L = layout){
+  const sp = new Map();
+  for (const l of L.specials){ if (!sp.has(l.type)) sp.set(l.type, []); sp.get(l.type).push(l.seg); }
+  return {cut:dieEntities(dieChains(L.cuts)), crease:dieEntities(dieChains(L.creases)), special:[...sp].map(([t, segs]) => [t, dieEntities(dieChains(segs))]), braille:brailleDots()};
+}
+// Calques DXF d'une géométrie, chaque entité passée par la transformation tr.
+function dieLayers(g, tr){
+  return [["COUPE", g.cut.map(tr)], ["RAINAGE", g.crease.map(tr)], ...g.special.map(([t, ents]) => [LINE_TYPES[t].layer, ents.map(tr)]), ["BRAILLE", g.braille.map(tr)]].filter(([n, e]) => e.length || n === "COUPE");
+}
+// Longueurs par type de trait (m).
+function lineLens(L = layout){
+  const o = {coupe:L.cutLen/1000};
+  for (const l of L.lines) o[l.type] = (o[l.type] || 0) + Math.hypot(l.seg[1][0] - l.seg[0][0], l.seg[1][1] - l.seg[0][1])/1000;
+  return o;
+}
+function lineLensText(L = layout, mult = 1){ return Object.entries(lineLens(L)).map(([k, v]) => `${k === "coupe" ? "coupe" : LINE_TYPES[k].name.toLowerCase()} ${fmt2.format(v*mult)} m`).join(" · "); }
 // Contrôle du tracé selon les exigences d'un formiste.
 function dieCheck(L = layout){
   const S = arr => arr.map(([a, b]) => ({a, b, l:Math.hypot(b[0] - a[0], b[1] - a[1])}));
-  const C = S(L.cuts), K = S(L.creases), r = {tiny:0, doubles:0, creaseOnCut:0, microGaps:0, freeEnds:0};
+  const C = S(L.cuts), K = S(L.lines.map(l => l.seg)), r = {tiny:0, doubles:0, creaseOnCut:0, microGaps:0, freeEnds:0};
   const over = (s, t) => { const dx = s.b[0] - s.a[0], dy = s.b[1] - s.a[1], d = q => Math.abs(dx*(q[1] - s.a[1]) - dy*(q[0] - s.a[0]))/s.l; if (s.l < 1e-6 || d(t.a) > .02 || d(t.b) > .02) return 0; const pr = q => ((q[0] - s.a[0])*dx + (q[1] - s.a[1])*dy)/s.l; let u0 = pr(t.a), u1 = pr(t.b); if (u0 > u1) [u0, u1] = [u1, u0]; return Math.min(s.l, u1) - Math.max(0, u0); };
   for (const s of C) if (s.l < .2) r.tiny++;
   for (let i = 0; i < C.length; i++) for (let j = i + 1; j < C.length; j++) if (over(C[i], C[j]) > .05) r.doubles++;
@@ -5072,12 +5593,14 @@ function knifeSpec(){
   return {e, txt:`Filet de coupe 2 pt (0,71 mm), hauteur 23,80 mm ; filet de rainage 2 pt, hauteur ≈ ${fmt2.format(23.8 - e - .05)} mm ; contre-partie : largeur ≈ ${fmt2.format(rule + 1.5*e)} mm, profondeur ≈ ${fmt2.format(e)} mm (indicatif, à valider par le formiste).`};
 }
 const asciiTxt = t => String(t).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\x20-\x7e]/g, " ").replace(/\s+/g, " ").trim();
-// DXF R12 (AC1009) : en-tête complet, types de traits, calques COUPE / RAINAGE / INFOS, unités mm, origine en bas à gauche.
+const LAYER_ACI = {COUPE:1, RAINAGE:5, INFOS:3, BRAILLE:8, EJECTION:210};
+const layerAci = nm => LAYER_ACI[nm] ?? (Object.values(LINE_TYPES).find(t => t.layer === nm) || {aci:7}).aci;
+// DXF R12 (AC1009) : en-tête complet, types de traits, un calque par type de trait, unités mm, origine en bas à gauche.
 function dxfWrite(groups, ext){
   const out = [], p = (...a) => out.push(...a.map(String)), n = v => (+v).toFixed(4);
   p(0,"SECTION",2,"HEADER",9,"$ACADVER",1,"AC1009",9,"$INSBASE",10,"0.0",20,"0.0",30,"0.0",9,"$EXTMIN",10,n(ext[0]),20,n(ext[1]),30,"0.0",9,"$EXTMAX",10,n(ext[2]),20,n(ext[3]),30,"0.0",9,"$INSUNITS",70,4,9,"$MEASUREMENT",70,1,0,"ENDSEC");
   p(0,"SECTION",2,"TABLES",0,"TABLE",2,"LTYPE",70,2,0,"LTYPE",2,"CONTINUOUS",70,0,3,"Solid line",72,65,73,0,40,"0.0",0,"LTYPE",2,"DASHED",70,0,3,"Dashed",72,65,73,2,40,"3.2",49,"2.0",49,"-1.2",0,"ENDTAB");
-  p(0,"TABLE",2,"LAYER",70,3); for (const [nm, col, lt] of [["COUPE",1,"CONTINUOUS"],["RAINAGE",5,"CONTINUOUS"],["INFOS",3,"CONTINUOUS"]]) p(0,"LAYER",2,nm,70,0,62,col,6,lt); p(0,"ENDTAB",0,"ENDSEC");
+  p(0,"TABLE",2,"LAYER",70,groups.length); for (const [nm] of groups) p(0,"LAYER",2,nm,70,0,62,layerAci(nm),6,"CONTINUOUS"); p(0,"ENDTAB",0,"ENDSEC");
   p(0,"SECTION",2,"ENTITIES");
   for (const [lay, ents] of groups) for (const e of ents){
     if (e.t === "L") p(0,"LINE",8,lay,10,n(e.a[0]),20,n(e.a[1]),30,"0.0",11,n(e.b[0]),21,n(e.b[1]),31,"0.0");
@@ -5088,12 +5611,13 @@ function dxfWrite(groups, ext){
   p(0,"ENDSEC",0,"EOF");
   return out.join("\r\n") + "\r\n";
 }
-// Transformation d'une entité : rotation de 90° (pose tournée) puis translation.
-function entMove(e, dx, dy, rot, h){
-  const P = q => rot ? [h - q[1] + dx, q[0] + dy] : [q[0] + dx, q[1] + dy];
-  if (e.t === "L") return {t:"L", a:P(e.a), b:P(e.b)};
-  if (e.t === "T"){ const [x, y] = P([e.x, e.y]); return {...e, x, y, rot:(e.rot || 0) + (rot ? 90 : 0)}; }
-  const [x, y] = P([e.x, e.y]); return e.t === "C" ? {t:"C", x, y, r:e.r} : {t:"A", x, y, r:e.r, a0:(e.a0 + (rot ? 90 : 0)) % 360, a1:(e.a1 + (rot ? 90 : 0)) % 360};
+// Transformation d'une entité par la fonction de points f (rotation d'un multiple de 90° comprise dans ang).
+function entPose(e, f, ang = 0){
+  if (e.t === "L") return {t:"L", a:f(e.a), b:f(e.b)};
+  const [x, y] = f([e.x, e.y]);
+  if (e.t === "T") return {...e, x, y, rot:((e.rot || 0) + ang) % 360};
+  if (e.t === "C") return {t:"C", x, y, r:e.r};
+  return {t:"A", x, y, r:e.r, a0:(e.a0 + ang) % 360, a1:(e.a1 + ang) % 360};
 }
 function grainEnts(x0, y0, len, vertical, label = "SENS FIBRE"){
   const a = 3, E = [];
@@ -5102,76 +5626,210 @@ function grainEnts(x0, y0, len, vertical, label = "SENS FIBRE"){
   return E;
 }
 function dielineDXF(){
-  const L = layout, cb = L.cbb, g = dieGeometry(L), mv = e => entMove(e, -cb.minX, -cb.minY, false, 0), w = cb.w, h = cb.h, t = TPL();
+  const L = layout, cb = L.cbb, g = dieGeometry(L), f = q => [q[0] - cb.minX, q[1] - cb.minY], w = cb.w, h = cb.h, t = TPL();
   const info = [{t:"T", x:0, y:-12, h:3.5, s:`${settings.company.name || "Label Pack"} - forme de decoupe ${quoteNo()} - ${t.name} - ${dimsText()}`},
-    {t:"T", x:0, y:-18, h:2.5, s:`Developpe ${fmt1.format(w)} x ${fmt1.format(h)} mm - echelle 1:1, unites mm - support ${kind() === "box" ? MAT.box[state.mat.box].name + ", e = " + fmt2.format(L.e) + " mm" : MAT[kind()][state.mat[kind()]].name} - coupe ${fmt2.format(L.cutLen/1000)} m, rainage ${fmt2.format(L.creaseLen/1000)} m`}];
+    {t:"T", x:0, y:-18, h:2.5, s:`Developpe ${fmt1.format(w)} x ${fmt1.format(h)} mm - echelle 1:1, unites mm - support ${kind() === "box" ? MAT.box[state.mat.box].name + ", e = " + fmt2.format(L.e) + " mm" : MAT[kind()][state.mat[kind()]].name} - ${lineLensText(L)}`}];
   if (kind() === "box") info.push(...grainEnts(state.grain === "v" ? -8 : 0, state.grain === "v" ? 0 : h + 8, Math.min(40, Math.max(w, h)/4), state.grain === "v"));
-  return dxfWrite([["COUPE", g.cut.map(mv)], ["RAINAGE", g.crease.map(mv)], ["INFOS", info]], [-12, -22, w + 10, h + 14]);
+  return dxfWrite([...dieLayers(g, e => entPose(e, f)), ["INFOS", info]], [-12, -22, w + 10, h + 14]);
 }
-// Montage sur la feuille : même calcul de poses que le devis (prise de pince et espace entre poses des paramètres).
+
+/* ---- Montage sur la feuille : imposition en grille ou tête-bêche (poses emboîtées), sens des fibres, chute ---- */
+const ROT90 = a => { const r = a*Math.PI/180; return [Math.round(Math.cos(r)), Math.round(Math.sin(r))]; };
+const polyArea = q => q.reduce((s, [x, y], i) => { const [x2, y2] = q[(i + 1) % q.length]; return s + x*y2 - x2*y; }, 0)/2;
+// Pièce (polygones des panneaux) ramenée à l'origine et tournée d'un multiple de 90°.
+function shapeAt(L, ang){
+  L._shapes = L._shapes || {};
+  if (L._shapes[ang]) return L._shapes[ang];
+  const cb = L.cbb, [c, s] = ROT90(ang), polys = L.panels.map(p => p.gpoly.map(([x, y]) => { const u = x - cb.minX, v = y - cb.minY; return [c*u - s*v, s*u + c*v]; })), b = polyBox(polys.flat());
+  return L._shapes[ang] = {ang, polys:polys.map(q => q.map(([x, y]) => [x - b.minX, y - b.minY])), w:b.w, h:b.h, ox:-b.minX, oy:-b.minY};
+}
+function poseFn(L, pose){ const cb = L.cbb, S = shapeAt(L, pose.ang), [c, s] = ROT90(pose.ang); return q => { const u = q[0] - cb.minX, v = q[1] - cb.minY; return [c*u - s*v + S.ox + pose.dx, s*u + c*v + S.oy + pose.dy]; }; }
+// Enveloppe verticale par tranches de « step » mm, élargie de l'espace entre poses.
+function envOf(S, step, gap){
+  const key = step + "|" + gap; S._env = S._env || {}; if (S._env[key]) return S._env[key];
+  const n = Math.max(1, Math.ceil(S.w/step - 1e-9)), top = new Float64Array(n).fill(-Infinity), bot = new Float64Array(n).fill(Infinity);
+  for (const q of S.polys) for (let i = 0; i < q.length; i++){
+    let [x0, y0] = q[i], [x1, y1] = q[(i + 1) % q.length]; if (x0 > x1){ [x0, x1] = [x1, x0]; [y0, y1] = [y1, y0]; }
+    const i0 = Math.min(n - 1, Math.max(0, Math.floor(x0/step))), i1 = Math.max(i0, Math.min(n - 1, Math.floor(x1/step - 1e-9)));
+    for (let k = i0; k <= i1; k++){
+      const a = Math.max(x0, k*step), b = Math.min(x1, (k + 1)*step), dx = x1 - x0;
+      const ya = dx < 1e-9 ? y0 : y0 + (y1 - y0)*(a - x0)/dx, yb = dx < 1e-9 ? y1 : y0 + (y1 - y0)*(b - x0)/dx;
+      top[k] = Math.max(top[k], ya, yb); bot[k] = Math.min(bot[k], ya, yb);
+    }
+  }
+  const g = Math.ceil(gap/step), topD = new Float64Array(n).fill(-Infinity);
+  for (let i = 0; i < n; i++) for (let j = Math.max(0, i - g); j <= Math.min(n - 1, i + g); j++) topD[i] = Math.max(topD[i], top[j]);
+  return S._env[key] = {top, topD, bot, n};
+}
+// Pas vertical minimal entre une pièce A en dessous et une pièce B au-dessus, décalée de k tranches.
+function pitchV(A, B, k){ let p = -Infinity; for (let i = 0; i < A.n; i++){ const j = i - k; if (j < 0 || j >= B.n || A.topD[i] === -Infinity || B.bot[j] === Infinity) continue; p = Math.max(p, A.topD[i] - B.bot[j]); } return p; }
+function nestColumn(FW, FH, gap, seq, pitches, type){
+  const minO = Math.min(...seq.map(s => s.off)), colW = Math.max(...seq.map(s => s.off + s.S.w)) - minO;
+  if (colW > FW + .01) return null;
+  const items = []; let y = 0;
+  for (let i = 0; i < 4000; i++){ const s = seq[i % seq.length]; if (y + s.S.h > FH + .01) break; items.push({ang:s.ang, dx:s.off - minO, dy:y, h:s.S.h}); y += pitches[i % pitches.length]; }
+  if (!items.length) return null;
+  const nx = Math.floor((FW - colW)/(colW + gap) + 1e-9) + 1, poses = [], usedH = Math.max(...items.map(it => it.dy + it.h));
+  for (let c = 0; c < nx; c++) for (const it of items) poses.push({ang:it.ang, dx:it.dx + c*(colW + gap), dy:it.dy});
+  return {n:poses.length, poses, type, area:(nx*colW + (nx - 1)*gap)*usedH};
+}
+function nestFrame(L, FW, FH, angs, gap, step){
+  let best = null;
+  const consider = c => { if (c && (!best || c.n > best.n || (c.n === best.n && (c.type === "grille") > (best.type === "grille")) || (c.n === best.n && c.type === best.type && c.area < best.area - 1))) best = c; };
+  for (const a of angs){
+    const A = shapeAt(L, a); if (A.w > FW + .01 || A.h > FH + .01) continue;
+    const EA = envOf(A, step, gap), pAA = Math.max(pitchV(EA, EA, 0) + gap, 1);
+    consider(nestColumn(FW, FH, gap, [{ang:a, off:0, S:A}], [pAA], "grille"));
+    const b = (a + 180) % 360, B = shapeAt(L, b), EB = envOf(B, step, gap), K = Math.floor(A.w*.5/step);
+    for (let k = -K; k <= K; k++){
+      let p1 = pitchV(EA, EB, k) + gap, p2 = pitchV(EB, EA, -k) + gap;
+      p1 = Number.isFinite(p1) ? Math.max(p1, 1) : A.h + gap; p2 = Number.isFinite(p2) ? Math.max(p2, 1) : A.h + gap;
+      if (p1 + p2 < pAA) p2 = pAA - p1;
+      consider(nestColumn(FW, FH, gap, [{ang:a, off:0, S:A}, {ang:b, off:k*step, S:B}], [p1, p2], "tête-bêche"));
+    }
+  }
+  return best;
+}
+let montCache = new Map(), montLayout = null;
+// Montage retenu ; avec « fibres de la feuille : automatique », le sens de feuille qui donne le plus de poses.
 function montage(){
-  const k = kind(); if (k === "label") return null;
-  const B = P().box, cb = layout.cbb, gap = B.gap, grip = B.grip, SW = B.sheetW - 2*grip, SH = B.sheetH - 2*grip;
-  const a = [Math.floor(SW/(cb.w + gap)), Math.floor(SH/(cb.h + gap))], b = [Math.floor(SW/(cb.h + gap)), Math.floor(SH/(cb.w + gap))], rot = b[0]*b[1] > a[0]*a[1], [nx, ny] = rot ? b : a;
-  const pw = rot ? cb.h : cb.w, ph = rot ? cb.w : cb.h, poses = [];
-  const ox = grip + (SW - (nx*pw + (nx - 1)*gap))/2, oy = grip + (SH - (ny*ph + (ny - 1)*gap))/2;
-  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) poses.push({dx:ox + i*(pw + gap), dy:oy + j*(ph + gap)});
-  return {W:B.sheetW, H:B.sheetH, grip, gap, nx, ny, rot, pw, ph, poses, n:poses.length};
+  const k = kind(); if (k === "label" || !layout) return null;
+  const D = {...DIE_DEFAULT, ...(state.die || {})}, lock = k === "box" && D.grainLock !== false;
+  if (!lock) return montageFor(false, "W");
+  if (D.sheetGrain === "W" || D.sheetGrain === "H") return montageFor(true, D.sheetGrain);
+  const a = montageFor(true, "W"), b = montageFor(true, "H");
+  return b.n > a.n ? b : a;
+}
+function montageFor(lock, sheetGrain){
+  const k = kind(), B = P().box, L = layout;
+  if (montLayout !== L){ montCache = new Map(); montLayout = L; }
+  const key = JSON.stringify([B.sheetW, B.sheetH, B.grip, B.gap, lock, sheetGrain, state.grain, k]);
+  if (montCache.has(key)) return montCache.get(key);
+  const gap = B.gap, grip = B.grip, W = B.sheetW, H = B.sheetH, FW = W - 2*grip, FH = H - 2*grip, step = 1;
+  const allowed = lock ? [(state.grain !== "v") === (sheetGrain !== "H") ? 0 : 90] : [0, 90];
+  const cands = [], v = nestFrame(L, FW, FH, allowed, gap, step), hz = nestFrame(L, FH, FW, allowed.map(a => (a + 90) % 360), gap, step);
+  if (v) cands.push(v);
+  if (hz) cands.push({...hz, poses:hz.poses.map(p => ({ang:(p.ang + 270) % 360, dx:p.dy, dy:FH - p.dx - shapeAt(L, p.ang).w}))});
+  let best = null; for (const c of cands) if (!best || c.n > best.n || (c.n === best.n && c.type === "grille" && best.type !== "grille")) best = c;
+  const area = L.panels.reduce((s, p) => s + Math.abs(polyArea(p.gpoly)) - p.gholes.reduce((t, h) => t + Math.abs(polyArea(h)), 0), 0);
+  let val = {W, H, grip, gap, poses:[], n:0, type:"", lock, sheetGrain, area, util:0, waste:1};
+  if (best && best.n){
+    const bx = polyBox(best.poses.flatMap(p => { const S = shapeAt(L, p.ang); return [[p.dx, p.dy], [p.dx + S.w, p.dy + S.h]]; }));
+    const ox = grip + (FW - bx.w)/2 - bx.minX, oy = grip + (FH - bx.h)/2 - bx.minY, poses = best.poses.map(p => ({ang:p.ang, dx:p.dx + ox, dy:p.dy + oy})), util = poses.length*area/(W*H);
+    val = {...val, poses, n:poses.length, type:best.type, rot90:poses.every(p => p.ang % 180), util, waste:1 - util};
+  }
+  montCache.set(key, val); return val;
+}
+const grainSheetTxt = g => `fibres parallèles au ${g === "H" ? "petit" : "grand"} côté`;
+function montageText(M){ return M && M.n ? `${M.n} poses ${M.type === "tête-bêche" ? "tête-bêche (emboîtées)" : "en grille"}${M.rot90 ? ", tournées de 90°" : ""}${M.lock ? `, feuille ${grainSheetTxt(M.sheetGrain)}` : ""} · chute ${fmt0.format(M.waste*100)} %` : "aucune pose ne tient sur la feuille"; }
+// Attaches (ponts) : interruptions du filet de coupe sur les plus longs bords extérieurs, pour retenir la pose dans la feuille.
+function nickify(L, ents, n, w){
+  if (!n || !(w > 0)) return {ents, pts:[]};
+  const inside = q => L.panels.some(p => inPoly(q, p.gpoly) && !p.gholes.some(h => inPoly(q, h))), anyPoly = q => L.panels.some(p => inPoly(q, p.gpoly));
+  const cand = ents.map((e, i) => ({e, i})).filter(o => o.e.t === "L").map(o => { const {a, b} = o.e, l = Math.hypot(b[0] - a[0], b[1] - a[1]); return {...o, l, m:[(a[0] + b[0])/2, (a[1] + b[1])/2], nx:-(b[1] - a[1])/l, ny:(b[0] - a[0])/l}; })
+    .filter(o => { if (o.l < 12) return false; const p1 = [o.m[0] + o.nx*.6, o.m[1] + o.ny*.6], p2 = [o.m[0] - o.nx*.6, o.m[1] - o.ny*.6], i1 = inside(p1), i2 = inside(p2); return i1 !== i2 && !anyPoly(i1 ? p2 : p1); })
+    .sort((x, y) => y.l - x.l);
+  const pick = [];
+  for (const sp of [25, 8]) for (const c of cand){ if (pick.length >= n) break; if (!pick.includes(c) && pick.every(p => Math.hypot(p.m[0] - c.m[0], p.m[1] - c.m[1]) > sp)) pick.push(c); }
+  const set = new Map(pick.map(p => [p.i, p])), out = [];
+  ents.forEach((e, i) => { const p = set.get(i); if (!p){ out.push(e); return; } const {a, b} = e, ux = (b[0] - a[0])/p.l, uy = (b[1] - a[1])/p.l, h = w/2; out.push({t:"L", a, b:[p.m[0] - ux*h, p.m[1] - uy*h]}, {t:"L", a:[p.m[0] + ux*h, p.m[1] + uy*h], b}); });
+  return {ents:out, pts:pick.map(p => p.m)};
+}
+// Filets d'éjection proposés : droites libres entre colonnes et rangées de poses.
+function ejectLines(L, M){
+  const boxes = M.poses.map(p => { const f = poseFn(L, p), polys = L.panels.map(pn => pn.gpoly.map(f)); return {polys, bb:polyBox(polys.flat())}; });
+  const all = polyBox(boxes.flatMap(o => [[o.bb.minX, o.bb.minY], [o.bb.maxX, o.bb.maxY]])), lines = [];
+  const clear = (a, b) => boxes.every(o => o.polys.every(q => !inPoly(a, q) && q.every((c, i) => !segX(a, b, c, q[(i + 1) % q.length]))));
+  for (const axis of [0, 1]){
+    const iv = boxes.map(o => axis ? [o.bb.minY, o.bb.maxY] : [o.bb.minX, o.bb.maxX]).sort((x, y) => x[0] - y[0]), merged = [];
+    for (const [s, e] of iv){ const cur = merged[merged.length - 1]; if (cur && s <= cur[1] + .01) cur[1] = Math.max(cur[1], e); else merged.push([s, e]); }
+    for (let i = 0; i < merged.length - 1; i++){
+      const g0 = merged[i][1], g1 = merged[i + 1][0]; if (g1 - g0 < 1) continue; const c = (g0 + g1)/2;
+      const a = axis ? [all.minX - 3, c] : [c, all.minY - 3], b = axis ? [all.maxX + 3, c] : [c, all.maxY + 3];
+      if (clear(a, b)) lines.push({t:"L", a, b});
+    }
+  }
+  return lines;
+}
+// Tous les calques du montage, poses transformées, attaches appliquées.
+function montageLayers(L, M){
+  const g = dieGeometry(L), D = {...DIE_DEFAULT, ...(state.die || {})}, nk = nickify(L, g.cut, +D.nicks || 0, +D.nickW || 0), groups = new Map([["COUPE", []]]), nicks = [];
+  for (const q of M.poses){
+    const f = poseFn(L, q);
+    for (const [nm, ents] of dieLayers({...g, cut:nk.ents}, e => entPose(e, f, q.ang))){ if (!groups.has(nm)) groups.set(nm, []); groups.get(nm).push(...ents); }
+    nicks.push(...nk.pts.map(f));
+  }
+  if (D.eject){ const ej = ejectLines(L, M); if (ej.length) groups.set("EJECTION", ej); }
+  return {groups, nicks, D};
 }
 function montageDXF(){
   const M = montage(); if (!M || !M.n) return null;
-  const L = layout, cb = L.cbb, g = dieGeometry(L), base = e => entMove(e, -cb.minX, -cb.minY, false, 0);
-  const cut = [], crease = [];
-  for (const q of M.poses){ for (const e of g.cut) cut.push(entMove(base(e), q.dx, q.dy, M.rot, cb.h)); for (const e of g.crease) crease.push(entMove(base(e), q.dx, q.dy, M.rot, cb.h)); }
+  const L = layout, {groups, nicks, D} = montageLayers(L, M);
   const rect = (x0, y0, x1, y1) => [{t:"L", a:[x0, y0], b:[x1, y0]}, {t:"L", a:[x1, y0], b:[x1, y1]}, {t:"L", a:[x1, y1], b:[x0, y1]}, {t:"L", a:[x0, y1], b:[x0, y0]}];
   const info = [...rect(0, 0, M.W, M.H), {t:"L", a:[0, M.grip], b:[M.W, M.grip]},
     {t:"T", x:2, y:2, h:3, s:`Prise de pince ${M.grip} mm`},
-    {t:"T", x:0, y:-10, h:4, s:`${settings.company.name || "Label Pack"} - montage ${quoteNo()} - feuille ${M.W} x ${M.H} mm - ${M.n} poses (${M.nx} x ${M.ny})${M.rot ? ", poses tournees de 90 degres" : ""} - espace entre poses ${M.gap} mm`},
-    {t:"T", x:0, y:-16, h:3, s:`Coupe ${fmt1.format(L.cutLen*M.n/1000)} m, rainage ${fmt1.format(L.creaseLen*M.n/1000)} m par feuille (hors filets de chute et attaches)`}];
-  if (kind() === "box") info.push(...grainEnts(M.W + 8, 0, 60, (state.grain === "v") !== M.rot, "SENS FIBRE (poses)"));
-  return dxfWrite([["COUPE", cut], ["RAINAGE", crease], ["INFOS", info]], [-5, -20, M.W + 20, M.H + 5]);
+    {t:"T", x:0, y:-10, h:4, s:`${settings.company.name || "Label Pack"} - montage ${quoteNo()} - feuille ${M.W} x ${M.H} mm - ${asciiTxt(montageText(M))} - espace entre poses ${M.gap} mm`},
+    {t:"T", x:0, y:-16, h:3, s:`Par feuille : ${asciiTxt(lineLensText(L, M.n))} - attaches : ${nicks.length ? `${D.nicks} x ${fmt2.format(D.nickW)} mm par pose` : "aucune"}`}];
+  if (kind() === "box" && M.lock) info.push(...grainEnts(M.W + 8, 0, 60, M.sheetGrain === "H", "SENS FIBRE (feuille et poses)"));
+  return dxfWrite([...groups, ["INFOS", info]], [-5, -20, M.W + 20, M.H + 5]);
 }
+function pdfEnt(doc, e, X, Y){
+  if (e.t === "L"){ doc.line(X(e.a[0]), Y(e.a[1]), X(e.b[0]), Y(e.b[1])); return; }
+  const a0 = e.t === "C" ? 0 : e.a0, a1 = e.t === "C" ? 360 : (e.a1 <= e.a0 ? e.a1 + 360 : e.a1), n = Math.max(4, Math.ceil((a1 - a0)/10)); let pv = null;
+  for (let i = 0; i <= n; i++){ const a = (a0 + (a1 - a0)*i/n)*Math.PI/180, q = [e.x + e.r*Math.cos(a), e.y + e.r*Math.sin(a)]; if (pv) doc.line(X(pv[0]), Y(pv[1]), X(q[0]), Y(q[1])); pv = q; }
+}
+const LAYER_STYLE = nm => nm === "COUPE" ? {rgb:[227,6,19], dash:[]} : nm === "BRAILLE" ? {rgb:[90,90,90], dash:[]} : nm === "EJECTION" ? {rgb:[120,60,200], dash:[2,1]} : (t => ({rgb:t.rgb, dash:t.dash}))(Object.values(LINE_TYPES).find(t => t.layer === nm) || LINE_TYPES.rainage);
 function montagePDF(){
   const M = montage(); if (!M || !M.n) return null;
-  const {jsPDF} = window.jspdf, doc = new jsPDF({unit:"mm", format:"a3", orientation:"landscape"}), L = layout, cb = L.cbb, g = dieGeometry(L);
-  const k = Math.min(380/M.W, 240/M.H), ox = 20, oy = 30 + M.H*k, X = x => ox + x*k, Y = y => oy - y*k;
+  const {jsPDF} = window.jspdf, doc = new jsPDF({unit:"mm", format:"a3", orientation:"landscape"}), L = layout, {groups, nicks, D} = montageLayers(L, M);
+  const k = Math.min(380/M.W, 235/M.H), ox = 20, oy = 30 + M.H*k, X = x => ox + x*k, Y = y => oy - y*k;
   doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(20); doc.text(pdfTxt(`${settings.company.name || "Label Pack"} — Montage de la forme ${quoteNo()}`), 20, 16);
   doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(80);
-  doc.text(pdfTxt(`Feuille ${M.W} × ${M.H} mm · ${M.n} poses (${M.nx} × ${M.ny})${M.rot ? ", poses tournées de 90°" : ""} · prise de pince ${M.grip} mm · espace entre poses ${M.gap} mm · échelle ${fmt2.format(k)} (cotes réelles dans le DXF)`), 20, 22);
+  doc.text(pdfTxt(`Feuille ${M.W} × ${M.H} mm · ${montageText(M)} · prise de pince ${M.grip} mm · espace entre poses ${M.gap} mm · échelle ${fmt2.format(k)} (cotes réelles dans le DXF)`), 20, 22);
   doc.setDrawColor(150); doc.setLineWidth(.3); doc.rect(X(0), Y(M.H), M.W*k, M.H*k); doc.setFillColor(235, 238, 242); doc.rect(X(0), Y(M.grip), M.W*k, M.grip*k, "F");
-  const draw = (e, col, dash) => { doc.setDrawColor(...col); doc.setLineDashPattern(dash ? [1.2, .8] : [], 0);
-    if (e.t === "L") doc.line(X(e.a[0]), Y(e.a[1]), X(e.b[0]), Y(e.b[1]));
-    else { const a0 = e.t === "C" ? 0 : e.a0, a1 = e.t === "C" ? 360 : (e.a1 <= e.a0 ? e.a1 + 360 : e.a1), n = Math.max(4, Math.ceil((a1 - a0)/10)); let pv = null;
-      for (let i = 0; i <= n; i++){ const a = (a0 + (a1 - a0)*i/n)*Math.PI/180, q = [e.x + e.r*Math.cos(a), e.y + e.r*Math.sin(a)]; if (pv) doc.line(X(pv[0]), Y(pv[1]), X(q[0]), Y(q[1])); pv = q; } } };
   doc.setLineWidth(.15);
-  for (const q of M.poses){ for (const e of g.crease) draw(entMove(entMove(e, -cb.minX, -cb.minY, false, 0), q.dx, q.dy, M.rot, cb.h), [0, 80, 255], true); for (const e of g.cut) draw(entMove(entMove(e, -cb.minX, -cb.minY, false, 0), q.dx, q.dy, M.rot, cb.h), [227, 6, 19], false); }
-  doc.setLineDashPattern([], 0); doc.setFontSize(8.5); doc.setTextColor(60);
+  for (const nm of ["EJECTION", ...[...groups.keys()].filter(n => n !== "COUPE" && n !== "EJECTION"), "COUPE"]){
+    const ents = groups.get(nm); if (!ents) continue; const st = LAYER_STYLE(nm);
+    doc.setDrawColor(...st.rgb); doc.setLineDashPattern(st.dash.map(v => v*Math.max(.5, k*2)), 0); ents.forEach(e => pdfEnt(doc, e, X, Y));
+  }
+  doc.setLineDashPattern([], 0); doc.setFillColor(0, 166, 81); nicks.forEach(q => doc.circle(X(q[0]), Y(q[1]), .7, "F"));
+  doc.setFontSize(8.5); doc.setTextColor(60);
   const ks = knifeSpec(), chk = dieCheck(L);
-  doc.text(doc.splitTextToSize(pdfTxt(`Coupe ${fmt1.format(L.cutLen*M.n/1000)} m · rainage ${fmt1.format(L.creaseLen*M.n/1000)} m par feuille. ${ks.txt} ${dieCheckText(chk)}${kind() === "box" ? ` Sens des fibres : ${(state.grain === "v") !== M.rot ? "parallèle au petit côté" : "parallèle au grand côté"} de la feuille.` : ""}`), 380), 20, oy + 8);
-  doc.setTextColor(227, 6, 19); doc.text("— Coupe", 20, 290); doc.setTextColor(0, 80, 255); doc.text("- - Rainage", 45, 290); doc.setTextColor(120); doc.text("Zone grise : prise de pince", 75, 290);
+  doc.text(doc.splitTextToSize(pdfTxt(`Par feuille : ${lineLensText(L, M.n)}. Rendement matière ${fmt0.format(M.util*100)} %, chute ${fmt0.format(M.waste*100)} %. Attaches : ${nicks.length ? `${D.nicks} par pose, ${fmt2.format(D.nickW)} mm (points verts)` : "aucune"}.${groups.has("EJECTION") ? " Filets d'éjection proposés en violet (à valider)." : ""} ${ks.txt} ${dieCheckText(chk)}${kind() === "box" ? (M.lock ? ` Feuille à ${grainSheetTxt(M.sheetGrain)} ; sens des fibres respecté pour toutes les poses.` : " Sens des fibres non imposé au montage.") : ""}`), 380), 20, oy + 7);
+  let lx = 20; const legend = [["COUPE", "Coupe"], ...[...groups.keys()].filter(n => n !== "COUPE").map(n => [n, n === "BRAILLE" ? "Braille (gaufrage)" : n === "EJECTION" ? "Éjection" : (Object.values(LINE_TYPES).find(t => t.layer === n) || {}).name || n])];
+  for (const [nm, lbl] of legend){ doc.setTextColor(...LAYER_STYLE(nm).rgb); doc.text(pdfTxt(lbl), lx, 290); lx += doc.getTextWidth(pdfTxt(lbl)) + 6; }
+  doc.setTextColor(120); doc.text("Zone grise : prise de pince", lx, 290);
   return doc.output("blob");
 }
 async function exportFormiste(base){
   if (!window.JSZip){ toast("Bibliothèque ZIP indisponible : rechargez la page."); return; }
-  const zip = new JSZip(), chk = dieCheck(layout), ks = knifeSpec(), M = montage(), md = montageDXF(), mp = montagePDF();
+  const zip = new JSZip(), chk = dieCheck(layout), ks = knifeSpec(), M = montage(), md = montageDXF(), mp = montagePDF(), D = {...DIE_DEFAULT, ...(state.die || {})};
   zip.file(`${base}_forme-1-pose.dxf`, dielineDXF());
   zip.file(`${base}_forme-1-pose.pdf`, dielinePDF());
   if (md) zip.file(`${base}_montage-feuille.dxf`, md);
   if (mp) zip.file(`${base}_montage-feuille.pdf`, mp);
+  const layers = [...new Set(["COUPE", "RAINAGE", ...layout.specials.map(l => LINE_TYPES[l.type].layer), ...(brailleDots().length ? ["BRAILLE"] : [])])];
   zip.file("LISEZ-MOI-formiste.txt", [`Forme de découpe ${quoteNo()} — ${meta.client || ""} ${meta.name || ""}`, "",
     `Modèle : ${TPL().name} — ${dimsText()}`, `Développé (1 pose) : ${fmt1.format(layout.cbb.w)} × ${fmt1.format(layout.cbb.h)} mm`,
     kind() === "box" ? `Support : ${MAT.box[state.mat.box].name}, épaisseur ${fmt2.format(layout.e)} mm — sens des fibres : ${state.grain === "v" ? "vertical" : "horizontal"} sur le plan 1 pose` : `Support : ${MAT[kind()][state.mat[kind()]].name}`,
-    `Longueurs par pose : coupe ${fmt2.format(layout.cutLen/1000)} m, rainage ${fmt2.format(layout.creaseLen/1000)} m`,
-    M ? `Montage : feuille ${M.W} × ${M.H} mm, ${M.n} poses (${M.nx} × ${M.ny})${M.rot ? ", poses tournées de 90°" : ""}, prise de pince ${M.grip} mm, espace ${M.gap} mm` : "Montage : étiquettes en bobine (outil magnétique), pas de montage feuille",
+    `Longueurs par pose : ${lineLensText(layout)}`,
+    M ? `Montage : feuille ${M.W} × ${M.H} mm, ${montageText(M)}, prise de pince ${M.grip} mm, espace ${M.gap} mm ; rendement matière ${fmt0.format(M.util*100)} %` : "Montage : étiquettes en bobine (outil magnétique), pas de montage feuille",
+    M ? `Attaches : ${+D.nicks ? `${D.nicks} par pose, largeur ${fmt2.format(+D.nickW)} mm, sur les plus longs bords extérieurs` : "aucune (à placer par le formiste)"}${D.eject ? " ; filets d'éjection proposés sur le calque EJECTION" : ""}` : "",
     "", "Filets : " + ks.txt, "", "Contrôle du tracé : " + dieCheckText(chk), "",
-    "Fichiers :", "- forme-1-pose.dxf : DXF R12 (AC1009), unités mm, échelle 1:1, origine en bas à gauche ; calques COUPE (rouge), RAINAGE (bleu), INFOS (vert, ne pas tailler) ; courbes en vrais arcs, traits continus sans doublon",
-    "- forme-1-pose.pdf : plan 1:1 avec cartouche", "- montage-feuille.dxf / .pdf : poses sur la feuille (attaches / ponts et filets de chute à ajouter par le formiste)", "",
-    "À valider sur échantillon (table de découpe ou maquette blanche) avant fabrication de la forme."].join("\r\n"));
+    "Fichiers :", `- forme-1-pose.dxf : DXF R12 (AC1009), unités mm, échelle 1:1, origine en bas à gauche ; calques ${layers.join(", ")}, INFOS (ne pas tailler) ; courbes en vrais arcs, traits continus sans doublon`,
+    "- forme-1-pose.pdf : plan 1:1 avec cartouche", "- montage-feuille.dxf / .pdf : poses sur la feuille avec attaches", brailleDots().length ? "- calque BRAILLE : points Ø 1,5 mm, pas 2,5 mm, cellules 6 mm (Marburg Medium) pour le cliché de gaufrage" : "", "",
+    "À valider sur échantillon (table de découpe ou maquette blanche) avant fabrication de la forme."].filter((l, i, a) => l !== "" || a[i - 1] !== "").join("\r\n"));
   await saveFile(`${base}_dossier-formiste.zip`, await zip.generateAsync({type:"blob"}));
 }
 function dielinePDF(){
-  const {jsPDF} = window.jspdf, L = layout, bb = L.bb, m = 15, cart = 34;
-  const W = Math.max(bb.w + 2*m, 190), H = bb.h + 2*m + cart, ox = (W - bb.w)/2 - bb.minX, oy = m + bb.maxY;
+  const {jsPDF} = window.jspdf, L = layout, bb = L.bb, m = 15, W = Math.max(bb.w + 2*m, 190), cols = 3, colW = (W - 2*m - 6)/cols, lh = 7.5*PT*1.2, lh2 = 6.5*PT*1.2;
+  const rows = specRows().concat([["Coupe / rainage", `${fmt2.format(L.cutLen/1000)} m / ${fmt2.format(L.creaseLen/1000)} m`], ["Échelle", "1:1 — cotes en mm"], ["Date", new Date().toLocaleDateString("fr-FR")]].concat(kind() === "box" ? [["Sens des fibres", state.grain === "v" ? "vertical sur le plan" : "horizontal sur le plan"]] : []).concat(L.specials.length ? [["Traits spéciaux", lineLensText(L).split(" · ").filter(x => !/^(coupe|rainage) /.test(x)).join(" · ")]] : []));
+  const meas = new jsPDF({unit:"mm", format:"a4"}); meas.setFont("helvetica", "normal"); meas.setFontSize(7.5);
+  const cells = rows.map(([a, b]) => meas.splitTextToSize(pdfTxt(`${a} : ${b}`), colW - 3)), per = Math.ceil(cells.length/cols);
+  const colCells = Array.from({length:cols}, (_, c) => cells.slice(c*per, (c + 1)*per)), colH = colCells.map(cs => cs.reduce((t, c) => t + c.length*lh + .8, 0));
+  meas.setFontSize(6.5); const chk = meas.splitTextToSize(pdfTxt(`${dieCheckText(dieCheck(L))} ${knifeSpec().txt}`), W - 2*m - 6);
+  const boxH = 10 + Math.max(...colH) + 2 + chk.length*lh2 + 2, cart = boxH + 8;
+  const H = bb.h + 2*m + cart, ox = (W - bb.w)/2 - bb.minX, oy = m + bb.maxY;
   const doc = new jsPDF({unit:"mm", format:[W, H], orientation: W > H ? "landscape" : "portrait"});
   const X = x => x + ox, Y = y => oy - y;
   const poly = (pts, style) => { const d = pts.slice(1).map((pt, i) => [pt[0] - pts[i][0], -(pt[1] - pts[i][1])]); doc.lines(d, X(pts[0][0]), Y(pts[0][1]), [1,1], style, true); };
@@ -5180,17 +5838,18 @@ function dielinePDF(){
   doc.setFillColor(255,255,255); L.panels.forEach(pn => poly(pn.gpoly, "F"));
   doc.setLineWidth(.25); doc.setDrawColor(0,80,255); doc.setLineDashPattern([2,1.2], 0);
   L.creases.forEach(([a,b]) => doc.line(X(a[0]), Y(a[1]), X(b[0]), Y(b[1])));
+  for (const [ty, d] of Object.entries(LINE_TYPES)){ const segs = L.specials.filter(l => l.type === ty); if (!segs.length) continue; doc.setDrawColor(...d.rgb); doc.setLineDashPattern(d.dash, 0); segs.forEach(({seg:[a, b]}) => doc.line(X(a[0]), Y(a[1]), X(b[0]), Y(b[1]))); }
+  { const br = brailleDots(); if (br.length){ doc.setLineDashPattern([], 0); doc.setDrawColor(90); doc.setLineWidth(.15); br.forEach(c => doc.circle(X(c.x), Y(c.y), c.r)); doc.setLineWidth(.25); } }
   doc.setLineDashPattern([], 0); doc.setDrawColor(227,6,19);
   L.cuts.forEach(([a,b]) => doc.line(X(a[0]), Y(a[1]), X(b[0]), Y(b[1])));
-  const cy = H - cart + 4; doc.setDrawColor(60); doc.setLineWidth(.3); doc.rect(m, cy, W - 2*m, cart - 10);
+  const cy = H - cart + 2; doc.setDrawColor(60); doc.setLineWidth(.3); doc.setLineDashPattern([], 0); doc.rect(m, cy, W - 2*m, boxH);
   doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(20);
   pdfText(doc, `${settings.company.name} — Plan de découpe ${quoteNo()}`, m + 3, cy + 6);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5);
-  const rows = specRows().concat([["Coupe / rainage", `${fmt2.format(L.cutLen/1000)} m / ${fmt2.format(L.creaseLen/1000)} m`], ["Échelle", "1:1 — cotes en mm"], ["Date", new Date().toLocaleDateString("fr-FR")]].concat(kind() === "box" ? [["Sens des fibres", state.grain === "v" ? "vertical sur le plan" : "horizontal sur le plan"]] : []));
-  const colW = (W - 2*m - 6)/3;
-  rows.forEach(([a, b], i) => doc.text(pdfTxt(`${a} : ${b}`), m + 3 + Math.floor(i/3)*colW, cy + 11 + (i % 3)*4.2, {maxWidth:colW - 2}));
-  doc.setTextColor(227,6,19); doc.text("— Coupe", W - m - 60, cy + 6); doc.setTextColor(0,80,255); doc.text("- - Rainage", W - m - 42, cy + 6); doc.setTextColor(0,160,227); doc.text("Fond perdu", W - m - 22, cy + 6);
-  doc.setTextColor(70); doc.setFontSize(6.5); doc.text(doc.splitTextToSize(pdfTxt(`${dieCheckText(dieCheck(L))} ${knifeSpec().txt}`), W - 2*m - 6), m + 3, cy + cart - 13);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setLineHeightFactor(1.2);
+  colCells.forEach((cs, c) => { let y = cy + 11; for (const ln of cs){ doc.text(ln, m + 3 + c*colW, y); y += ln.length*lh + .8; } });
+  const leg = [["— Coupe", [227,6,19]], ["- - Rainage", [0,80,255]], ["Fond perdu", [0,160,227]], ...[...new Set(L.specials.map(l => l.type))].map(t => [LINE_TYPES[t].name, LINE_TYPES[t].rgb]), ...(brailleDots().length ? [["Braille", [90,90,90]]] : [])];
+  let lx = W - m - 3; for (const [txt, col] of leg.reverse()){ const tw = doc.getTextWidth(pdfTxt(txt)); lx -= tw; doc.setTextColor(...col); doc.text(pdfTxt(txt), lx, cy + 6); lx -= 4; }
+  doc.setTextColor(70); doc.setFontSize(6.5); doc.text(chk, m + 3, cy + 10 + Math.max(...colH) + 2 + lh2*.7);
   if (kind() === "box"){ const cb = L.cbb, gl = Math.min(40, Math.max(cb.w, cb.h)/4); doc.setDrawColor(0,166,81); doc.setLineWidth(.35); doc.setLineDashPattern([], 0);
     const ar = (x0, y0, x1, y1) => { doc.line(x0, y0, x1, y1); const dx = Math.sign(x1 - x0), dy = Math.sign(y1 - y0); for (const [xa, ya, sx, sy] of [[x1, y1, dx, dy], [x0, y0, -dx, -dy]]){ doc.line(xa, ya, xa - sx*2.5 - sy*1.5, ya - sy*2.5 + sx*1.5); doc.line(xa, ya, xa - sx*2.5 + sy*1.5, ya - sy*2.5 - sx*1.5); } };
     doc.setTextColor(0,166,81); doc.setFontSize(7);
@@ -5288,14 +5947,14 @@ async function runExport(kindName){
       zip.file(`${base}_plan-decoupe.pdf`, dielinePDF());
       zip.file(`${base}_plan-decoupe.svg`, dielineSVG(true));
       zip.file(`${base}_plan-decoupe.dxf`, dielineDXF());
-      { const md = montageDXF(); if (md) zip.file(`${base}_montage-feuille.dxf`, md); }
+      { const md = montageDXF(), mp = montagePDF(); if (md) zip.file(`${base}_montage-feuille.dxf`, md); if (mp) zip.file(`${base}_montage-feuille.pdf`, mp); }
       zip.file(`${base}_impression.pdf`, printPDF());
       zip.file(`${base}_visuel-a-plat.png`, await new Promise(r => proofCanvas(4000).toBlob(r, "image/png")));
       zip.file(`${base}_maquette.png`, dataURLtoBlob(captureMockup(2000, 1500, bg)));
       zip.file(`${base}_BAT.pdf`, batPDF(captureMockup(1200, 1200, "white", true)));
       zip.file(`${base}_devis.pdf`, devisPDF(captureMockup(1000, 1000, "white", true)));
       if (kind() === "box" && state.inside.on && state.images.inside){ const vc = versoCanvas(); if (vc) zip.file(`${base}_impression-interieure-verso.png`, await new Promise(r => vc.toBlob(r, "image/png"))); }
-      zip.file("LISEZ-MOI.txt", `Pack fabrication ${quoteNo()} — ${meta.client || ""} ${meta.name || ""}\r\n\r\n` + specRows().map(([a,b]) => `${a} : ${b}`).join("\r\n") + `\r\nQuantité : ${state.qty}\r\n\r\nContrôle prépresse :\r\n` + pfItems.map(x => `- [${x.level}] ${x.msg}`).join("\r\n") + `\r\n\r\nFichiers :\r\n- impression.pdf : visuel 300 dpi avec fond perdu et traits de coupe (page 1), forme de découpe vectorielle (page 2), puis un masque par finition (dorure, vernis sélectif, gaufrage, blanc de soutien)\r\n- plan-decoupe.pdf / .svg : échelle 1:1, calques COUPE (rouge) et RAINAGE (bleu), épaisseur du support compensée\r\n- plan-decoupe.dxf : pour table de découpe / CAO (mm)\r\n- visuel-a-plat.png : contrôle visuel avec traits\r\n- BAT.pdf : à faire signer par le client\r\n- devis.pdf : offre de prix\r\n\r\nGabarit à valider sur échantillon (table de découpe ou maquette blanche) avant la première production.\r\n`);
+      zip.file("LISEZ-MOI.txt", `Pack fabrication ${quoteNo()} — ${meta.client || ""} ${meta.name || ""}\r\n\r\n` + specRows().map(([a,b]) => `${a} : ${b}`).join("\r\n") + `\r\nQuantité : ${state.qty}\r\n\r\nContrôle prépresse :\r\n` + pfItems.map(x => `- [${x.level}] ${x.msg}`).join("\r\n") + `\r\n\r\nFichiers :\r\n- impression.pdf : PDF/X-3 (TrimBox, BleedBox, intention de sortie FOGRA39 ou FOGRA47, images RVB calibrées sRGB, aucune police) ; visuel 300 dpi avec fond perdu et traits de coupe (page 1), forme de découpe vectorielle (page 2), puis un masque par finition (dorure, vernis sélectif, gaufrage, blanc de soutien)\r\n- plan-decoupe.pdf / .svg : échelle 1:1, calques COUPE (rouge) et RAINAGE (bleu), épaisseur du support compensée\r\n- plan-decoupe.dxf : pour table de découpe / CAO (mm)\r\n- visuel-a-plat.png : contrôle visuel avec traits\r\n- BAT.pdf : à faire signer par le client\r\n- devis.pdf : offre de prix\r\n\r\nGabarit à valider sur échantillon (table de découpe ou maquette blanche) avant la première production.\r\n`);
       await saveFile(`${base}_pack-fabrication.zip`, await zip.generateAsync({type:"blob"}));
     }
   } catch (e) { console.error(e); toast("L'export a échoué. Réessayez."); }
@@ -5355,24 +6014,27 @@ $("#shareBtn").addEventListener("click", () => {
   if (!cloud()){ body.innerHTML = `<p>Le lien client nécessite la page publiée sur claude.ai avec les données partagées. En attendant, envoyez au client la <b>maquette PNG</b> et le <b>BAT PDF</b> depuis « Exporter ».</p>`; openDlg("#shareDlg"); return; }
   body.innerHTML = `<p class="hint">Le client voit la maquette 3D animée, le plan et les caractéristiques, sans le détail des coûts. Il doit être connecté à claude.ai et la page doit lui être partagée (menu Partager).</p>
     <label class="check"><input type="checkbox" id="shPrice" checked> Afficher le prix pour la quantité choisie et les paliers</label>
+    <label class="check"><input type="checkbox" id="shAppr" checked> Validation du BAT en ligne : le client valide ou demande une correction ; son nom, la date et son commentaire s'inscrivent dans le dossier</label>
     <button class="btn primary" type="button" id="shCreate">Créer le lien</button><div id="shOut"></div>`;
   openDlg("#shareDlg");
   $("#shCreate").onclick = async () => {
+    const wantAppr = $("#shAppr").checked; if (wantAppr && !meta.id) await saveProject(true);
     const id = newId(), q = quote(state.qty), showPrice = $("#shPrice").checked;
-    const doc = {name:meta.name || TPL().name, client:meta.client, ref:quoteNo(), config:configForSave(), createdAt:new Date().toISOString(), createdBy:cap.uid, specs:specRows(),
+    const doc = {name:meta.name || TPL().name, client:meta.client, ref:quoteNo(), approval:wantAppr, project:meta.id || null, config:configForSave(), createdAt:new Date().toISOString(), createdBy:cap.uid, specs:specRows(),
       price: showPrice && !q.error ? {qty:state.qty, unit:q.unit, ht:q.ht, ttc:q.ttc, tva:P().tva, tiers:TIERS.map(n => { const t = quote(n); return t.error ? null : [n, t.unit]; }).filter(Boolean)} : null,
       company:{name:settings.company.name, whatsapp:settings.company.whatsapp, phone:settings.company.phone, email:settings.company.email}};
     stripHeavy(doc);
     try {
       await cap.db.doc("shares/" + id).set(doc);
       const url = `${SHARE_BASE}#s-${id}`;
+      if (wantAppr && meta.id && ["brouillon","devis"].includes(meta.status)) setProjectStatus(meta.id, "bat");
       $("#shOut").innerHTML = `<div class="linkbox"><input type="text" readonly id="shUrl" value="${esc(url)}" aria-label="Lien client"><button class="btn" type="button" id="shCopy">Copier</button></div>`;
       $("#shCopy").onclick = () => copyText(url, "Lien copié", $("#shUrl"));
     } catch (e) { $("#shOut").innerHTML = `<p class="err">Création du lien impossible (droits d'écriture requis).</p>`; }
   };
 });
 async function bootClient(sid){
-  clientMode = true; document.body.classList.add("client");
+  clientMode = true; shareId = sid; document.body.classList.add("client");
   $("#clientBanner").hidden = false; $("#clientBanner").textContent = "Chargement de votre maquette…";
   if (!cap.db){ $("#clientBanner").textContent = "Connectez-vous à claude.ai pour afficher cette maquette, ou demandez le BAT PDF à votre interlocuteur."; return; }
   try {
@@ -5386,6 +6048,30 @@ async function bootClient(sid){
     if (!reduce){ anim = {from:0, to:1, t0:performance.now() + 500, dur:2800}; setFold(0); }
   } catch (e) { $("#clientBanner").textContent = "Impossible de charger la maquette pour le moment."; }
 }
+function apprBlock(){ return `<div class="appr"><h3 class="eyebrow">Validation du BAT</h3>
+    <div class="field"><label for="clName">Votre nom et fonction</label><input id="clName" type="text" autocomplete="name"></div>
+    <div class="field"><label for="clNote">Commentaire ou corrections demandées</label><textarea id="clNote" rows="3"></textarea></div>
+    <label class="check"><input type="checkbox" id="clConfirm"> J'ai vérifié les textes, les cotes, les couleurs et les codes ; le rendu écran n'est pas contractuel.</label>
+    <div class="row"><button class="btn primary" type="button" id="clOk">Valider le BAT</button><button class="btn" type="button" id="clModif">Demander une correction</button></div>
+    <p class="hint" id="clApprOut" role="status"></p></div>`; }
+function wireClientAppr(s, wa){
+  const send = async dec => {
+    const name = $("#clName").value.trim(), note = $("#clNote").value.trim(), out = $("#clApprOut");
+    if (!name){ out.textContent = "Indiquez votre nom."; $("#clName").focus(); return; }
+    if (dec === "ok" && !$("#clConfirm").checked){ out.textContent = "Cochez la case de vérification pour valider."; return; }
+    if (dec === "modif" && !note){ out.textContent = "Décrivez les corrections souhaitées."; $("#clNote").focus(); return; }
+    const at = new Date().toISOString();
+    try {
+      await cap.db.doc("approvals/" + newId()).set({share:shareId, project:s.project || null, ref:s.ref || "", projectName:s.name || "", client:s.client || "", name, comment:note, decision:dec, at, uid:cap.uid || null, applied:false});
+      out.textContent = `Merci : ${dec === "ok" ? "votre validation" : "votre demande de correction"} est enregistrée (${new Date(at).toLocaleString("fr-FR")}). Elle apparaît dans le dossier de votre interlocuteur.`;
+      $("#clOk").disabled = $("#clModif").disabled = true;
+    } catch (e) {
+      const c = s.company || {}, msg = `${dec === "ok" ? "Je valide le BAT" : "Je demande une correction sur le BAT"} « ${s.name} » (réf. ${s.ref}). Nom : ${name}.${note ? " " + note : ""}`;
+      out.innerHTML = `Votre accès à cette page ne permet pas d'enregistrer la réponse en ligne. Envoyez-la directement${wa ? ` par <a href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${wa && c.email ? " ou" : ""}${c.email ? ` par <a href="mailto:${esc(c.email)}?subject=${encodeURIComponent("BAT " + (s.ref || ""))}&body=${encodeURIComponent(msg)}">e-mail</a>` : ""}.`;
+    }
+  };
+  $("#clOk").onclick = () => send("ok"); $("#clModif").onclick = () => send("modif");
+}
 function renderClientCard(){
   const s = shareDoc, c = s.company || {}, card = $("#clientCard"), pr = s.price;
   card.hidden = false;
@@ -5397,10 +6083,11 @@ function renderClientCard(){
     ${pr ? `<div class="unit-price"><b>${fmt3.format(pr.unit)}</b><span>TND HT / unité pour ${fmt0.format(pr.qty)} ex.</span></div>
       <dl class="totals"><dt>Total HT</dt><dd>${tnd(pr.ht)}</dd><dt class="ttc">Total TTC (TVA ${pr.tva} %)</dt><dd class="ttc">${tnd(pr.ttc)}</dd></dl>
       <table class="tiers"><thead><tr><th>Quantité</th><th>Unitaire HT</th></tr></thead><tbody>${(pr.tiers || []).map(([n, u]) => `<tr><td>${fmt0.format(n)}</td><td>${fmt3.format(u)}</td></tr>`).join("")}</tbody></table>` : ""}
-    ${wa ? (s.fromCatalog ? `<a class="btn primary" href="https://wa.me/${wa}?text=${msg}" target="_blank" rel="noopener">Demander un devis</a>` : `<a class="btn primary" href="https://wa.me/${wa}?text=${msg}" target="_blank" rel="noopener">Valider sur WhatsApp</a><a class="btn" href="https://wa.me/${wa}?text=${msg2}" target="_blank" rel="noopener">Demander une modification</a>`) : ""}
+    ${s.approval && !s.fromCatalog ? apprBlock() : ""}${wa && !(s.approval && !s.fromCatalog) ? (s.fromCatalog ? `<a class="btn primary" href="https://wa.me/${wa}?text=${msg}" target="_blank" rel="noopener">Demander un devis</a>` : `<a class="btn primary" href="https://wa.me/${wa}?text=${msg}" target="_blank" rel="noopener">Valider sur WhatsApp</a><a class="btn" href="https://wa.me/${wa}?text=${msg2}" target="_blank" rel="noopener">Demander une modification</a>`) : ""}
     ${c.phone || c.email ? `<p class="hint">Contact : <span style="user-select:all">${esc([c.phone, c.email].filter(Boolean).join(" · "))}</span></p>` : ""}
     <button class="btn" type="button" id="clPng">Télécharger la maquette (PNG)</button>${s.fromCatalog ? `<button class="btn" type="button" id="clBack">← Retour au catalogue</button>` : ""}`;
   $("#clPng").onclick = () => runExport("png3d");
+  if (s.approval && !s.fromCatalog) wireClientAppr(s, wa);
   if (s.fromCatalog) $("#clBack").onclick = () => { $("#clientBanner").hidden = true; card.hidden = true; showCatalog(); };
 }
 
@@ -6041,6 +6728,8 @@ const GUIDE = [
     {t:"Support, impression, finition", d:"Le support fixe l'épaisseur prise en compte dans le plan (affichée dans « e = … mm »). L'impression et la finition (pelliculage, vernis) modifient le devis et le rendu 3D.", el:gup("#mat", ".sec"), prep:G.studio},
     {t:"Dorure, vernis sélectif, gaufrage", d:"Activez la dorure (or, argent, cuivre, or rose, holographique), le vernis sélectif et le relief de la marque. Chaque finition produit son masque dans le PDF d'impression.", el:gup("#foil", ".checks"), prep:G.studio},
     {t:"Impression intérieure", d:"Couleur unie ou visuel intérieur (fichier verso fourni dans le pack). Disponible sur les boîtes.", el:gq("#insideRow"), prep:G.studio},
+    {t:"Forme de découpe et montage", d:"Sens des fibres du carton et de la feuille, attaches (ponts) et filets d'éjection. Le montage choisit seul la meilleure imposition, en grille ou tête-bêche, et affiche le rendement matière et la chute.", el:gq("#dieBox"), prep:() => { G.studio(); $("#dieBox").open = true; }},
+    {t:"Plis et traits spéciaux", d:"Pour chaque pli : rainage, contre-rainage, coupe-rainage ou perforation. Survolez une ligne pour la repérer sur le plan. La bande d'ouverture facile (zipper) se règle juste en dessous.", el:gq("#lineList"), prep:() => { G.studio(); $("#dieBox").open = true; }},
   ]},
   {id:"visuel", title:"Créer le visuel", intro:"Quatre façons d'habiller l'emballage, combinables : décor automatique, éléments libres, réglages par face, ou création complète importée.", steps:[
     {t:"Décor automatique", d:"Marque, produit, mention et texte réglementaire se placent seuls sur les bonnes faces, dans le bon sens de lecture une fois plié.", el:gq("#brand"), prep:G.ed("auto")},
@@ -6048,6 +6737,7 @@ const GUIDE = [
     {t:"Charte graphique client", d:"Enregistrez marque, couleurs, logo et dorure sous le nom du client pour les réappliquer en un clic à toute sa gamme.", el:gup("#kitSel", ".field"), prep:G.ed("auto")},
     {t:"Déclinaisons de gamme", d:"Parfums, variétés, contenances : chaque déclinaison reprend le design en changeant produit et couleurs, avec maquettes, BAT et devis par version.", el:gq("#varBox"), prep:() => { G.ed("auto")(); $("#varBox").open = true; }},
     {t:"Éléments libres", d:"Ajoutez textes (français et arabe), images et formes, puis glissez-les directement sur le plan 2D. Chaque élément peut recevoir dorure, vernis ou relief.", el:gup("#addText", ".row"), prep:G.ed("els")},
+    {t:"Codes, braille, pictogrammes", d:"Codes-barres EAN-13 et GS1-128 (lot, date), braille français pour les médicaments, pictogrammes (recyclage, PAO, ℮, contact alimentaire, transport), zone de marquage lot / date et kits de mentions par secteur. Le contrôle prépresse vérifie tailles, plis et lisibilité.", el:gq("#addMore"), prep:G.ed("els")},
     {t:"Réglages par face", d:"Choisissez une face pour lui donner sa propre couleur ou image, avec zoom, rotation et décalage.", el:gq("#faceSel"), prep:G.ed("face")},
     {t:"Création complète", d:"Pour un visuel fait dans Illustrator : exportez le gabarit graphiste (SVG) ou le script Illustrator, créez le visuel sur le calque prévu, puis importez-le ici en PNG/JPG 300 dpi au format du plan avec fond perdu.", el:gup("#fullImg", "label"), prep:G.ed("full")},
   ]},
@@ -6067,7 +6757,8 @@ const GUIDE = [
   ]},
   {id:"export", title:"Exporter pour l'impression", intro:"Tous les fichiers de fabrication partent du menu Exporter.", steps:[
     {t:"Menu Exporter", d:"Tous les formats en un endroit : PDF, SVG, DXF, images, vidéos, Illustrator, packs ZIP.", el:gq("#expBtn"), prep:G.studio},
-    {t:"PDF d'impression", d:"Visuel 300 dpi avec fond perdu et repères, forme de découpe vectorielle sur une page séparée (coupe magenta, rainage cyan), puis un masque par finition.", el:gq('[data-exp="printpdf"]'), prep:G.pop},
+    {t:"PDF d'impression", d:"Fichier PDF/X-3 : visuel 300 dpi avec fond perdu et repères, forme de découpe vectorielle sur une page séparée (coupe magenta, rainage cyan), puis un masque par finition. Intention de sortie FOGRA39 ou FOGRA47 selon le support, à contrôler dans votre logiciel de prépresse.", el:gq('[data-exp="printpdf"]'), prep:G.pop},
+    {t:"Dossier formiste", d:"Forme 1 pose et montage feuille en DXF R12 et PDF : vrais arcs, un calque par type de trait, attaches, sens des fibres, braille, caractéristiques des filets et contrôle du tracé.", el:gq('[data-exp="formiste"]'), prep:G.pop},
     {t:"Gabarit graphiste (SVG)", d:"Calques COUPE, RAINAGE, FOND_PERDU, SECURITE à l'échelle 1:1 : la base de travail dans Illustrator.", el:gq('[data-exp="tplsvg"]'), prep:G.pop},
     {t:"Illustrator", d:"Le script recrée le gabarit dans Illustrator : calques Visuel, Fond perdu, Rainage, Coupe et tons directs CutContour / Rainage. Dans le panneau Illustrator, « Envoyer vers Illustrator » le fait directement.", el:() => document.querySelector('[data-exp="ai-send"]:not([hidden])') || document.querySelector('[data-exp="aijsx"]'), prep:G.pop},
     {t:"Pack fabrication", d:"Tout pour l'atelier en un ZIP : PDF d'impression, plan PDF/SVG/DXF, visuel, maquette, BAT et devis.", el:gq('[data-exp="zip"]'), prep:G.pop},
@@ -6078,11 +6769,12 @@ const GUIDE = [
     {t:"Quantité", d:"Saisissez la quantité ou choisissez un palier : le devis et le BAT se mettent à jour.", el:gq("#qty"), prep:G.studio},
     {t:"Devis PDF et mail", d:"Devis PDF à en-tête de l'imprimerie et texte de mail prêt à copier.", el:gq("#devisPdf"), prep:G.studio},
     {t:"Bon à tirer (BAT)", d:"Maquette, visuel avec traits, contrôle prépresse et case « Bon pour accord » à faire signer avant impression.", el:gq('[data-exp="bat"]'), prep:G.pop},
+    {t:"Validation du BAT en ligne", d:"Le lien client 3D peut demander la validation : le client valide ou demande une correction, son nom, la date et son commentaire s'inscrivent dans le dossier. Réponse reçue par téléphone ou par mail : bouton « Réponse client au BAT… » sur la carte du projet.", el:gq("#shareBtn"), prep:G.studio},
     {t:"BAT et devis de toute la gamme", d:"Un BAT et un devis par produit (projet, déclinaisons, composition) et un devis récapitulatif.", el:gq('[data-exp="allbat"]'), prep:G.pop},
   ]},
   {id:"data", title:"Projets et données", intro:"Retrouvez vos dossiers, suivez leur avancement et protégez vos données.", steps:[
     {t:"Enregistrer", d:"Enregistre le projet (gabarit, cotes, visuel, quantité). Ensuite, chaque modification est enregistrée automatiquement. Raccourci : Ctrl+S. Annuler / rétablir : Ctrl+Z / Ctrl+Y.", el:gq("#saveBtn"), prep:G.studio},
-    {t:"Projets", d:"Tableau par statut (brouillon, BAT envoyé, validé, en production, livré), recherche par client.", el:gq("#boardBtn"), prep:G.studio},
+    {t:"Projets", d:"Tableau par statut (brouillon, BAT envoyé, validé, en production, livré) avec historique, réponses client et dossiers à relancer (sans réponse depuis 7 jours). La vue « Par client » totalise dossiers et montants.", el:gq("#boardBtn"), prep:G.studio},
     {t:"Catalogue", d:"Toutes les structures avec visuels et prix indicatifs ; catalogue PDF à envoyer aux prospects.", el:gq("#catBtn"), prep:G.studio},
     {t:"Paramètres et sauvegarde", d:"Tarifs de l'imprimerie, coordonnées, conditions. Pensez à « Sauvegarder les données » régulièrement (fichier .json) ; « Restaurer » sur un autre poste.", el:gq("#settingsBtn"), prep:G.studio},
   ]},
@@ -6101,6 +6793,9 @@ const GUIDE = [
     "Résolution : 300 dpi minimum à l'échelle 1:1 (le contrôle prépresse le vérifie).",
     "Couleurs : aucune couleur hors gamut CMJN non validée ; Pantone de marque confirmé sur épreuve.",
     "Code-barres EAN-13 : clé de contrôle valide, taille ≥ 80 %, zone claire respectée, barres noires sur fond clair.",
+    "GS1-128 : module ≥ 0,25 mm (0,495 mm et 32 mm de haut pour la logistique), jamais à cheval sur un pli.",
+    "Braille : sur une seule face, à 5 mm au moins des plis, sans dorure ni vernis dessous ; transcription relue par un lecteur braille.",
+    "Forme de découpe : contrôle du tracé conforme, sens des fibres et montage validés avec le formiste.",
     "Finitions : dorure, vernis sélectif, gaufrage et blanc de soutien sur leurs masques séparés (pages du PDF d'impression).",
     "Plan : gabarit validé sur échantillon (table de découpe ou maquette blanche) avant la première production.",
     "BAT signé par le client, référence identique sur le BAT, le devis et le PDF d'impression.",
@@ -6232,7 +6927,7 @@ function onCapsReady(){
     if (unsubSettings) unsubSettings();
     unsubSettings = cap.db.doc("settings/main").onSnapshot(s => { if (s.exists){ settings = merge(DEFAULT_SETTINGS, s.data()); if (layout){ renderControls(); refresh("geo"); } } }, () => {});
   }
-  subscribeProjects(); loadKits();
+  subscribeProjects(); subscribeApprovals(); loadKits();
 }
 renderControls();
 showView("3d");
