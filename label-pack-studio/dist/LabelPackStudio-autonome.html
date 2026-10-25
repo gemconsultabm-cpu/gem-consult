@@ -425,6 +425,37 @@ input[type=range]{accent-color:var(--accent);width:100%}
 .ai-sw{width:38px;height:38px;border-radius:4px;position:relative;overflow:hidden}
 .ai-sw i{position:absolute;right:0;bottom:0;width:45%;height:45%}
 .ai-card small{display:block;color:var(--muted)}
+.setboxes{display:flex;flex-direction:column;gap:12px;padding:0 20px 16px}
+.setbox{border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface-2)}
+.setbox .row{flex-wrap:wrap}
+.setbox input[type=text]{flex:1;min-width:180px}
+.swlist,.doclist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:220px;overflow:auto}
+.swlist li{display:grid;grid-template-columns:22px minmax(0,1fr) auto auto;gap:8px;align-items:center;font-size:12.5px}
+.swlist i{width:22px;height:22px;border-radius:4px;border:1px solid var(--line)}
+.swlist small{color:var(--muted);font-family:var(--f-mono);font-size:11px}
+.doclist li{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12.5px}
+.fs-banner{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:6px 16px;background:var(--warn-soft);color:var(--warn);font-size:12.5px}
+.sign-prev{display:grid;grid-template-columns:1fr 1.5fr;gap:10px;align-items:center}
+.sign-prev img{width:100%;border:1px solid var(--line);border-radius:6px;background:#fff}
+.sign-pad{width:100%;height:auto;aspect-ratio:900/260;border:1px dashed var(--muted);border-radius:6px;background:#fff;touch-action:none;cursor:crosshair}
+.dash{display:flex;flex-direction:column;gap:12px;position:relative}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--f-display);font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12.5px;color:var(--ink)} .kpi small{font-size:11.5px;color:var(--muted)}
+.dcard{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:8px}
+.dcard h3{margin:0;font-size:14px}
+.dash{--c-s1:#3b6fb6;--c-s2:#b80f5a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .dash{--c-s1:#4f86e0;--c-s2:#e8458d}}
+:root[data-theme="dark"] .dash{--c-s1:#4f86e0;--c-s2:#e8458d}
+.dchart{width:100%;height:auto;font-family:var(--f-mono);font-size:10.5px}
+.dchart .grid{stroke:var(--line);stroke-width:1} .dchart .base{stroke:var(--muted);stroke-width:1} .dchart .ax{fill:var(--muted)}
+.dchart .s1{fill:var(--c-s1)} .dchart .s2{fill:var(--c-s2)} .dchart .hit{fill:transparent} .dchart .hit:hover{fill:var(--accent-soft)}
+.dleg{display:flex;gap:12px;font-size:12px;color:var(--muted)} .dleg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.dleg .s1{background:var(--c-s1)} .dleg .s2{background:var(--c-s2)}
+.dtip{position:absolute;pointer-events:none;background:var(--ink);color:var(--surface);font-size:12px;padding:6px 8px;border-radius:5px;max-width:250px;z-index:5}
+#board{position:relative}
+@media (pointer:coarse){.btn{min-height:42px} .btn.small{min-height:36px} input,select,textarea{font-size:16px} .seg button,.tabs button{min-height:40px} .ellist button{min-height:40px}}
 .die-opts{border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--surface-2)}
 .die-opts > summary{cursor:pointer;font-size:13px;font-weight:600}
 .die-opts[open] > summary{margin-bottom:10px}
@@ -652,6 +683,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
 @media (prefers-reduced-motion: reduce){.toast{transition:none}}
 </style>
 
+<div class="fs-banner" id="fsBanner" hidden role="status">Dossier partagé « <b id="fsBannerName"></b> » : Chrome demande de confirmer l'accès à chaque ouverture. <button class="btn small" type="button" id="fsReconnect">Reconnecter</button></div>
 <header class="top gutter">
   <div class="brand">
     <svg class="mark" viewBox="0 0 30 30" aria-hidden="true"><rect x="1" y="1" width="28" height="28" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11h14M8 19h14M11 8v14M19 8v14" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="2.5 2"/><rect x="11" y="11" width="8" height="8" fill="var(--accent)"/></svg>
@@ -836,7 +868,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <div class="field" data-for="picto"><label for="elPic">Pictogramme</label><select id="elPic"></select></div>
           <div class="field" data-for="picto" id="elPicTxtF"><label for="elPicTxt">Durée après ouverture</label><input type="text" id="elPicTxt" maxlength="4" placeholder="12M"></div>
           <div class="field" data-for="shape"><label for="elShape">Forme</label><select id="elShape"><option value="rect">Rectangle</option><option value="ellipse">Ellipse</option></select></div>
-          <div class="row" data-for="text shape picto zone"><label class="swatch"><input type="color" id="elColor"> Couleur</label></div>
+          <div class="row" data-for="text shape picto zone"><label class="swatch"><input type="color" id="elColor"> Couleur</label><select id="elSpot" aria-label="Ton direct" class="addmore"></select></div>
           <div class="grid2">
             <div class="field"><label for="elX">Position X</label><div class="unit" data-unit="mm"><input type="number" id="elX" step="0.5"></div></div>
             <div class="field"><label for="elY">Position Y</label><div class="unit" data-unit="mm"><input type="number" id="elY" step="0.5"></div></div>
@@ -917,6 +949,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <button class="exp" data-exp="aijsx" type="button"><b>Script Illustrator</b><small>Recrée le gabarit dans Illustrator avec calques et tons directs (Fichier › Scripts › Autre script)</small><span>.zip</span></button>
       <button class="exp" data-exp="printpdf" type="button"><b>PDF d'impression (PDF/X-3)</b><small>300 dpi, fond perdu, repères, intention de sortie FOGRA ; forme de découpe et calques de finition sur pages séparées</small><span>.pdf</span></button>
       <button class="exp" data-exp="formiste" type="button"><b>Dossier formiste</b><small>Forme 1 pose et montage feuille en DXF / PDF, vrais arcs, calques normalisés, filets, sens des fibres, contrôle du tracé</small><span>.zip</span></button>
+      <button class="exp" data-exp="of" type="button"><b>Ordre de fabrication</b><small>Fiche atelier : matière à préparer, étapes avec opérateur et visa, montage, contrôle qualité</small><span>.pdf</span></button>
       <button class="exp" data-exp="diepdf" type="button"><b>Plan de découpe</b><small>Échelle 1:1, coupe / rainage, cartouche</small><span>.pdf</span></button>
       <button class="exp" data-exp="tplsvg" type="button"><b>Gabarit graphiste</b><small>Calques COUPE, RAINAGE, FOND_PERDU, SECURITE</small><span>.svg</span></button>
       <button class="exp" data-exp="bat" type="button"><b>Bon à tirer (BAT)</b><small>Maquette, visuel, contrôle prépresse, accord</small><span>.pdf</span></button>
@@ -986,7 +1019,11 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
         <button class="btn" id="mailBtn" type="button">Mail au client</button>
         <button class="btn" id="shareBtn" type="button">Lien client 3D</button>
         <button class="btn" id="tarifBtn" type="button">Tarifs</button>
+        <button class="btn" id="signBtn" type="button">Faire signer le BAT</button>
+        <button class="btn" id="invBtn" type="button">Facture / BL</button>
+        <button class="btn" id="ofBtn" type="button">Ordre de fabrication</button>
       </div>
+      <div class="field" style="margin-top:10px"><label for="docLang">Langue du devis, du BAT et de la facture</label><select id="docLang"><option value="fr">Français</option><option value="ar">Français + arabe</option></select></div>
     </section>
     <section class="sec" id="clientCard" hidden></section>
   </aside>
@@ -995,7 +1032,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
 <main class="boardview gutter" id="boardView" hidden>
   <div class="board-head">
     <h2>Projets</h2>
-    <div class="seg" role="tablist" aria-label="Affichage des dossiers"><button type="button" role="tab" id="bvStatus" aria-selected="true">Par statut</button><button type="button" role="tab" id="bvClients" aria-selected="false">Par client</button></div>
+    <div class="seg" role="tablist" aria-label="Affichage des dossiers"><button type="button" role="tab" id="bvStatus" aria-selected="true">Par statut</button><button type="button" role="tab" id="bvClients" aria-selected="false">Par client</button><button type="button" role="tab" id="bvDash" aria-selected="false">Tableau de bord</button></div>
     <input type="search" class="search" id="boardSearch" placeholder="Client, projet…" aria-label="Rechercher un projet">
     <button class="btn" id="boardBack" type="button">Retour au studio</button>
     <button class="btn primary" id="boardNew" type="button">Nouveau projet</button>
@@ -1021,6 +1058,16 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
   <div class="dialog">
     <header><h2 id="settingsTitle">Paramètres de l'imprimerie</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
     <div class="body" id="settingsBody"></div>
+    <div class="setboxes">
+      <div class="setbox" id="fsBox" hidden><h3 class="eyebrow">Dossier partagé de l'équipe</h3><p class="hint" id="fsState"></p>
+        <div class="row"><button class="btn" type="button" id="fsPick">Choisir le dossier partagé…</button><button class="btn ghost" type="button" id="fsOff">Déconnecter</button></div>
+        <div class="row" id="fsPathRow" hidden><input type="text" id="fsPath" placeholder="\\SERVEUR\Partage\LabelPack ou Z:\LabelPack" aria-label="Chemin du dossier partagé"><button class="btn" type="button" id="fsPathUse">Utiliser ce dossier</button></div></div>
+      <div class="setbox" id="swBox"><h3 class="eyebrow">Nuancier des tons directs (Pantone…)</h3><p class="hint">Importez le nuancier depuis Illustrator (palette Nuancier, menu « Enregistrer la bibliothèque de nuances au format ASE ») ou ajoutez vos teintes de marque. Utilisables sur les textes, formes et pictogrammes ; chaque ton direct a sa plaque dans le PDF d'impression.</p>
+        <ul class="swlist" id="swList"></ul>
+        <div class="row" id="swAddRow"><input type="text" id="swName" placeholder="Nom, ex. PANTONE 186 C" aria-label="Nom du ton direct"><input type="color" id="swHex" value="#c8102e" aria-label="Couleur à l'écran"><button class="btn small" type="button" id="swAdd">Ajouter</button><label class="btn small file-btn">Importer un .ase<input type="file" id="swAse" accept=".ase"></label></div></div>
+      <div class="setbox" id="iccBox"><h3 class="eyebrow">Profil de sortie CMJN (PDF/X-4)</h3><p class="hint" id="iccState"></p>
+        <div class="row"><label class="btn small file-btn">Charger un profil .icc<input type="file" id="iccFile" accept=".icc,.icm"></label><button class="btn small ghost" type="button" id="iccClear">Retirer</button></div></div>
+    </div>
     <footer><span class="hint" id="settingsNote" style="margin-right:auto"></span><button class="btn" type="button" id="dataBackup">Sauvegarder les données</button><label class="btn file-btn" id="dataRestoreLbl">Restaurer<input type="file" id="dataRestore" accept=".json,application/json"></label><button class="btn" type="button" id="settingsReset">Valeurs d'exemple</button><button class="btn primary" type="button" id="settingsSave">Enregistrer les paramètres</button></footer>
   </div>
 </div>
@@ -1046,6 +1093,34 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <div class="grid2"><div class="field"><label for="apprName">Nom du signataire</label><input type="text" id="apprName" autocomplete="off"></div><div class="field"><label for="apprDate">Date</label><input type="date" id="apprDate"></div></div>
       <div class="field"><label for="apprNote">Commentaire ou corrections demandées</label><textarea id="apprNote" rows="3"></textarea></div>
       <button class="btn primary" type="button" id="apprSave">Enregistrer dans le dossier</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="invDlg" hidden role="dialog" aria-modal="true" aria-labelledby="invTitle">
+  <div class="dialog">
+    <header><h2 id="invTitle">Facture et bon de livraison</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body">
+      <div class="grid2"><div class="field"><label for="invClient">Client</label><input type="text" id="invClient"></div><div class="field"><label for="invMF">Matricule fiscal du client</label><input type="text" id="invMF"></div></div>
+      <div class="field"><label for="invAddr">Adresse du client</label><input type="text" id="invAddr"></div>
+      <div class="grid3"><div class="field"><label for="invQty">Quantité</label><input type="number" id="invQty" min="1" step="1"></div><div class="field"><label for="invPU">Prix unitaire HT</label><div class="unit" data-unit="TND"><input type="number" id="invPU" step="0.001" min="0"></div></div><div class="field"><label for="invRem">Remise</label><div class="unit" data-unit="%"><input type="number" id="invRem" min="0" max="100" step="0.5"></div></div></div>
+      <div class="grid3"><div class="field"><label for="invDate">Date</label><input type="date" id="invDate"></div><div class="field"><label for="invColis">Colis (BL)</label><input type="number" id="invColis" min="0" step="1"></div><div class="field"><label for="invRef">Réf. commande client</label><input type="text" id="invRef"></div></div>
+      <p class="hint" id="invTotals"></p>
+      <div class="row"><button class="btn primary" type="button" id="invMake">Établir la facture</button><button class="btn" type="button" id="blMake">Établir le bon de livraison</button><button class="btn" type="button" id="accExport">Export comptable</button></div>
+      <h3 class="eyebrow">Documents déjà établis pour ce projet</h3><ul class="doclist" id="invList"></ul>
+      <p class="hint">Numérotation suivie par année (préfixes et premiers numéros dans Paramètres › Facturation). Mentions de la facture : matricules fiscaux, TVA, droit de timbre, montant en toutes lettres. La facture électronique (El Fatoora, TTN) n'est pas gérée par l'application.</p>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="signDlg" hidden role="dialog" aria-modal="true" aria-labelledby="signTitle">
+  <div class="dialog">
+    <header><h2 id="signTitle">Signature du BAT</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body">
+      <div class="sign-prev"><img id="signMock" alt="Maquette 3D"><img id="signFlat" alt="Visuel à plat avec traits de coupe"></div>
+      <p class="hint" id="signSpecs"></p>
+      <div class="grid2"><div class="field"><label for="signName">Nom et fonction du signataire</label><input type="text" id="signName" autocomplete="off"></div><div class="field"><label for="signDec">Décision</label><select id="signDec"><option value="ok">Bon pour accord</option><option value="modif">Correction demandée</option></select></div></div>
+      <div class="field"><label for="signNote">Commentaire ou corrections</label><textarea id="signNote" rows="2"></textarea></div>
+      <span class="lbl">Signature (doigt, stylet ou souris)</span><canvas id="signPad" class="sign-pad" width="900" height="260" aria-label="Zone de signature"></canvas>
+      <div class="row"><button class="btn" type="button" id="signClear">Effacer</button><button class="btn primary" type="button" id="signSave">Enregistrer et produire le BAT signé</button></div>
     </div>
   </div>
 </div>
@@ -2649,10 +2724,13 @@ const CATS = [["all","Tous"],["etui","Étuis"],["boite","Boîtes"],["coffret","C
 const ALL_BOX = ["gc1","duplex","kraft","micro"], PAPERS = ["kraftp","whitep"], ALL_LABEL = ["couche","ppw","ppt","verge"];
 const TEMPLATES = [
   {id:"rte", cat:"etui", icon:"tuck", name:"Étui rabats inversés", sub:"Patte rentrante haut / bas", kind:"box", window:true, mats:ALL_BOX, desc:"Étui pliant à rabats rentrants opposés, fentes de verrouillage et patte de collage — cosmétique, pharmacie, agroalimentaire.", fold:"Pliage"},
+  {id:"crash", cat:"etui", icon:"tuck", name:"Étui fond automatique", sub:"Fond à crochet (crash-lock) + patte rentrante", kind:"box", window:true, mats:ALL_BOX, desc:"Étui livré plié-collé dont le fond se forme seul à l'ouverture grâce aux triangles collés : conditionnement rapide, produits lourds (bouteilles, pots, flacons).", fold:"Pliage"},
   {id:"ste", cat:"etui", icon:"ste", name:"Étui rabats droits", sub:"Rabats du même côté", kind:"box", window:true, mats:ALL_BOX, desc:"Étui à rabats rentrants du même côté (face arrière) : ouverture nette en vitrine, adapté au remplissage manuel.", fold:"Pliage"},
   {id:"hang", cat:"etui", icon:"hang", name:"Étui à suspente", sub:"Fente de suspension", kind:"box", window:true, mats:ALL_BOX, desc:"Étui à rabats rentrants dont la face arrière se prolonge en suspente avec fente (32 × 8 mm) pour présentoir à crochets — cosmétique, accessoires, petites pièces.", fold:"Pliage"},
   {id:"sleeve", cat:"etui", icon:"sleeve", name:"Fourreau", sub:"Étui ouvert, sans rabats", kind:"box", window:true, mats:ALL_BOX, desc:"Fourreau ouvert aux deux extrémités, pour habiller une barquette, un coffret ou des savons.", fold:"Pliage"},
   {id:"rsc", cat:"boite", icon:"rsc", name:"Caisse américaine", sub:"FEFCO 0201", kind:"box", mats:["micro","ondB"], desc:"Caisse à rabats standard FEFCO 0201 : rabats de longueur égale qui se rejoignent au centre — expédition, carton de regroupement.", fold:"Pliage"},
+  {id:"rsc0203", cat:"boite", icon:"rsc", name:"Caisse rabats chevauchants", sub:"FEFCO 0203", kind:"box", mats:["micro","ondB"], desc:"Caisse à rabats pleine largeur qui se recouvrent entièrement : fond et dessus renforcés pour les charges lourdes.", fold:"Pliage"},
+  {id:"partition", cat:"boite", icon:"rsc", name:"Croisillon de calage", sub:"Cloisons emboîtées", kind:"box", mats:[...ALL_BOX, "ondB"], desc:"Cloisons à fentes emboîtées formant des cases : calage de bouteilles, pots et flacons dans un étui ou une caisse.", fold:"Assemblage"},
   {id:"hex", cat:"boite", icon:"hex", name:"Boîte hexagonale", sub:"6 faces, rabats rentrants", kind:"box", mats:ALL_BOX, desc:"Boîte hexagonale à couvercles rentrants haut et bas — thé, confiserie, bougies, coffrets cadeaux.", fold:"Pliage"},
   {id:"coffret", cat:"coffret", icon:"coffret", name:"Coffret couvercle + fond", sub:"2 pièces emboîtées", kind:"box", lay:true, mats:[...ALL_BOX, "ondB"], desc:"Coffret en deux pièces : fond et couvercle à coins collés, le couvercle emboîte le fond avec 1 mm de jeu — dattes, chocolats, coffrets cadeaux.", fold:"Montage"},
   {id:"drawer", cat:"coffret", icon:"drawer", name:"Boîte tiroir", sub:"Fourreau + tiroir", kind:"box", lay:true, mats:[...ALL_BOX], desc:"Boîte tiroir en deux pièces : tiroir à coins collés coulissant dans un fourreau (1 mm de jeu) — chocolats, bijoux, thé.", fold:"Montage"},
@@ -2662,6 +2740,7 @@ const TEMPLATES = [
   {id:"bag", cat:"sac", icon:"bag", name:"Sac papier", sub:"Fond carré, poignées", kind:"box", bag:true, mats:PAPERS, desc:"Sac papier à soufflets et fond carré, rabat de renfort en haut, poignées torsadées collées — boutiques, pâtisseries, cadeaux.", fold:"Montage", extra3d:bagExtras},
   {id:"display", cat:"plv", icon:"display", name:"Présentoir de comptoir", sub:"Fronton double", kind:"box", lay:true, mats:[...ALL_BOX, "ondB"], desc:"Présentoir de comptoir : plateau à côtés montants et fronton double épaisseur imprimé côté client — confiserie, sachets, échantillons.", fold:"Montage"},
   {id:"tray", cat:"boite", icon:"tray", name:"Barquette", sub:"Coins collés", kind:"box", lay:true, mats:[...ALL_BOX, "ondB"], desc:"Plateau à bords relevés et pattes d'angle collées — coffrets, pâtisserie, fruits secs, dattes.", fold:"Pliage"},
+  {id:"trayLock", cat:"boite", icon:"tray", name:"Barquette sans colle", sub:"Pattes verrouillées", kind:"box", lay:true, mats:[...ALL_BOX, "ondB"], desc:"Plateau monté sans colle : les pattes d'angle sont prises sous des retours intérieurs ; livraison à plat, montage manuel.", fold:"Pliage"},
   {id:"mailer", cat:"boite", icon:"mailer", name:"Boîte à couvercle", sub:"Charnière, coins collés", kind:"box", lay:true, mats:[...ALL_BOX, "ondB"], desc:"Boîte à coins collés avec couvercle à charnière, rabats latéraux et languette — coffrets cadeaux et vente en ligne.", fold:"Pliage"},
   {id:"labelPot", cat:"etiquette", icon:"pot", name:"Étiquette pot", sub:"Bocal, miel, harissa", kind:"label", container:"pot", mats:ALL_LABEL, desc:"Étiquette adhésive en bobine, posée sur pot ou bocal cylindrique.", fold:"Enroulement"},
   {id:"labelBottle", cat:"etiquette", icon:"bottle", name:"Étiquette bouteille", sub:"Huile, vin, sirop", kind:"label", container:"bouteille", mats:ALL_LABEL, desc:"Étiquette adhésive posée sur le corps cylindrique d'une bouteille.", fold:"Enroulement"},
@@ -2680,6 +2759,10 @@ const DIM_FIELDS = {
   ste:[["L","Longueur",20,300],["W","Profondeur",15,200],["H","Hauteur",30,350]],
   sleeve:[["L","Longueur",30,400],["W","Épaisseur",10,200],["H","Largeur de bande",20,300]],
   rsc:[["L","Longueur",80,600],["W","Largeur",60,400],["H","Hauteur",50,500]],
+  rsc0203:[["L","Longueur",80,600],["W","Largeur",60,400],["H","Hauteur",50,500]],
+  crash:[["L","Longueur",30,300],["W","Profondeur",25,200],["H","Hauteur",40,350]],
+  partition:[["L","Longueur",40,600],["W","Profondeur",30,400],["H","Hauteur",20,300],["nx","Cases en longueur",2,8],["ny","Cases en profondeur",2,8]],
+  trayLock:[["L","Longueur",40,480],["W","Largeur",40,400],["H","Hauteur des bords",10,150]],
   tray:[["L","Longueur",40,480],["W","Largeur",40,400],["H","Hauteur des bords",10,150]],
   mailer:[["L","Longueur",60,400],["W","Largeur",50,300],["H","Hauteur",20,150]],
   labelPot:[["lw","Largeur étiquette",20,320],["lh","Hauteur étiquette",15,250],["d","Diamètre du pot",30,200],["ch","Hauteur du pot",40,300]],
@@ -2737,6 +2820,8 @@ let hiLine = null, approvals = [], unsubAppr = null, applying = false, boardMode
 const TIERS = [500, 1000, 2500, 5000, 10000];
 
 const DEFAULT_SETTINGS = {
+  billing:{timbre:1, prefixInv:"FA", prefixBL:"BL", startInv:1, startBL:1, payment:"Paiement à 30 jours fin de mois", rib:"", accounts:{client:"411", sales:"701", vat:"4366", stamp:"4371"}},
+  swatches:[],
   company:{name:"Label Pack", address:"", mf:"", phone:"", email:"", whatsapp:"", conditions:"Prix établis sur la base des informations transmises, à confirmer après validation du BAT. Validité de l'offre : 30 jours. Délai de fabrication communiqué à la validation du BAT. Rendu écran des couleurs non contractuel."},
   pricing:{
     marge:25, gache:6, tva:19, example:true,
@@ -2757,18 +2842,18 @@ const P = () => settings.pricing;
 
 const DEFAULT = {
   model:"rte", dimMode:"int",
-  dims:{rte:{L:60,W:40,H:150}, ste:{L:80,W:30,H:120}, sleeve:{L:180,W:30,H:110}, rsc:{L:200,W:150,H:120}, tray:{L:220,W:150,H:45}, mailer:{L:250,W:180,H:80},
+  dims:{crash:{L:70,W:70,H:180}, rsc0203:{L:250,W:160,H:120}, partition:{L:200,W:130,H:80,nx:3,ny:2}, trayLock:{L:220,W:150,H:45}, rte:{L:60,W:40,H:150}, ste:{L:80,W:30,H:120}, sleeve:{L:180,W:30,H:110}, rsc:{L:200,W:150,H:120}, tray:{L:220,W:150,H:45}, mailer:{L:250,W:180,H:80},
     labelPot:{lw:200,lh:62,d:75,ch:95,shape:"rect",r:4}, labelBottle:{lw:95,lh:105,d:72,ch:270,shape:"rect",r:3}, labelLid:{lw:60,lh:60,d:72,ch:85,shape:"rond",r:0},
     hang:{L:60,W:30,H:120,hh:40}, pillow:{W:90,L:150,D:30}, pyramid:{b:80,h:90}, gable:{L:160,W:110,H:90,r:45,hh:50}, bag:{L:240,G:100,H:300}, import:{}, can:{d:66,ch:115,lw:207.3,lh:95,shape:"rect",r:0}, tube:{d:35,L:150,lw:110,lh:150,shape:"rect",r:0}, pouch:{W:160,H:230,G:80,lw:160,lh:230,shape:"rect",r:0}, hex:{a:40,H:110}, coffret:{L:220,W:120,H:40,Hl:30}, drawer:{L:180,W:120,H:35}, display:{L:300,W:200,Hf:60,Hs:120,Hh:300}, cup:{D1:80,D2:56,h:93}},
   window:{on:false, w:30, h:60, y:5, r:4},
   mat:{box:"gc1", label:"couche", cup:"pe"}, print:{box:"cmjn", label:"num", cup:"cmjn"}, lam:{box:"mat", label:"vernis", cup:"none"},
   varnish:false, foil:true, foilColor:"or", relief:"none", raw:false, inside:{on:false, color:"#e2b25a"},
-  importData:null, grain:"h", lineTypes:{}, tear:{on:false, y:25, w:4}, die:{nicks:4, nickW:.5, eject:false, sheetGrain:"auto", grainLock:true}, softProof:false, focal:42, bgBlur:0, shelf:{cols:4, rows:2}, variants:[], scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
+  importData:null, docLang:"fr", grain:"h", lineTypes:{}, tear:{on:false, y:25, w:4}, die:{nicks:4, nickW:.5, eject:false, sheetGrain:"auto", grainLock:true}, softProof:false, focal:42, bgBlur:0, shelf:{cols:4, rows:2}, variants:[], scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
   design:{bg:"#123c3a", accent:"#e2b25a", brand:"Néroli", product:"Crème mains à la fleur d'oranger", mention:"75 ml · Fabriqué en Tunisie", pattern:"zellige", legal:"", ean:""},
   images:{logo:null, full:null, inside:null, bg:null}, faces:{}, fullHide:false, elements:[],
   qty:2500, fold:1, showArt:true, showSafe:true
 };
-const NEW_META = () => ({id:null, draftId:null, name:"", client:"", status:"brouillon", createdAt:null, createdBy:null, history:[]});
+const NEW_META = () => ({id:null, draftId:null, name:"", client:"", status:"brouillon", createdAt:null, createdBy:null, history:[], docs:[], cmf:"", caddr:""});
 let state = structuredClone(DEFAULT), meta = NEW_META(), dirty = false, savedAt = null;
 const CEP = !!(window.__adobe_cep__ && window.cep && window.cep.fs);
 let compoT = 0;
@@ -2852,11 +2937,45 @@ function bottomTuck(r, on){
     {id:"tuckB", name:"Languette basse", parent:"lidB", anchor:[0,-W], axis:"bottom", hinge:[k, L-k], inset:[0,ei,-.2], poly:tuckPoly(L,t,-1), stage:[.58,.74]},
   ];
 }
+// Fond automatique (crash-lock) : grands rabats avec triangle de collage à 45° pris sur le rabat voisin ; le fond se forme à l'ouverture.
+function crashBottom(r){
+  const {L, W, ei} = r, g = Math.min(W*.45, L*.45), dA = Math.min(W*.5 + Math.min(12, W*.3), W - 2), dB = W*.5 - 1, h2 = g*Math.SQRT2;
+  const main = (pid, id, nm, n) => [
+    {id, name:nm, parent:pid, anchor:[0,0], axis:"bottom", inset:[0,-ei,0], poly:[[0,0],[L,0],[L-g,-g],[Math.max(L-g-1, 4),-dA],[2,-dA]], stage:[.5,.7]},
+    {id:id + "G", name:`Triangle de collage ${n}`, parent:id, anchor:[L,0], rot:225, axis:"top", fold:180, poly:[[0,0],[h2,0],[h2/2,h2/2]], stage:[0,.08], glue:true},
+  ];
+  return [
+    {id:"cB1", name:"Rabat de fond 1", parent:"s1", anchor:[0,0], axis:"bottom", poly:[[0,0],[W,0],[W-2,-dB],[0,-dB]], stage:[.42,.56]},
+    {id:"cB2", name:"Rabat de fond 2", parent:"s2", anchor:[0,0], axis:"bottom", poly:[[0,0],[W,0],[W-2,-dB],[0,-dB]], stage:[.42,.56]},
+    ...main("front", "cF", "Grand rabat de fond avant", 1), ...main("back", "cK", "Grand rabat de fond arrière", 2),
+  ];
+}
+function buildCrash(d, e){ const r = ring(d, e, 2*e, [.15,.5]); return [...r.parts, ...topTuck(r), ...crashBottom(r)]; }
+// Croisillon : cloisons à fentes emboîtées (fentes du haut sur les cloisons longues, du bas sur les courtes).
+function buildPartition(d, e){
+  const nx = clamp(Math.round(d.nx || 3), 2, 8), ny = clamp(Math.round(d.ny || 2), 2, 8), L = d.L, W = d.W, H = d.H, s = 2*e + .4, gap = 8, parts = [];
+  const notch = (len, n, top) => {
+    const xs = Array.from({length:n - 1}, (_, i) => (i + 1)*len/n);
+    if (top){ const pts = [[0,0],[len,0],[len,H]]; for (const x of xs.slice().reverse()) pts.push([x + s/2,H],[x + s/2,H/2],[x - s/2,H/2],[x - s/2,H]); pts.push([0,H]); return pts; }
+    const pts = [[0,0]]; for (const x of xs) pts.push([x - s/2,0],[x - s/2,H/2],[x + s/2,H/2],[x + s/2,0]); pts.push([len,0],[len,H],[0,H]); return pts;
+  };
+  let row = 0;
+  for (let k = 1; k < ny; k++, row++) parts.push({id:"pl" + k, name:`Cloison longue ${k}`, poly:notch(L, nx, true), role:null, origin:[0, row*(H + gap)], assemble:{pos:[0, 0, -k*W/ny], rx:0, stage:[.25,1]}});
+  for (let j = 1; j < nx; j++, row++) parts.push({id:"pc" + j, name:`Cloison courte ${j}`, poly:notch(W, ny, false), role:null, origin:[0, row*(H + gap)], assemble:{pos:[j*L/nx, 0, 0], rx:0, ry:Math.PI/2, stage:[.25,1]}});
+  return parts;
+}
+// Barquette sans colle : pattes d'angle prises sous des retours intérieurs rabattus sur les bords latéraux.
+function buildTrayLock(d, e){
+  const r = trayParts(d, e, {tabs:[0,.25], sides:[.2,.5], fb:[.5,.8], fwRole:"main", noGlue:true}), {W, H, ei} = r, dr = Math.max(5, H - e - 1);
+  return [...r.parts,
+    {id:"rwR", name:"Retour intérieur droit", parent:"rw", anchor:[H,0], axis:"right", fold:180, inset:[-ei,0,-.2], poly:R(0,1.5,dr,W - 1.5), stage:[.82,1]},
+    {id:"lwR", name:"Retour intérieur gauche", parent:"lw", anchor:[-H,0], axis:"left", fold:180, inset:[ei,0,-.2], poly:R(-dr,1.5,0,W - 1.5), stage:[.82,1]}];
+}
 function buildRTE(d, e){ const r = ring(d, e, 2*e, [.15,.5]); return [...r.parts, ...topTuck(r), ...bottomTuck(r, "front")]; }
 function buildSTE(d, e){ const r = ring(d, e, 2*e, [.15,.5]); return [...r.parts, ...topTuck(r), ...bottomTuck(r, "back")]; }
 function buildSleeve(d, e){ return ring(d, e, 0, [.25,1]).parts; }
-function buildRSC(d, e){
-  const r = ring(d, e, 2*e, [.12,.36]), {L, W, H, ei} = r, f = W/2, half = Math.max(1.5, e);
+function buildRSC(d, e, full){
+  const r = ring(d, e, 2*e, [.12,.36]), {L, W, H, ei} = r, f = full ? W - 1 : W/2, half = Math.max(1.5, e);
   const flaps = [];
   for (const [pid, Pw, major] of [["front", L, true], ["s1", W, false], ["back", L, true], ["s2", W, false]]){
     const x0 = pid === "front" ? 0 : half, x1 = Pw - half, nm = major ? "Grand rabat" : "Petit rabat";
@@ -2874,10 +2993,10 @@ function trayParts(d, e, S, px = ""){
     {id:id("bw"), name:nm("Bord arrière"), parent:id("base"), anchor:[0,W], axis:"top", poly:R(0,0,L,H), stage:S.fb, role:role("bw", {type:"back", up:[0,1]})},
     {id:id("rw"), name:nm("Bord droit"), parent:id("base"), anchor:[L,0], axis:"right", poly:R(0,0,H,W), stage:S.sides, role:role("rw", {type:"side", up:[1,0]})},
     {id:id("lw"), name:nm("Bord gauche"), parent:id("base"), anchor:[0,0], axis:"left", poly:R(-H,0,0,W), stage:S.sides, role:role("lw", {type:"side", up:[-1,0]})},
-    {id:id("fwR"), name:nm("Patte d'angle 1"), parent:id("fw"), anchor:[L,0], axis:"right", inset:[-ei,0,-.2], poly:[[0,0],[t,-3],[t,-H+3],[0,-H]], stage:S.tabs, glue:true},
-    {id:id("fwL"), name:nm("Patte d'angle 2"), parent:id("fw"), anchor:[0,0], axis:"left", inset:[ei,0,-.2], poly:[[0,0],[0,-H],[-t,-H+3],[-t,-3]], stage:S.tabs, glue:true},
-    {id:id("bwR"), name:nm("Patte d'angle 3"), parent:id("bw"), anchor:[L,0], axis:"right", inset:[-ei,0,-.2], poly:[[0,0],[t,3],[t,H-3],[0,H]], stage:S.tabs, glue:true},
-    {id:id("bwL"), name:nm("Patte d'angle 4"), parent:id("bw"), anchor:[0,0], axis:"left", inset:[ei,0,-.2], poly:[[0,0],[0,H],[-t,H-3],[-t,3]], stage:S.tabs, glue:true},
+    {id:id("fwR"), name:nm("Patte d'angle 1"), parent:id("fw"), anchor:[L,0], axis:"right", inset:[-ei,0,-.2], poly:[[0,0],[t,-3],[t,-H+3],[0,-H]], stage:S.tabs, glue:!S.noGlue},
+    {id:id("fwL"), name:nm("Patte d'angle 2"), parent:id("fw"), anchor:[0,0], axis:"left", inset:[ei,0,-.2], poly:[[0,0],[0,-H],[-t,-H+3],[-t,-3]], stage:S.tabs, glue:!S.noGlue},
+    {id:id("bwR"), name:nm("Patte d'angle 3"), parent:id("bw"), anchor:[L,0], axis:"right", inset:[-ei,0,-.2], poly:[[0,0],[t,3],[t,H-3],[0,H]], stage:S.tabs, glue:!S.noGlue},
+    {id:id("bwL"), name:nm("Patte d'angle 4"), parent:id("bw"), anchor:[0,0], axis:"left", inset:[ei,0,-.2], poly:[[0,0],[0,H],[-t,H-3],[-t,3]], stage:S.tabs, glue:!S.noGlue},
   ]};
 }
 function buildHang(d, e){
@@ -3340,7 +3459,7 @@ function buildImport(d, e){
   for (const P of out) delete P.T;
   return out;
 }
-const BUILDERS = {import:buildImport, can:buildWrap, tube:buildWrap, pouch:buildPouch, pillow:buildPillow, pyramid:buildPyramid, gable:buildGable, bag:buildBag, rte:buildRTE, ste:buildSTE, hang:buildHang, sleeve:buildSleeve, rsc:buildRSC, hex:buildHex, coffret:buildCoffret, drawer:buildDrawer, display:buildDisplay, tray:buildTray, mailer:buildMailer, labelPot:buildLabel, labelBottle:buildLabel, labelLid:buildLabel, cup:buildCup};
+const BUILDERS = {crash:buildCrash, partition:buildPartition, rsc0203:(d, e) => buildRSC(d, e, true), trayLock:buildTrayLock, import:buildImport, can:buildWrap, tube:buildWrap, pouch:buildPouch, pillow:buildPillow, pyramid:buildPyramid, gable:buildGable, bag:buildBag, rte:buildRTE, ste:buildSTE, hang:buildHang, sleeve:buildSleeve, rsc:buildRSC, hex:buildHex, coffret:buildCoffret, drawer:buildDrawer, display:buildDisplay, tray:buildTray, mailer:buildMailer, labelPot:buildLabel, labelBottle:buildLabel, labelLid:buildLabel, cup:buildCup};
 function dimsText(d = innerDims()){
   const t = TPL(), f = v => fmt1.format(v);
   switch (t.id){
@@ -3363,7 +3482,7 @@ function dimsText(d = innerDims()){
   if (t.kind === "label") return `${d.lw} × ${d.lh} mm (${d.shape === "ovale" ? "ovale" : "rectangle"}), contenant Ø ${d.d} mm`;
   return `${f(d.L)} × ${f(d.W)} × ${f(d.H)} mm intérieur (L × l × H)`;
 }
-const STD_DIMS = ["rte","ste","sleeve","rsc","tray","mailer","hang"];
+const STD_DIMS = ["rte","ste","sleeve","rsc","tray","mailer","hang","crash","rsc0203","trayLock"];
 
 function polyBox(pts){ let a=1e9,b=1e9,c=-1e9,d=-1e9; for (const [x,y] of pts){ a=Math.min(a,x); b=Math.min(b,y); c=Math.max(c,x); d=Math.max(d,y);} return {minX:a,minY:b,maxX:c,maxY:d,w:c-a,h:d-b}; }
 function cutPieces(a, b, hinges){
@@ -3877,7 +3996,7 @@ function gamutIssues(){
   const d = state.design, k = kind();
   if (!state.raw) chk(d.bg, "fond", v => d.bg = v);
   chk(d.accent, "accent", v => d.accent = v);
-  state.elements.forEach((el, i) => { if (el.type !== "image" && !el.foil) chk(el.color, `élément ${i + 1}`, v => el.color = v); });
+  state.elements.forEach((el, i) => { if (el.type !== "image" && !el.foil && !el.spot) chk(el.color, `élément ${i + 1}`, v => el.color = v); });
   Object.entries(state.faces || {}).forEach(([id, f]) => { if (f && f.bg){ const p = layout && layout.byId[id]; chk(f.bg, `face « ${p ? p.name : id} »`, v => f.bg = v); } });
   if (k === "box" && state.inside.on) chk(state.inside.color, "intérieur", v => state.inside.color = v);
   return out;
@@ -3912,6 +4031,7 @@ function renderGamut(){
   $("#gamutTxt").textContent = `${g.length} couleur(s) hors gamut CMJN : elles ne peuvent pas être reproduites en quadrichromie et sortiront plus ternes.`;
   $("#gamutSw").innerHTML = g.map(x => `<span class="gsw" title="${esc(x.where)}"><i style="background:${x.hex}"></i>${x.hex} → <i style="background:${x.fix}"></i>${x.fix}</span>`).join("");
 }
+$("#docLang").addEventListener("change", e => { state.docLang = e.target.value; changed("art"); });
 $("#grainSel").addEventListener("change", e => { state.grain = e.target.value; changed("art"); });
 $("#softProof").addEventListener("change", e => { state.softProof = e.target.checked; changed("art"); });
 $("#gamutFix").addEventListener("click", () => { const g = gamutIssues(); g.forEach(x => x.set(x.fix)); renderControls(); changed("art"); toast(`${g.length} couleur(s) remplacée(s) par une teinte imprimable`); });
@@ -4045,7 +4165,8 @@ function pdfX3(ab, o){
   const objs = new Map(); offs.forEach(([n, a], k) => objs.set(n, s.slice(a, k + 1 < offs.length ? offs[k + 1][1] : xo)));
   const trailer = s.slice(s.indexOf("trailer", xo)), rootN = +/\/Root (\d+) 0 R/.exec(trailer)[1], infoN = +/\/Info (\d+) 0 R/.exec(trailer)[1];
   const idM = /\/ID\s*\[[^\]]*\]/.exec(trailer), hex = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("");
-  let next = N; const iccN = next++, oiN = next++, pt = v => (v*72/25.4).toFixed(3);
+  let next = N; const iccN = next++, oiN = next++, destN = o.icc ? next++ : 0, xmpN = o.icc ? next++ : 0, pt = v => (v*72/25.4).toFixed(3), ver = o.icc ? "PDF/X-4" : "PDF/X-3:2003";
+  let cdate = "D:20260101000000Z", title = "";
   for (const [n, txt] of objs){
     const at = txt.indexOf("stream"), dict = at < 0 ? txt : txt.slice(0, at), rest = at < 0 ? "" : txt.slice(at);
     let d = dict;
@@ -4053,14 +4174,21 @@ function pdfX3(ab, o){
     d = d.replace(/\/Font <<[^>]*>>/, "");
     if (/\/Type \/Page[\s/>]/.test(d)) d = d.replace(/\/MediaBox \[[^\]]*\]/, mb => `${mb}\n/BleedBox [${o.bleedBox.map(pt).join(" ")}]\n/TrimBox [${o.trimBox.map(pt).join(" ")}]`);
     if (/\/Subtype \/Image/.test(d)) d = d.replace("/ColorSpace /DeviceRGB", `/ColorSpace [/ICCBased ${iccN} 0 R]`);
-    if (/\/Type \/Catalog/.test(d)) d = d.replace(/>>\s*endobj/, `/OutputIntents [${oiN} 0 R]\n>>\nendobj`);
-    if (n === infoN){ const cd = (/\/CreationDate (\([^)]*\))/.exec(d) || [, "(D:20260101000000)"])[1]; d = d.replace(/>>\s*endobj/, `${/\/ModDate/.test(d) ? "" : `/ModDate ${cd}\n`}/Trapped /False\n/GTS_PDFXVersion (PDF/X-3:2003)\n>>\nendobj`); }
+    if (/\/Type \/Catalog/.test(d)) d = d.replace(/>>\s*endobj/, `/OutputIntents [${oiN} 0 R]${o.icc ? `\n/Metadata ${xmpN} 0 R` : ""}\n>>\nendobj`);
+    if (n === infoN){ const cd = (/\/CreationDate (\([^)]*\))/.exec(d) || [, "(D:20260101000000)"])[1]; cdate = cd.slice(1, -1); title = ((/\/Title \(([^)]*)\)/.exec(d) || [])[1] || ""); d = d.replace(/>>\s*endobj/, `${/\/ModDate/.test(d) ? "" : `/ModDate ${cd}\n`}/Trapped /False\n/GTS_PDFXVersion (${ver})\n>>\nendobj`); }
     objs.set(n, d + rest);
   }
   const icc = srgbICC(); let iccS = ""; for (let i = 0; i < icc.length; i++) iccS += String.fromCharCode(icc[i]);
   objs.set(iccN, `${iccN} 0 obj\n<<\n/N 3\n/Alternate /DeviceRGB\n/Length ${icc.length}\n>>\nstream\n${iccS}\nendstream\nendobj\n`);
-  objs.set(oiN, `${oiN} 0 obj\n<<\n/Type /OutputIntent\n/S /GTS_PDFX\n/OutputCondition (${o.oc.name})\n/OutputConditionIdentifier (${o.oc.id})\n/RegistryName (http://www.color.org)\n/Info (${o.oc.info})\n>>\nendobj\n`);
-  let out = s.slice(0, offs[0][1]); const pos = [];
+  if (o.icc){
+    const pb = o.icc.bytes; let ps = ""; for (let i = 0; i < pb.length; i += 8192) ps += String.fromCharCode.apply(null, pb.subarray(i, i + 8192));
+    objs.set(destN, `${destN} 0 obj\n<<\n/N 4\n/Length ${pb.length}\n>>\nstream\n${ps}\nendstream\nendobj\n`);
+    objs.set(oiN, `${oiN} 0 obj\n<<\n/Type /OutputIntent\n/S /GTS_PDFX\n/OutputCondition (${pdfStr(o.icc.desc)})\n/OutputConditionIdentifier (${o.icc.id === "Custom" ? pdfStr(o.icc.desc) : o.icc.id})\n${o.icc.id === "Custom" ? "" : "/RegistryName (http://www.color.org)\n"}/Info (${pdfStr(o.icc.desc)})\n/DestOutputProfile ${destN} 0 R\n>>\nendobj\n`);
+    const m = /D:(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/.exec(cdate) || [], iso = m.length ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z` : new Date().toISOString().replace(/\.\d+Z$/, "Z"), uid = () => { const h = hex(); return `uuid:${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`; };
+    const xmp = `\xef\xbb\xbf<?xpacket begin="\xef\xbb\xbf" id="W5M0MpCehiHzreSzNTczkc9d"?>\n<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmlns:pdf="http://ns.adobe.com/pdf/1.3/" xmlns:xmpMM="http://ns.adobe.com/xap/1.0/mm/" xmlns:pdfxid="http://www.npes.org/pdfx/ns/id/"><dc:format>application/pdf</dc:format><dc:title><rdf:Alt><rdf:li xml:lang="x-default">${title.replace(/[<&>]/g, " ")}</rdf:li></rdf:Alt></dc:title><xmp:CreateDate>${iso}</xmp:CreateDate><xmp:ModifyDate>${iso}</xmp:ModifyDate><xmp:MetadataDate>${iso}</xmp:MetadataDate><xmp:CreatorTool>Label Pack Studio</xmp:CreatorTool><pdf:Producer>jsPDF 2.5.1</pdf:Producer><pdf:Trapped>False</pdf:Trapped><xmpMM:DocumentID>${uid()}</xmpMM:DocumentID><xmpMM:InstanceID>${uid()}</xmpMM:InstanceID><xmpMM:RenditionClass>default</xmpMM:RenditionClass><xmpMM:VersionID>1</xmpMM:VersionID><pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion></rdf:Description></rdf:RDF></x:xmpmeta>\n<?xpacket end="w"?>`.slice(3);
+    objs.set(xmpN, `${xmpN} 0 obj\n<<\n/Type /Metadata\n/Subtype /XML\n/Length ${xmp.length}\n>>\nstream\n${xmp}\nendstream\nendobj\n`);
+  } else objs.set(oiN, `${oiN} 0 obj\n<<\n/Type /OutputIntent\n/S /GTS_PDFX\n/OutputCondition (${o.oc.name})\n/OutputConditionIdentifier (${o.oc.id})\n/RegistryName (http://www.color.org)\n/Info (${o.oc.info})\n>>\nendobj\n`);
+  let out = s.slice(0, offs[0][1]); if (o.icc) out = out.replace("%PDF-1.3", "%PDF-1.6"); const pos = [];
   for (const n of [...objs.keys()].sort((a, b) => a - b)){ pos[n] = out.length; const t = objs.get(n); out += t.endsWith("\n") ? t : t + "\n"; }
   const xs = out.length;
   out += `xref\n0 ${next}\n0000000000 65535 f \n` + Array.from({length:next - 1}, (_, i) => pos[i + 1] != null ? `${String(pos[i + 1]).padStart(10, "0")} 00000 n \n` : "0000000000 65535 f \n").join("");
@@ -4081,7 +4209,8 @@ function printPDF(){
   const {jsPDF} = window.jspdf, L = computeLayout(), bb = L.bb, cb = L.cbb, M = 15, W = bb.w + 2*M, H = bb.h + 2*M + 8, t = TPL(), k = kind(), oc = outputCondition();
   let s = 300/25.4; s = Math.min(s, Math.sqrt(70e6/(bb.w*bb.h)), 14000/Math.max(bb.w, bb.h)); const dpi = Math.round(s*25.4);
   const doc = new jsPDF({unit:"mm", format:[W, H], orientation: W > H ? "l" : "p", compress:true});
-  doc.setProperties({title:pdfStr(`${quoteNo()} ${meta.client || ""} ${meta.name || t.name} - impression`), subject:"PDF/X-3:2003", creator:"Label Pack Studio"});
+  const X4 = !!outputICC;
+  doc.setProperties({title:pdfStr(`${quoteNo()} ${meta.client || ""} ${meta.name || t.name} - impression`), subject:X4 ? "PDF/X-4" : "PDF/X-3:2003", creator:"Label Pack Studio"});
   const X = x => M + (x - bb.minX), Y = y => M + (bb.maxY - y), ref = quoteNo();
   const raster = (draw) => { const c = document.createElement("canvas"); c.width = Math.ceil(bb.w*s); c.height = Math.ceil(bb.h*s); const x = c.getContext("2d"); draw(x, c); return c; };
   const T = x => x.setTransform(s, 0, 0, -s, -bb.minX*s, bb.maxY*s);
@@ -4093,10 +4222,12 @@ function printPDF(){
     rasterLine(doc, pdfTxt(`${title} · ${ref} · ${meta.client || ""} ${meta.name ? "· " + meta.name : ""} · ${t.name} · format ${fmt1.format(cb.w)} × ${fmt1.format(cb.h)} mm + fond perdu ${L.bleed} mm · ${new Date().toLocaleDateString("fr-FR")}`), M, H - 6, W - 2*M);
   };
   // page 1 : visuel
-  const art = drawArt(L, s, "print");
+  const spotEls = state.elements.filter(e => e.spot), allEls = state.elements;
+  state.elements = allEls.map(e => e.spot ? {...e, color:"#ffffff", foil:false} : e);
+  let art; try { art = drawArt(L, s, "print"); } finally { state.elements = allEls; }
   const p1 = raster((x, c) => { x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); const m = document.createElement("canvas"); m.width = c.width; m.height = c.height; const mx = m.getContext("2d"); mx.fillStyle = mx.strokeStyle = "#000"; shape(mx, true); mx.globalCompositeOperation = "source-in"; mx.drawImage(art, 0, 0); x.drawImage(m, 0, 0); });
   doc.addImage(p1, "JPEG", M, M, bb.w, bb.h, undefined, "FAST");
-  marks(`IMPRESSION QUADRI · PDF/X-3 · ${dpi} dpi · images RVB sRGB calibrées, conversion CMJN au RIP vers ${oc.id}`);
+  marks(`IMPRESSION QUADRI · ${X4 ? "PDF/X-4" : "PDF/X-3"} · ${dpi} dpi · images RVB sRGB calibrées, conversion CMJN au RIP vers ${X4 ? outputICC.desc : oc.id}`);
   // page 2 : forme de découpe
   doc.addPage([W, H], W > H ? "l" : "p");
   doc.setLineWidth(.25); doc.setDrawColor(0, 1, 0, 0); doc.setLineDashPattern([], 0); L.cuts.forEach(([a, b]) => doc.line(X(a[0]), Y(a[1]), X(b[0]), Y(b[1])));
@@ -4116,13 +4247,17 @@ function printPDF(){
     const c = raster((x, cv) => { const im = x.createImageData(cv.width, cv.height), o = im.data; for (let i = 0; i < pd.length; i += 4){ const on = pd[i + 3] > 128 && test(pd[i], pd[i + 1], pd[i + 2]); o[i] = o[i + 1] = o[i + 2] = on ? 0 : 255; o[i + 3] = 255; } x.putImageData(im, 0, 0); });
     doc.addPage([W, H], W > H ? "l" : "p"); doc.addImage(c, "JPEG", M, M, bb.w, bb.h, undefined, "FAST"); marks(`${title} · noir 100 % = zone traitée · ${dpi} dpi`);
   }
+  for (const name of [...new Set(spotEls.map(e => e.spot))]){
+    const keep = metrics, c = raster((x, cv) => { x.fillStyle = "#fff"; x.fillRect(0, 0, cv.width, cv.height); T(x); state.elements = allEls.filter(e => e.spot === name).map(e => ({...e, color:"#000000", foil:false, opacity:100})); try { drawElements(x, "print"); } finally { state.elements = allEls; metrics = keep; } });
+    doc.addPage([W, H], W > H ? "l" : "p"); doc.addImage(c, "JPEG", M, M, bb.w, bb.h, undefined, "FAST"); marks(`TON DIRECT ${name} · noir 100 % = encre ${name} · réserve blanche dans la quadri`);
+  }
   if (k === "label" && (state.print.label === "numb" || state.mat.label === "ppt")){
     const wart = state.raw ? art : null;
     const c = raster((x, cv) => { x.fillStyle = "#fff"; x.fillRect(0, 0, cv.width, cv.height); if (wart){ const m = document.createElement("canvas"); m.width = cv.width; m.height = cv.height; const mx = m.getContext("2d"); mx.drawImage(wart, 0, 0); mx.globalCompositeOperation = "source-in"; mx.fillStyle = "#000"; mx.fillRect(0, 0, cv.width, cv.height); x.drawImage(m, 0, 0); } else { x.fillStyle = "#000"; shape(x, false); } });
     doc.addPage([W, H], W > H ? "l" : "p"); doc.addImage(c, "JPEG", M, M, bb.w, bb.h, undefined, "FAST"); marks("BLANC DE SOUTIEN · noir 100 % = encre blanche sous la quadri");
   }
   const trim = [M + (cb.minX - bb.minX), H - (M + (bb.maxY - cb.minY)), M + (cb.maxX - bb.minX), H - (M + (bb.maxY - cb.maxY))];
-  return pdfX3(doc.output("arraybuffer"), {trimBox:trim, bleedBox:[trim[0] - L.bleed, trim[1] - L.bleed, trim[2] + L.bleed, trim[3] + L.bleed], oc});
+  return pdfX3(doc.output("arraybuffer"), {trimBox:trim, bleedBox:[trim[0] - L.bleed, trim[1] - L.bleed, trim[2] + L.bleed, trim[3] + L.bleed], oc, icc:outputICC});
 }
 
 /* ================= Scène 3D ================= */
@@ -4369,7 +4504,7 @@ function applyFold(t){
       if (!p.node) continue;
       if (!p.parent){
         if (p.assemble){ const A = p.assemble, kk = ease(clamp((t - A.stage[0])/(A.stage[1] - A.stage[0]), 0, 1)), o = p.origin || [0,0];
-          p.node.position.set(o[0] + (A.pos[0] - o[0])*kk, o[1] + (A.pos[1] - o[1])*kk, A.pos[2]*kk); p.node.rotation.set((A.rx || 0)*kk, 0, 0); }
+          p.node.position.set(o[0] + (A.pos[0] - o[0])*kk, o[1] + (A.pos[1] - o[1])*kk, A.pos[2]*kk); p.node.rotation.set((A.rx || 0)*kk, (A.ry || 0)*kk, 0); }
         continue;
       }
       const [s0, s1] = p.stage || [0,1], a = (p.fold ?? 90)*Math.PI/180*ease(clamp((t - s0)/(s1 - s0), 0, 1));
@@ -4619,7 +4754,7 @@ function quote(qty){
     if (layout.panels.some(p => p.film)) add("Fenêtre (film PET + pose)", `${fmt0.format(qty)} pièces`, B.windowCal + qty*B.windowPc);
     const nGlue = TPL().bag ? 0 : state.model === "import" ? (state.importData && state.importData.glue ? 1 : 0) : new Set(layout.panels.filter(p => p.glue).map(p => p.root)).size;
     if (TPL().bag){ add("Façonnage du sac (collage, fond)", `${fmt0.format(qty)} sacs`, qty*B.bagPc); add("Poignées torsadées posées", `${fmt0.format(qty)} paires`, qty*B.handlePc); }
-    if (nGlue) add("Collage", `${fmt0.format(qty)} boîtes${nGlue > 1 ? ` × ${nGlue} pièces` : ""}`, B.glueCal + qty*nGlue*B.gluePc);
+    if (nGlue) add(state.model === "crash" ? "Collage fond automatique (4 points)" : "Collage", `${fmt0.format(qty)} boîtes${nGlue > 1 ? ` × ${nGlue} pièces` : ""}`, B.glueCal + qty*nGlue*B.gluePc*(state.model === "crash" ? 1.8 : 1));
     tech.push(["Imposition", montageText(M)], ["Rendement matière", `${fmt0.format(M.util*100)} % de la feuille (chute ${fmt0.format(M.waste*100)} %, soit ≈ ${fmt0.format(sheets*M.waste*B.sheet[state.mat.box])} TND de carton)`], ["Feuilles (gâche incluse)", fmt0.format(sheets)], ["Longueur de coupe", `${fmt2.format(cutM)} m / pose`], ["Longueur de rainage", `${fmt2.format(layout.creaseLen/1000)} m / pose`], ["Fond perdu", `${layout.bleed} mm`]);
   } else if (k === "cup"){
     const B = Pr.box, cb = layout.cbb, pw = cb.w + B.gap, ph = cb.h + B.gap, SW = B.sheetW - 2*B.grip, SH = B.sheetH - 2*B.grip, c = layout.panels[0].cup;
@@ -4741,6 +4876,12 @@ function preflight(q){
     }
     if (state.raw && kind() === "box") add("warn", `${nm} : sur carton brut, vérifiez le contraste (barres noires sur fond clair obligatoire).`);
   }
+  { const spots = [...new Set(state.elements.filter(o => o.spot).map(o => o.spot))];
+    if (spots.length){
+      if (kind() !== "label" && state.print[kind()] !== "cmjnp") add("warn", `Ton direct utilisé (${spots.join(", ")}) : choisissez l'impression « Quadri + 1 Pantone » pour que le devis compte le groupe supplémentaire.`);
+      if (spots.length > 1) add("warn", `${spots.length} tons directs : le devis ne compte qu'un Pantone ; prévoir ${spots.length - 1} groupe(s) supplémentaire(s).`);
+      for (const n of spots){ const el = state.elements.find(o => o.spot === n); add("info", `Ton direct ${n} : ${gamutCheck(el.color) ? "hors gamut quadri, le ton direct est justifié" : "reproductible en quadri, un ton direct n'est pas indispensable"} ; plaque séparée dans le PDF d'impression.`); }
+    } }
   const finEls = state.elements.filter(o => o.foil || o.varnish), overlaps = (a, b) => { const qa = elCorners(a), qb = elCorners(b); return qa.some(c => inPoly(c, qb)) || qb.some(c => inPoly(c, qa)); };
   for (const el of state.elements){
     if (el.type === "braille"){
@@ -4805,6 +4946,8 @@ function preflight(q){
     if (state.model === "coffret" && dd.Hl > dd.H) add("warn", `Couvercle ramené à la hauteur du fond (${fmt0.format(dd.H)} mm) pour qu'il ne touche pas la table.`);
     if (state.model === "pillow" && dd.D > dd.W*.8) add("warn", `Épaisseur ramenée à ${fmt0.format(dd.W*.8)} mm (80 % de la largeur maximum pour un berlingot).`);
     if (state.model === "gable" && dd.r > dd.W*.7) add("warn", `Hauteur du toit ramenée à ${fmt0.format(dd.W*.7)} mm (70 % de la profondeur).`);
+    if (state.model === "crash") add("info", "Fond automatique : les deux triangles sont collés en machine (plieuse-colleuse équipée du module fond automatique). Validez le montage sur maquette blanche avant de commander la forme.");
+    if (state.model === "partition") add("info", `Croisillon : ${Math.max(2, Math.round(state.dims.partition.ny)) - 1} cloison(s) longue(s) et ${Math.max(2, Math.round(state.dims.partition.nx)) - 1} courte(s), fentes à mi-hauteur ; prévoir 1 mm de jeu par rapport à l'emballage.`);
     if (state.model === "bag") add("info", "Sac fabriqué sur machine à sacs : les poignées sont posées et collées à l'intérieur, sous le rabat de renfort.");
     if (state.model === "display" && (dd.Hs < dd.Hf || dd.Hh < dd.Hs + 30)) add("warn", "Cotes du présentoir ajustées : côtés ≥ bord avant, fronton ≥ côtés + 30 mm.");
     if (state.mat.box === "ondB" && state.print.box !== "noir") add("warn", "Cannelure B : l'offset quadri direct n'est pas possible, prévoir un contre-collage (litho) ou la flexographie.");
@@ -4928,7 +5071,7 @@ function renderControls(){
   $("#focalSel").value = state.focal || 42; $("#bgBlur").value = state.bgBlur || 0; $("#shelfCols").value = state.shelf.cols; $("#shelfRows").value = state.shelf.rows;
   const bgi = state.images.bg; $("#bgThumb").hidden = !bgi; if (bgi) $("#bgThumb").src = bgi.src; $("#bgClear").hidden = !bgi; renderVariants();
   $("#sceneSel").value = state.scene in SCENES ? state.scene : "studio"; $("#lightAz").value = state.lightAz ?? 35; $("#lightPow").value = state.lightPow ?? 100; applyScene();
-  $("#softProof").checked = !!state.softProof; renderGamut();
+  $("#softProof").checked = !!state.softProof; renderGamut(); $("#docLang").value = state.docLang === "ar" ? "ar" : "fr";
   $("#grainRow").hidden = kind() !== "box"; $("#grainSel").value = state.grain === "v" ? "v" : "h"; setTimeout(renderFlow, 50);
   $("#foilColor").value = state.foilColor in FOILS ? state.foilColor : "or"; $("#relief").value = state.relief in RELIEFS ? state.relief : "none";
   $("#varnish").checked = state.varnish; $("#foil").checked = state.foil; $("#raw").checked = state.raw; $("#fullHide").checked = state.fullHide;
@@ -4972,6 +5115,7 @@ function renderElEditor(){
   const set = (id, val) => { const n = $("#" + id); if (document.activeElement !== n) n.value = val; };
   set("elText", el.text || ""); set("elFont", el.font || "plex"); set("elSize", el.size || 12); set("elAlign", el.align || "center"); set("elShape", el.shape || "rect");
   set("elColor", el.color || "#000000"); set("elX", el.x); set("elY", el.y); set("elW", el.w || 20); set("elH", el.h || 10); set("elRot", el.rot || 0); set("elOpacity", el.opacity ?? 100);
+  $("#elSpot").innerHTML = `<option value="">Quadri (CMJN)</option>` + (settings.swatches || []).map(sw => `<option value="${esc(sw.name)}"${sw.name === el.spot ? " selected" : ""}>Ton direct : ${esc(sw.name)}</option>`).join("") + (el.spot && !(settings.swatches || []).some(sw => sw.name === el.spot) ? `<option selected>${esc(el.spot)}</option>` : ""); $("#elSpot").hidden = !(settings.swatches || []).length && !el.spot; $("#elColor").disabled = !!el.spot;
   set("elSym", el.sym || "ean13"); set("elMag", el.mag || 100); set("elCode", el.value || ""); set("elBraille", el.type === "braille" ? el.text || "" : ""); set("elPic", el.pic || "recycle"); set("elPicTxt", el.type === "picto" ? el.text || "" : ""); renderElHints(el);
   $("#elBold").checked = !!el.bold; $("#elFoil").checked = !!el.foil; $("#elVarnish").checked = !!el.varnish; $("#elRelief").value = el.relief || "none";
 }
@@ -5185,6 +5329,431 @@ function renderElHints(el){
   }
   if (el.type === "braille"){ const B = brailleLayout(el); $("#elBrHint").textContent = `${B.cells} cellule(s) × ${B.lines} ligne(s) · ${fmt1.format(B.w)} × ${fmt1.format(B.h)} mm · Marburg Medium${B.bad.size ? ` · non transcrit : ${[...B.bad].join(" ")}` : ""}`; }
 }
+/* ================= Dossier partagé de l'équipe (version installée) ================= */
+// Projets, paramètres et chartes enregistrés dans un dossier réseau commun : chaque poste lit et écrit les mêmes fichiers.
+const FS = {dir:null, path:"", name:"", ready:false, mt:new Map(), known:new Map(), timer:0, busy:false};
+const fsAvailable = () => !cloud() && !clientMode && (CEP || typeof window.showDirectoryPicker === "function");
+function idb(){ return new Promise((ok, ko) => { const r = indexedDB.open("lp-studio", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); }); }
+async function kvGet(k){ try { const db = await idb(); return await new Promise(ok => { const r = db.transaction("kv").objectStore("kv").get(k); r.onsuccess = () => ok(r.result ?? null); r.onerror = () => ok(null); }); } catch (e) { return null; } }
+async function kvSet(k, v){ try { const db = await idb(); await new Promise(ok => { const t = db.transaction("kv", "readwrite"); if (v == null) t.objectStore("kv").delete(k); else t.objectStore("kv").put(v, k); t.oncomplete = ok; t.onerror = ok; }); } catch (e) {} }
+// Accès aux fichiers : API d'accès aux fichiers du navigateur (Chrome, Edge) ou système de fichiers du panneau Illustrator.
+const fsb = {
+  async sub(name, create){ let d = FS.dir; for (const part of name.split("/").filter(Boolean)) d = await d.getDirectoryHandle(part, {create}); return d; },
+  split(p){ const i = p.lastIndexOf("/"); return [i < 0 ? "" : p.slice(0, i), p.slice(i + 1)]; },
+  cep(p){ return FS.path.replace(/[\\/]+$/, "") + "/" + p; },
+  async list(sub){
+    if (FS.path){ const r = window.cep.fs.readdir(fsb.cep(sub)); if (r.err) return []; return r.data.map(name => { const st = window.cep.fs.stat(fsb.cep(sub ? sub + "/" + name : name)); return st.err || !st.data.isFile() ? null : {name, mtime:+new Date(st.data.mtime)}; }).filter(Boolean); }
+    let d; try { d = await fsb.sub(sub, false); } catch (e) { return []; }
+    const out = []; for await (const [name, h] of d.entries()) if (h.kind === "file") out.push({name, mtime:(await h.getFile()).lastModified});
+    return out;
+  },
+  async read(p, bin){
+    if (FS.path){ const r = window.cep.fs.readFile(fsb.cep(p), bin ? window.cep.encoding.Base64 : undefined); if (r.err) throw new Error("lecture"); return bin ? Uint8Array.from(atob(r.data), c => c.charCodeAt(0)) : r.data; }
+    const [dir, name] = fsb.split(p), f = await (await (await fsb.sub(dir, false)).getFileHandle(name)).getFile();
+    return bin ? new Uint8Array(await f.arrayBuffer()) : f.text();
+  },
+  async write(p, data){
+    if (FS.path){ const [dir] = fsb.split(p); if (dir) window.cep.fs.makedir(fsb.cep(dir)); const bin = data instanceof Uint8Array;
+      const r = window.cep.fs.writeFile(fsb.cep(p), bin ? btoa(Array.from(data, b => String.fromCharCode(b)).join("")) : data, bin ? window.cep.encoding.Base64 : undefined); if (r.err) throw new Error("écriture"); return Date.now(); }
+    const [dir, name] = fsb.split(p), fh = await (await fsb.sub(dir, true)).getFileHandle(name, {create:true}), w = await fh.createWritable();
+    await w.write(data); await w.close(); return (await fh.getFile()).lastModified;
+  },
+  async remove(p){
+    if (FS.path){ window.cep.fs.deleteFile(fsb.cep(p)); return; }
+    const [dir, name] = fsb.split(p); try { await (await fsb.sub(dir, false)).removeEntry(name); } catch (e) {}
+  },
+};
+async function fsConnect(target){
+  if (typeof target === "string"){ FS.path = target; FS.dir = null; FS.name = target; try { localStorage.setItem("lp-fs-path", target); } catch (e) {} }
+  else { FS.dir = target; FS.path = ""; FS.name = target.name; await kvSet("fsdir", target); }
+  FS.ready = true; FS.mt.clear(); FS.known.clear();
+  try { await fsPull(true); } catch (e) { FS.ready = false; toast("Dossier partagé inaccessible : vérifiez le lecteur réseau."); renderFsState(); return false; }
+  clearInterval(FS.timer); FS.timer = setInterval(() => { if (!document.hidden) fsPull(false).catch(() => {}); }, 15000);
+  renderFsState(); toast(`Dossier partagé « ${FS.name} » connecté`); return true;
+}
+async function fsDisconnect(){ clearInterval(FS.timer); FS.ready = false; FS.dir = null; FS.path = ""; FS.name = ""; await kvSet("fsdir", null); try { localStorage.removeItem("lp-fs-path"); } catch (e) {} renderFsState(); }
+async function fsPull(first){
+  if (!FS.ready || FS.busy) return; FS.busy = true;
+  try {
+    const files = await fsb.list("projets"), seen = new Set(); let changed = false;
+    for (const f of files.filter(f => f.name.endsWith(".json"))){
+      const id = f.name.slice(0, -5); seen.add(id);
+      if (FS.mt.get(id) !== f.mtime){ try { const txt = await fsb.read("projets/" + f.name); JSON.parse(txt); FS.known.set(id, txt); FS.mt.set(id, f.mtime); changed = true; } catch (e) {} }
+    }
+    for (const id of [...FS.known.keys()]) if (!seen.has(id)){ FS.known.delete(id); FS.mt.delete(id); changed = true; }
+    if (first) for (const p of localProjects()) if (!FS.known.has(p.id)){ await fsWriteProject(p); changed = true; }
+    if (changed){
+      projects = [...FS.known.values()].map(t => JSON.parse(t)).sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
+      try { localStorage.setItem("lp-projects-v2", JSON.stringify(projects)); } catch (e) {}
+      renderBoard();
+    }
+    const top = await fsb.list(""), get = n => top.find(f => f.name === n);
+    const st = get("parametres.json");
+    if (st && FS.mt.get("@settings") !== st.mtime){ FS.mt.set("@settings", st.mtime); try { settings = merge(DEFAULT_SETTINGS, JSON.parse(await fsb.read("parametres.json"))); try { localStorage.setItem("lp-settings-v2", JSON.stringify(settings)); } catch (e) {} if (layout && !first){ renderControls(); refresh("geo"); } } catch (e) {} }
+    else if (!st && first) await fsWriteSettings();
+    const kt = get("chartes.json");
+    if (kt && FS.mt.get("@kits") !== kt.mtime){ FS.mt.set("@kits", kt.mtime); try { brandKits = JSON.parse(await fsb.read("chartes.json")); try { localStorage.setItem("lp-brands", JSON.stringify(brandKits)); } catch (e) {} renderKits(); } catch (e) {} }
+    else if (!kt && first && brandKits.length) await fsWriteKits();
+    const ic = get("profil-sortie.icc");
+    if (ic && FS.mt.get("@icc") !== ic.mtime){ FS.mt.set("@icc", ic.mtime); try { await setOutputProfile(await fsb.read("profil-sortie.icc", true), true); } catch (e) {} }
+  } finally { FS.busy = false; }
+}
+async function fsWriteProject(p){ const txt = JSON.stringify(p); FS.mt.set(p.id, await fsb.write(`projets/${p.id}.json`, txt)); FS.known.set(p.id, txt); }
+// Appelé à chaque écriture locale de la liste des projets : écrit les projets modifiés, supprime les projets retirés.
+async function fsSyncProjects(list){
+  if (!FS.ready) return;
+  try {
+    const ids = new Set(list.map(p => p.id));
+    for (const p of list) if (FS.known.get(p.id) !== JSON.stringify(p)) await fsWriteProject(p);
+    for (const id of [...FS.known.keys()]) if (!ids.has(id)){ await fsb.remove(`projets/${id}.json`); FS.known.delete(id); FS.mt.delete(id); }
+  } catch (e) { toast("Écriture dans le dossier partagé impossible : vérifiez le lecteur réseau."); }
+}
+async function fsWriteSettings(){ if (FS.ready) try { FS.mt.set("@settings", await fsb.write("parametres.json", JSON.stringify(settings, null, 1))); } catch (e) {} }
+async function fsWriteKits(){ if (FS.ready) try { FS.mt.set("@kits", await fsb.write("chartes.json", JSON.stringify(brandKits))); } catch (e) {} }
+function renderFsState(){
+  const box = $("#fsBox"); if (box){
+    box.hidden = !fsAvailable() && !FS.ready;
+    $("#fsState").textContent = FS.ready ? `Connecté : « ${FS.name} ». Projets, paramètres, chartes et profil couleur sont partagés ; les autres postes voient les changements sous 15 secondes. Si deux personnes modifient le même projet au même moment, la dernière sauvegarde l'emporte.` : "Non connecté : les projets restent dans ce navigateur. Choisissez un dossier sur le serveur ou le disque réseau de l'atelier (même dossier sur chaque poste).";
+    $("#fsPick").hidden = !!FS.path || CEP; $("#fsPathRow").hidden = !CEP; $("#fsOff").hidden = !FS.ready;
+  }
+  if (!cloud() && !clientMode){ $("#modeTag").textContent = FS.ready ? `Dossier partagé · ${FS.name}` : "Ce navigateur"; $("#modeTag").classList.toggle("cloud", FS.ready); }
+  $("#fsBanner").hidden = true;
+}
+async function fsAutoConnect(){
+  if (!fsAvailable()) return;
+  if (CEP){ const p = localStorage.getItem("lp-fs-path"); if (p) await fsConnect(p); return; }
+  const h = await kvGet("fsdir"); if (!h || !h.queryPermission) return;
+  if ((await h.queryPermission({mode:"readwrite"})) === "granted"){ await fsConnect(h); return; }
+  const b = $("#fsBanner"); b.hidden = false; $("#fsBannerName").textContent = h.name;
+  $("#fsReconnect").onclick = async () => { if ((await h.requestPermission({mode:"readwrite"})) === "granted") await fsConnect(h); };
+}
+$("#fsPick").addEventListener("click", async () => { try { const h = await window.showDirectoryPicker({id:"labelpack", mode:"readwrite"}); await fsConnect(h); } catch (e) { if (e && e.name !== "AbortError") toast("Ce dossier n'est pas accessible en écriture."); } });
+$("#fsPathUse").addEventListener("click", () => { const p = $("#fsPath").value.trim(); if (p) fsConnect(p); });
+$("#fsOff").addEventListener("click", fsDisconnect);
+/* ================= Documents : ordre de fabrication, facture, bon de livraison, export comptable ================= */
+// Libellés bilingues des documents client (français + arabe, à faire relire).
+const AR = {"DEVIS":"عرض سعر","FACTURE":"فاتورة","BON DE LIVRAISON":"وصل تسليم","BON À TIRER (BAT)":"موافقة على الطباعة","CLIENT":"الحريف","DÉSIGNATION":"البيان","Désignation":"البيان","Quantité":"الكمية","Prix unitaire HT":"سعر الوحدة دون أداءات","PU HT":"سعر الوحدة","Total HT":"المجموع دون أداءات","Montant HT":"المبلغ دون أداءات","Remise":"التخفيض","TVA":"الأداء على القيمة المضافة","Droit de timbre":"معلوم الطابع الجبائي","Total TTC":"المجموع باعتبار الأداءات","CONDITIONS":"الشروط","PRIX PAR QUANTITÉ":"الأسعار حسب الكمية","CARACTÉRISTIQUES":"الخصائص","CONTRÔLE PRÉPRESSE":"مراقبة ما قبل الطباعة","Bon pour accord":"موافق عليه","Nom :":"الاسم:","Date :":"التاريخ:","Signature et cachet :":"الإمضاء والختم:","Matricule fiscal":"المعرف الجبائي","Adresse":"العنوان","Colis":"الطرود","Livreur":"الناقل","Client : reçu en bon état":"الحريف: استلمت في حالة جيدة","Modèle":"النموذج","Format":"المقاس","Développé à plat":"المقاس المفرود","Support":"الحامل","Impression":"الطباعة","Finitions":"اللمسات النهائية","Quantité livrée":"الكمية المسلمة","Validité : 30 jours":"صلاحية العرض: 30 يوما","Réf. commande":"مرجع الطلب","Conditions de paiement":"شروط الدفع","Arrêtée la présente facture à la somme de :":"أوقفت هذه الفاتورة على مبلغ:","Observations":"ملاحظات"};
+const bi = fr => state.docLang === "ar" && AR[fr] ? `${fr} / ${AR[fr]}` : fr;
+// Libellé de colonne : français, et arabe en dessous en version bilingue.
+function th(doc, fr, x, y, o = {}){ pdfText(doc, fr, x, y, o); if (state.docLang === "ar" && AR[fr]) pdfText(doc, AR[fr], x, y + 3.6, o); }
+const thH = () => state.docLang === "ar" ? 11 : 8;
+const r3 = v => Math.round(v*1000)/1000;
+function enLettres(n){
+  const u = ["zéro","un","deux","trois","quatre","cinq","six","sept","huit","neuf","dix","onze","douze","treize","quatorze","quinze","seize","dix-sept","dix-huit","dix-neuf"], d = ["","dix","vingt","trente","quarante","cinquante","soixante","soixante","quatre-vingt","quatre-vingt"];
+  const lt100 = x => { if (x < 20) return u[x]; const t = Math.floor(x/10), r = x % 10; if (t === 7 || t === 9) return d[t] + (t === 7 && r === 1 ? " et " : "-") + u[10 + r]; return d[t] + (r === 1 && t !== 8 ? " et un" : r ? "-" + u[r] : t === 8 ? "s" : ""); };
+  const lt1000 = x => { const c = Math.floor(x/100), r = x % 100; return [c === 0 ? "" : c === 1 ? "cent" : u[c] + " cent" + (r === 0 ? "s" : ""), r ? lt100(r) : ""].filter(Boolean).join(" "); };
+  if (!n) return "zéro";
+  const out = [], md = Math.floor(n/1e9), mn = Math.floor(n/1e6) % 1000, k = Math.floor(n/1000) % 1000, r = n % 1000;
+  if (md) out.push(lt1000(md) + " milliard" + (md > 1 ? "s" : ""));
+  if (mn) out.push(lt1000(mn) + " million" + (mn > 1 ? "s" : ""));
+  if (k) out.push(k === 1 ? "mille" : lt1000(k).replace(/(cent|vingt)s$/, "$1") + " mille");
+  if (r) out.push(lt1000(r));
+  return out.join(" ");
+}
+function montantLettres(v){ const t = Math.round(v*1000), dn = Math.floor(t/1000), m = t % 1000; return `${enLettres(dn)} dinar${dn > 1 ? "s" : ""}${m ? ` et ${enLettres(m)} millime${m > 1 ? "s" : ""}` : ""}`; }
+async function nextDocNo(type){
+  const Bl = settings.billing, y = new Date().getFullYear(), key = `${type}${y}`, start = type === "inv" ? +Bl.startInv || 1 : +Bl.startBL || 1;
+  let n;
+  if (cloud()){ const ref = cap.db.doc("counters/main"), s = await ref.get(), c = s.exists ? s.data() : {}; n = Math.max((c[key] || 0) + 1, start); await ref.set({...c, [key]:n}); }
+  else { if (FS.ready) await fsPull(false).catch(() => {}); settings.counters = settings.counters || {}; n = Math.max((settings.counters[key] || 0) + 1, start); settings.counters[key] = n; try { localStorage.setItem("lp-settings-v2", JSON.stringify(settings)); } catch (e) {} await fsWriteSettings(); }
+  return `${type === "inv" ? Bl.prefixInv || "FA" : Bl.prefixBL || "BL"}-${y}-${String(n).padStart(4, "0")}`;
+}
+function mfLine(doc, mf, x, y){ pdfText(doc, bi("Matricule fiscal") + " :", x, y); doc.text(pdfTxt(mf), x + (state.docLang === "ar" ? 44 : 25), y); }
+function docHeader(doc, title, no, date){
+  const co = settings.company, M = 15;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(17); doc.setTextColor(20); pdfText(doc, co.name || "Label Pack", M, 21, {bold:true});
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(90);
+  [co.address, co.mf ? "@mf" : "", [co.phone, co.email].filter(Boolean).join(" · ")].filter(Boolean).forEach((l, i) => l === "@mf" ? mfLine(doc, co.mf, M, 27 + i*4.2) : pdfText(doc, l, M, 27 + i*4.2));
+  doc.setFont("helvetica", "bold"); doc.setFontSize(17); doc.setTextColor(184,15,90); pdfText(doc, bi(title), 195, 21, {align:"right", bold:true, color:"#b80f5a"});
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(40);
+  doc.text(pdfTxt(`N° ${no}`), 195, 28, {align:"right"}); doc.text(pdfTxt(`Date : ${new Date(date).toLocaleDateString("fr-FR")}`), 195, 32.5, {align:"right"});
+}
+function clientBox(doc, rec, y){
+  const M = 15; doc.setDrawColor(210); doc.setFillColor(246,247,244); doc.roundedRect(M, y, 105, 27, 2, 2, "FD");
+  doc.setFontSize(8); doc.setTextColor(110); pdfText(doc, bi("CLIENT"), M + 4, y + 6);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(20); pdfText(doc, rec.client || "—", M + 4, y + 12, {maxWidth:97, bold:true});
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(60);
+  if (rec.caddr) pdfText(doc, rec.caddr, M + 4, y + 17, {maxWidth:97});
+  if (rec.cmf) mfLine(doc, rec.cmf, M + 4, y + 22);
+  if (rec.ref){ doc.setTextColor(60); pdfText(doc, `${bi("Réf. commande")} : ${rec.ref}`, 125, y + 6); }
+}
+function invoicePDF(rec){
+  const {jsPDF} = window.jspdf, doc = new jsPDF({unit:"mm", format:"a4"}), M = 15, Bl = settings.billing;
+  docHeader(doc, "FACTURE", rec.no, rec.date); clientBox(doc, rec, 44);
+  let y = 82; const cols = [[M, "Désignation"], [120, "Quantité"], [143, "PU HT"], [163, "Remise"], [195, "Montant HT"]];
+  doc.setFillColor(21,24,29); doc.rect(M, y, 180, thH(), "F"); doc.setFontSize(8.5); doc.setTextColor(255);
+  cols.forEach(([x, l], i) => th(doc, l, i ? x : x + 2, y + 5.3, {align:i ? "right" : undefined, color:"#ffffff"}));
+  y += thH(); doc.setTextColor(20); doc.setFontSize(9);
+  const des = doc.splitTextToSize(pdfTxt(rec.designation), 100); doc.text(des, M + 2, y + 5);
+  doc.text(pdfTxt(fmt0.format(rec.qty)), 120, y + 5, {align:"right"}); doc.text(pdfTxt(fmt3.format(rec.pu)), 143, y + 5, {align:"right"}); doc.text(rec.remise ? pdfTxt(fmt1.format(rec.remise) + " %") : "—", 163, y + 5, {align:"right"}); doc.text(pdfTxt(fmt3.format(rec.ht)), 195, y + 5, {align:"right"});
+  y += Math.max(12, des.length*4.2 + 4); doc.setDrawColor(200); doc.line(M, y, M + 180, y); y += 6;
+  const tot = [[`${bi("Total HT")}`, rec.ht], [`${bi("TVA")} ${fmt0.format(rec.tvaRate)} %`, rec.tva], [bi("Droit de timbre"), rec.timbre], [bi("Total TTC"), rec.ttc]];
+  tot.forEach(([l, v], i) => { const last = i === tot.length - 1; doc.setFont("helvetica", last ? "bold" : "normal"); doc.setFontSize(last ? 11 : 9.5); doc.setTextColor(20); pdfText(doc, l, 150, y, {align:"right", bold:last}); doc.text(pdfTxt(money(v)), 195, y, {align:"right"}); y += last ? 7 : 5.5; });
+  y += 4; doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(60); pdfText(doc, bi("Arrêtée la présente facture à la somme de :"), M, y); y += 5;
+  doc.setFont("helvetica", "bold"); doc.setTextColor(20); doc.text(doc.splitTextToSize(pdfTxt(montantLettres(rec.ttc).replace(/^./, c => c.toUpperCase()) + " TTC."), 180), M, y); y += 12;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(60);
+  if (Bl.payment){ pdfText(doc, `${bi("Conditions de paiement")} : ${Bl.payment}`, M, y, {maxWidth:180}); y += 5; }
+  if (Bl.rib){ doc.text(pdfTxt(`RIB : ${Bl.rib}`), M, y); y += 5; }
+  doc.setDrawColor(60); doc.rect(130, Math.max(y + 6, 225), 65, 35); doc.setFontSize(8.5); doc.setTextColor(20); pdfText(doc, bi("Signature et cachet :"), 133, Math.max(y + 6, 225) + 6);
+  doc.setFontSize(7.5); doc.setTextColor(150); doc.text(pdfTxt(`${settings.company.name || ""}${settings.company.mf ? " — MF " + settings.company.mf : ""} — facture établie avec Label Pack Studio`), 105, 289, {align:"center"});
+  return doc.output("blob");
+}
+function blPDF(rec){
+  const {jsPDF} = window.jspdf, doc = new jsPDF({unit:"mm", format:"a4"}), M = 15;
+  docHeader(doc, "BON DE LIVRAISON", rec.no, rec.date); clientBox(doc, rec, 44);
+  let y = 82; doc.setFillColor(21,24,29); doc.rect(M, y, 180, thH(), "F"); doc.setFontSize(8.5); doc.setTextColor(255);
+  th(doc, "Désignation", M + 2, y + 5.3, {color:"#ffffff"}); th(doc, "Quantité livrée", 165, y + 5.3, {align:"right", color:"#ffffff"}); th(doc, "Colis", 195, y + 5.3, {align:"right", color:"#ffffff"});
+  y += thH(); doc.setFontSize(9); doc.setTextColor(20);
+  const des = doc.splitTextToSize(pdfTxt(rec.designation), 115); doc.text(des, M + 2, y + 5); doc.text(pdfTxt(fmt0.format(rec.qty)), 165, y + 5, {align:"right"}); doc.text(rec.colis ? String(rec.colis) : "—", 195, y + 5, {align:"right"});
+  y += Math.max(12, des.length*4.2 + 4); doc.setDrawColor(200); doc.line(M, y, M + 180, y); y += 8;
+  if (rec.invoice){ doc.setFontSize(8.5); doc.setTextColor(60); doc.text(pdfTxt(`Facture associée : ${rec.invoice}`), M, y); y += 6; }
+  doc.setFontSize(8.5); doc.setTextColor(110); pdfText(doc, bi("Observations"), M, y); doc.setDrawColor(210); for (let i = 1; i <= 3; i++) doc.line(M, y + i*7, M + 180, y + i*7);
+  y += 30; doc.setDrawColor(60); doc.setTextColor(20); doc.setFontSize(8.5);
+  doc.rect(M, y, 85, 40); pdfText(doc, bi("Livreur"), M + 3, y + 6); doc.text("Nom, date, signature", M + 3, y + 12);
+  doc.rect(M + 95, y, 85, 40); pdfText(doc, bi("Client : reçu en bon état"), M + 98, y + 6); doc.text(pdfTxt("Nom, date, signature et cachet"), M + 98, y + 12);
+  doc.setFontSize(7.5); doc.setTextColor(150); doc.text(pdfTxt(`${settings.company.name || ""} — bon de livraison établi avec Label Pack Studio`), 105, 289, {align:"center"});
+  return doc.output("blob");
+}
+function docDesignation(){ const t = TPL(), k = kind(); return `${t.name} — ${dimsText()}\n${MAT[k][state.mat[k]].name}, ${PRINT[k][state.print[k]]}${specRows().find(r => r[0] === "Finitions")[1] ? ", " + specRows().find(r => r[0] === "Finitions")[1] : ""}\nRéf. ${quoteNo()}${meta.name ? " — " + meta.name : ""}`; }
+function invoiceCalc(){
+  const qty = Math.max(1, Math.round(+$("#invQty").value || 0)), pu = r3(+$("#invPU").value || 0), rem = clamp(+$("#invRem").value || 0, 0, 100), ht = r3(qty*pu*(1 - rem/100)), tvaRate = P().tva, tva = r3(ht*tvaRate/100), timbre = +settings.billing.timbre || 0;
+  return {qty, pu, remise:rem, ht, tvaRate, tva, timbre, ttc:r3(ht + tva + timbre)};
+}
+function renderInvDlg(){
+  const c = invoiceCalc(); $("#invTotals").textContent = `Total HT ${money(c.ht)} · TVA ${fmt0.format(c.tvaRate)} % ${money(c.tva)} · droit de timbre ${money(c.timbre)} · total TTC ${money(c.ttc)}`;
+  const docs = meta.docs || [];
+  $("#invList").innerHTML = docs.length ? docs.slice().reverse().map((d, i) => `<li><span>${d.type === "inv" ? "Facture" : "Bon de livraison"} <b>${esc(d.no)}</b> · ${new Date(d.date).toLocaleDateString("fr-FR")} · ${fmt0.format(d.qty)} ex.${d.type === "inv" ? " · " + esc(money(d.ttc)) + " TTC" : ""}</span><button class="btn small" type="button" data-reprint="${docs.length - 1 - i}">Réimprimer</button></li>`).join("") : `<li class="hint">Aucun document pour ce projet.</li>`;
+}
+function openInvDlg(){
+  if (clientMode) return;
+  const q = quote(state.qty), last = (meta.docs || []).slice(-1)[0] || {};
+  $("#invClient").value = meta.client || last.client || ""; $("#invMF").value = meta.cmf || last.cmf || ""; $("#invAddr").value = meta.caddr || last.caddr || "";
+  $("#invQty").value = state.qty; $("#invPU").value = q.error ? "" : r3(q.unit).toFixed(3); $("#invRem").value = 0; $("#invDate").value = new Date().toISOString().slice(0, 10); $("#invColis").value = ""; $("#invRef").value = "";
+  renderInvDlg(); openDlg("#invDlg");
+}
+async function makeDoc(type){
+  const c = invoiceCalc(), client = $("#invClient").value.trim();
+  if (!client){ toast("Indiquez le client."); $("#invClient").focus(); return; }
+  if (type === "inv" && !(c.pu > 0)){ toast("Indiquez le prix unitaire HT."); $("#invPU").focus(); return; }
+  if (!meta.client) meta.client = client; meta.cmf = $("#invMF").value.trim(); meta.caddr = $("#invAddr").value.trim();
+  const dt = $("#invDate").value, rec = {type, no:await nextDocNo(type), date:dt ? new Date(dt + "T12:00:00").toISOString() : new Date().toISOString(), client, cmf:meta.cmf, caddr:meta.caddr, ref:$("#invRef").value.trim(), designation:docDesignation(), colis:+$("#invColis").value || 0, ...c};
+  if (type === "bl"){ const inv = (meta.docs || []).filter(d => d.type === "inv").slice(-1)[0]; if (inv) rec.invoice = inv.no; }
+  meta.docs = [...(meta.docs || []), rec]; renderMeta(); await saveProject(true); renderInvDlg();
+  await saveFile(`${rec.no}_${slug()}.pdf`, type === "inv" ? invoicePDF(rec) : blPDF(rec));
+}
+// Export comptable : journal des ventes et écritures (comptes paramétrables), au format CSV pour Excel.
+async function exportCompta(){
+  const all = new Map();
+  for (const p of projects) for (const d of (p.docs || [])) all.set(d.no, d);
+  for (const d of (meta.docs || [])) all.set(d.no, d);
+  const inv = [...all.values()].filter(d => d.type === "inv").sort((a, b) => a.no.localeCompare(b.no));
+  if (!inv.length){ toast("Aucune facture établie pour le moment."); return; }
+  const A = settings.billing.accounts || {}, n = v => (+v).toFixed(3).replace(".", ","), q = s => `"${String(s ?? "").replace(/"/g, '""')}"`, day = d => new Date(d).toLocaleDateString("fr-FR");
+  const reg = ["Date;N° facture;Client;Matricule fiscal;Total HT;TVA;Droit de timbre;Total TTC"].concat(inv.map(d => [day(d.date), d.no, q(d.client), q(d.cmf), n(d.ht), n(d.tva), n(d.timbre), n(d.ttc)].join(";")));
+  const jr = ["Date;Journal;N° pièce;Compte;Libellé;Débit;Crédit"];
+  for (const d of inv){ const lib = q(`Facture ${d.no} ${d.client}`), row = (acc, de, cr) => jr.push([day(d.date), "VT", d.no, acc, lib, de ? n(de) : "", cr ? n(cr) : ""].join(";"));
+    row(A.client || "411", d.ttc, 0); row(A.sales || "701", 0, d.ht); row(A.vat || "4366", 0, d.tva); if (d.timbre) row(A.stamp || "4371", 0, d.timbre); }
+  const zip = new JSZip(), bom = "﻿";
+  zip.file("journal-des-ventes.csv", bom + reg.join("\r\n")); zip.file("ecritures-comptables.csv", bom + jr.join("\r\n"));
+  zip.file("LISEZ-MOI.txt", "Export comptable Label Pack Studio\r\n\r\n- journal-des-ventes.csv : une ligne par facture (HT, TVA, droit de timbre, TTC)\r\n- ecritures-comptables.csv : écritures du journal des ventes (VT), comptes définis dans Paramètres > Facturation, à vérifier selon votre plan comptable\r\n\r\nSéparateur « ; », décimales avec virgule : s'ouvre directement dans Excel.\r\n");
+  await saveFile(`export-comptable-${new Date().toISOString().slice(0, 10)}.zip`, await zip.generateAsync({type:"blob"}));
+}
+["invQty","invPU","invRem"].forEach(id => $("#" + id).addEventListener("input", renderInvDlg));
+$("#invBtn").addEventListener("click", openInvDlg);
+$("#invMake").addEventListener("click", () => makeDoc("inv").catch(e => { console.error(e); toast("Document non établi, réessayez."); }));
+$("#blMake").addEventListener("click", () => makeDoc("bl").catch(e => { console.error(e); toast("Document non établi, réessayez."); }));
+$("#accExport").addEventListener("click", exportCompta);
+$("#invList").addEventListener("click", e => { const b = e.target.closest("[data-reprint]"); if (!b) return; const d = meta.docs[+b.dataset.reprint]; saveFile(`${d.no}_${slug()}.pdf`, d.type === "inv" ? invoicePDF(d) : blPDF(d)); });
+
+// Ordre de fabrication : fiche atelier du dossier, étape par étape.
+function ofPDF(){
+  const {jsPDF} = window.jspdf, doc = new jsPDF({unit:"mm", format:"a4"}), M = 12, k = kind(), q = quote(state.qty), B = P().box, t = TPL(), M2 = montage();
+  const appr = [...(meta.history || [])].reverse().find(h => h.decision);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(15); doc.setTextColor(20); doc.text("ORDRE DE FABRICATION", M, 16);
+  doc.setFontSize(10); doc.setTextColor(184,15,90); doc.text(pdfTxt(`OF ${quoteNo()}`), 198, 16, {align:"right"});
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(60);
+  pdfText(doc, `${meta.client || "Client non renseigné"} · ${meta.name || t.name} · émis le ${new Date().toLocaleDateString("fr-FR")} · délai : ______________`, M, 22, {maxWidth:186});
+  doc.setTextColor(...(appr && appr.decision === "ok" ? [23,120,74] : [200,30,30]));
+  doc.text(pdfTxt(appr && appr.decision === "ok" ? `BAT validé par ${appr.client} le ${new Date(appr.at).toLocaleDateString("fr-FR")}${appr.signature ? " (signé)" : ""}` : "ATTENTION : BAT non validé — ne pas lancer sans accord du client"), M, 27);
+  try { const mk = captureMockup(600, 600, "white", true); doc.addImage(mk, "JPEG", 158, 30, 40, 40); } catch (e) {}
+  let y = 34; doc.setFontSize(8); doc.setTextColor(110); doc.text("PRODUIT", M, y); y += 4.5; doc.setFontSize(8.5);
+  const rows = specRows().concat([["Quantité", fmt0.format(state.qty) + " ex."]]);
+  if (!q.error && k !== "label") rows.push(["Imposition", montageText(M2)]);
+  for (const [a, b] of rows){ doc.setTextColor(110); doc.text(pdfTxt(a), M, y); doc.setTextColor(20); const ls = doc.splitTextToSize(pdfTxt(b), 105); doc.text(ls, M + 32, y); y += 4.2*ls.length; }
+  y = Math.max(y, 74) + 3;
+  const tech = Object.fromEntries((q.tech || []).map(([a, b]) => [a, String(b)])), sheets = tech["Feuilles (gâche incluse)"];
+  doc.setFontSize(8); doc.setTextColor(110); doc.text("MATIÈRE À PRÉPARER", M, y); y += 4.5; doc.setFontSize(8.5); doc.setTextColor(20);
+  const mat = k === "label" ? [`${MAT.label[state.mat.label].name} · laize ${P().label.web} mm · ${tech["Métrage (gâche incluse)"] || ""}`] : [`${MAT[k][state.mat[k]].name} · feuilles ${B.sheetW} × ${B.sheetH} mm${M2 && M2.lock ? `, ${grainSheetTxt(M2.sheetGrain)}` : ""}`, `${sheets || "—"} feuilles (dont gâche ${P().gache} % et ${B.sheetsCal} feuilles de calage) · ${M2 ? M2.n : "—"} poses par feuille · rendement ${M2 ? fmt0.format(M2.util*100) : "—"} %`];
+  mat.forEach(l => { doc.text(doc.splitTextToSize(pdfTxt(l), 186), M, y); y += 4.6; });
+  y += 3;
+  const pr = state.print[k], spots = [...new Set(state.elements.filter(e => e.spot).map(e => e.spot))], glueN = layout.panels.some(p => p.glue);
+  const steps = [
+    ["Prépresse", `PDF d'impression ${quoteNo()} ; ${k === "box" ? `${B.plates[pr] || 4} plaque(s) CTP` : "fichier numérique"}${spots.length ? ` + tons directs : ${spots.join(", ")}` : ""}`],
+    ["Impression", `${PRINT[k][pr]}${state.inside.on && k === "box" ? " ; impression intérieure (verso)" : ""} ; caler sur le BAT signé`],
+    ...(state.lam[k] && state.lam[k] !== "none" ? [["Pelliculage / vernis", LAM[k][state.lam[k]]]] : []),
+    ...(state.varnish ? [["Vernis sélectif UV", "selon masque « vernis » du PDF d'impression"]] : []),
+    ...(state.foil || state.elements.some(x => x.foil) ? [["Dorure à chaud", `film ${(FOILS[state.foilColor] || FOILS.or).name.toLowerCase()}, cliché selon masque « dorure »`]] : []),
+    ...(hasRelief() ? [["Gaufrage", `cliché mâle / femelle${state.elements.some(x => x.type === "braille") ? " ; braille : relire avant production" : ""}`]] : []),
+    ...(k !== "label" ? [["Découpe-rainage", `forme ${quoteNo()} · ${M2 ? M2.n : "—"} poses · ${lineLensText(layout)}${(state.die && +state.die.nicks) ? ` · ${state.die.nicks} attaches / pose` : ""}`], ["Éjection / débourrage", "contrôler les poses et les attaches"]] : [["Découpe & échenillage", "outil magnétique, rebobinage"]]),
+    ...(layout.panels.some(p => p.film) ? [["Fenêtre", "pose du film PET"]] : []),
+    ...(glueN ? [["Collage", state.model === "crash" ? "fond automatique (4 points) + patte latérale" : "patte latérale"]] : []),
+    ["Contrôle qualité", "couleurs / BAT, repérage découpe, pliage d'essai, collage, comptage"],
+    ["Conditionnement", "_____ ex. par carton · _____ cartons · étiquetage"],
+  ];
+  doc.setFillColor(21,24,29); doc.rect(M, y, 186, 7, "F"); doc.setTextColor(255); doc.setFontSize(8);
+  [["Étape", M + 2], ["Consignes", M + 40], ["Qté", M + 122], ["Opérateur", M + 138], ["Date", M + 160], ["Visa", M + 176]].forEach(([l, x]) => doc.text(pdfTxt(l), x, y + 4.7));
+  y += 7; doc.setTextColor(20);
+  for (const [s, c] of steps){
+    const ls = doc.splitTextToSize(pdfTxt(c), 80), h = Math.max(8, ls.length*3.8 + 3);
+    if (y + h > 280){ doc.addPage(); y = 15; }
+    doc.setDrawColor(200); doc.rect(M, y, 186, h); doc.line(M + 38, y, M + 38, y + h); [M + 120, M + 136, M + 158, M + 174].forEach(x => doc.line(x, y, x, y + h));
+    doc.setFont("helvetica", "bold"); doc.text(pdfTxt(s), M + 2, y + 5); doc.setFont("helvetica", "normal"); doc.text(ls, M + 40, y + 5); y += h;
+  }
+  if (M2 && M2.n && y < 200){
+    y += 6; doc.setFontSize(8); doc.setTextColor(110); doc.text("MONTAGE DE LA FEUILLE", M, y); y += 2;
+    const s = Math.min(186/M2.W, (282 - y)/M2.H), X = x => M + x*s, Y = v => y + (M2.H - v)*s;
+    doc.setDrawColor(150); doc.setLineWidth(.2); doc.rect(M, y, M2.W*s, M2.H*s);
+    doc.setDrawColor(227,6,19); doc.setLineWidth(.15);
+    for (const p of M2.poses){ const f = poseFn(layout, p); for (const pn of layout.panels){ const g = pn.gpoly.map(f); g.forEach((a, i) => { const b = g[(i + 1) % g.length]; doc.line(X(a[0]), Y(a[1]), X(b[0]), Y(b[1])); }); } }
+  }
+  doc.setFontSize(7.5); doc.setTextColor(150); doc.text(pdfTxt(`${settings.company.name || ""} — ordre de fabrication interne, Label Pack Studio`), 105, 290, {align:"center"});
+  return doc.output("blob");
+}
+$("#ofBtn").addEventListener("click", () => { if (!window.jspdf){ toast("Bibliothèque PDF indisponible : rechargez la page."); return; } saveFile(`${slug()}_ordre-de-fabrication.pdf`, ofPDF()).catch(() => {}); });
+/* ================= Nuancier des tons directs ================= */
+async function saveSettingsNow(){
+  try {
+    if (cloud()) await cap.db.doc("settings/main").set({...settings, updatedAt:new Date().toISOString(), updatedBy:cap.uid});
+    else { localStorage.setItem("lp-settings-v2", JSON.stringify(settings)); await fsWriteSettings(); }
+    return true;
+  } catch (e) { toast("Enregistrement refusé (droits d'édition requis)."); return false; }
+}
+function parseASE(buf){
+  const v = new DataView(buf), out = [];
+  if (String.fromCharCode(v.getUint8(0), v.getUint8(1), v.getUint8(2), v.getUint8(3)) !== "ASEF") throw new Error("ase");
+  const n = v.getUint32(8); let o = 12;
+  for (let i = 0; i < n && o + 6 <= buf.byteLength; i++){
+    const type = v.getUint16(o), len = v.getUint32(o + 2); let p = o + 6;
+    if (type === 1){
+      const nl = v.getUint16(p); p += 2; let name = ""; for (let k = 0; k < nl - 1; k++) name += String.fromCharCode(v.getUint16(p + 2*k)); p += nl*2;
+      const model = String.fromCharCode(v.getUint8(p), v.getUint8(p + 1), v.getUint8(p + 2), v.getUint8(p + 3)).trim(); p += 4;
+      const f = k => v.getFloat32(p + 4*k); let rgb = null;
+      if (model === "RGB") rgb = [f(0), f(1), f(2)].map(x => x*255);
+      else if (model === "CMYK"){ const [c, m, y, kk] = [f(0), f(1), f(2), f(3)]; rgb = [255*(1 - c)*(1 - kk), 255*(1 - m)*(1 - kk), 255*(1 - y)*(1 - kk)]; }
+      else if (model === "LAB") rgb = labToRgb(f(0)*100, f(1), f(2));
+      else if (model === "Gray") rgb = [f(0)*255, f(0)*255, f(0)*255];
+      if (rgb && name) out.push({name:name.trim(), hex:"#" + rgb.map(x => Math.round(clamp(x, 0, 255)).toString(16).padStart(2, "0")).join("")});
+    }
+    o += 6 + len;
+  }
+  return out;
+}
+function renderSwatches(){
+  const sw = settings.swatches || [], ro = cloud() && !cap.admin;
+  $("#swList").innerHTML = sw.length ? sw.map((s, i) => `<li><i style="background:${esc(s.hex)}"></i><span>${esc(s.name)}</span><small>${esc(s.hex)}${gamutCheck(s.hex) ? " · hors gamut quadri" : ""}</small>${ro ? "" : `<button class="btn small ghost" type="button" data-swdel="${i}" aria-label="Retirer ${esc(s.name)}">Retirer</button>`}</li>`).join("") : `<li class="hint">Aucun ton direct pour l'instant.</li>`;
+  $("#swAddRow").hidden = ro;
+}
+async function addSwatches(list){
+  const sw = [...(settings.swatches || [])];
+  for (const s of list){ const i = sw.findIndex(x => x.name.toLowerCase() === s.name.toLowerCase()); if (i >= 0) sw[i] = s; else sw.push(s); }
+  settings.swatches = sw.sort((a, b) => a.name.localeCompare(b.name, "fr", {numeric:true})); if (await saveSettingsNow()){ renderSwatches(); renderElEditor(); }
+}
+$("#swAdd").addEventListener("click", () => { const name = $("#swName").value.trim(); if (!name){ $("#swName").focus(); return; } addSwatches([{name, hex:$("#swHex").value}]); $("#swName").value = ""; });
+$("#swAse").addEventListener("change", async e => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { const list = parseASE(await f.arrayBuffer()); if (!list.length){ toast("Aucune couleur trouvée dans ce fichier."); return; } await addSwatches(list); toast(`${list.length} ton(s) direct(s) importé(s)`); } catch (err) { toast("Fichier .ase illisible."); } });
+$("#swList").addEventListener("click", async e => { const b = e.target.closest("[data-swdel]"); if (!b) return; settings.swatches = (settings.swatches || []).filter((_, i) => i !== +b.dataset.swdel); if (await saveSettingsNow()) renderSwatches(); });
+$("#elSpot").addEventListener("change", e => { const el = curEl(); if (!el) return; const s = (settings.swatches || []).find(x => x.name === e.target.value);
+  if (s){ el.spot = s.name; el.color = s.hex; el.foil = false; } else delete el.spot; renderElEditor(); changed("art"); });
+
+/* ================= Profil de sortie CMJN (PDF/X-4) ================= */
+let outputICC = null;
+function iccInfo(bytes){
+  if (bytes.length < 132) return null;
+  const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength), sig = o => String.fromCharCode(bytes[o], bytes[o + 1], bytes[o + 2], bytes[o + 3]);
+  if (sig(36) !== "acsp" || sig(16) !== "CMYK" || sig(12) !== "prtr") return null;
+  let desc = "";
+  const n = v.getUint32(128);
+  for (let i = 0; i < n; i++){
+    const o = 132 + 12*i; if (sig(o) !== "desc") continue; const off = v.getUint32(o + 4), t = sig(off);
+    if (t === "desc"){ const len = v.getUint32(off + 8); for (let k = 0; k < len - 1; k++) desc += String.fromCharCode(bytes[off + 12 + k]); }
+    else if (t === "mluc"){ const rlen = v.getUint32(off + 20), roff = v.getUint32(off + 24); for (let k = 0; k < rlen; k += 2) desc += String.fromCharCode(v.getUint16(off + roff + k)); }
+  }
+  desc = desc.replace(/\0/g, "").trim() || "Profil CMJN";
+  const id = /fogra\s*39|iso\s*coated\s*v2|coated.*fogra39/i.test(desc) ? "FOGRA39" : /fogra\s*51|pso\s*coated\s*v3/i.test(desc) ? "FOGRA51" : /fogra\s*52|pso\s*uncoated\s*v3/i.test(desc) ? "FOGRA52" : /fogra\s*47|uncoated/i.test(desc) ? "FOGRA47" : "Custom";
+  return {desc, id};
+}
+async function setOutputProfile(bytes, fromFs){
+  const info = iccInfo(bytes); if (!info){ toast("Ce fichier n'est pas un profil d'impression CMJN (.icc)."); return false; }
+  outputICC = {bytes, ...info}; await kvSet("icc", bytes);
+  if (FS.ready && !fromFs) try { FS.mt.set("@icc", await fsb.write("profil-sortie.icc", bytes)); } catch (e) {}
+  renderICC(); return true;
+}
+function renderICC(){ const s = $("#iccState"); if (!s) return; s.textContent = outputICC ? `Profil chargé : ${outputICC.desc} (${outputICC.id === "Custom" ? "condition personnalisée" : outputICC.id}). Le PDF d'impression est produit en PDF/X-4 avec ce profil incorporé.` : "Aucun profil : le PDF d'impression est en PDF/X-3 (condition FOGRA39 ou FOGRA47 déclarée selon le support). Chargez le profil de votre presse (par exemple ISOcoated_v2_eci.icc ou PSOcoated_v3.icc, fournis gratuitement par l'ECI) pour passer en PDF/X-4."; $("#iccClear").hidden = !outputICC; }
+$("#iccFile").addEventListener("change", async e => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f && await setOutputProfile(new Uint8Array(await f.arrayBuffer()))) toast("Profil de sortie enregistré"); });
+$("#iccClear").addEventListener("click", async () => { outputICC = null; await kvSet("icc", null); if (FS.ready) await fsb.remove("profil-sortie.icc"); renderICC(); });
+kvGet("icc").then(b => { if (b && !outputICC){ const info = iccInfo(b); if (info) outputICC = {bytes:b, ...info}; renderICC(); } });
+
+/* ================= Signature du BAT sur tablette ================= */
+const pad = {cv:null, ctx:null, drawing:false, signed:false, last:null};
+function padInit(){
+  pad.cv = $("#signPad"); pad.ctx = pad.cv.getContext("2d"); padClear();
+  const pos = e => { const r = pad.cv.getBoundingClientRect(); return [(e.clientX - r.left)*pad.cv.width/r.width, (e.clientY - r.top)*pad.cv.height/r.height]; };
+  pad.cv.addEventListener("pointerdown", e => { pad.drawing = true; pad.last = pos(e); pad.cv.setPointerCapture(e.pointerId); e.preventDefault(); });
+  pad.cv.addEventListener("pointermove", e => { if (!pad.drawing) return; const p = pos(e), c = pad.ctx; c.beginPath(); c.moveTo(...pad.last); c.lineTo(...p); c.stroke(); pad.last = p; pad.signed = true; });
+  const end = () => { pad.drawing = false; }; pad.cv.addEventListener("pointerup", end); pad.cv.addEventListener("pointercancel", end);
+}
+function padClear(){ const c = pad.ctx; c.fillStyle = "#fff"; c.fillRect(0, 0, pad.cv.width, pad.cv.height); c.strokeStyle = "#111"; c.lineWidth = 3.2; c.lineCap = c.lineJoin = "round"; pad.signed = false; }
+function openSign(){
+  if (clientMode) return; if (!pad.cv) padInit(); padClear();
+  $("#signMock").src = captureMockup(700, 700, "white", true); $("#signFlat").src = proofCanvas(1400).toDataURL("image/jpeg", .85);
+  $("#signSpecs").textContent = specRows().concat([["Quantité", fmt0.format(state.qty) + " ex."]]).map(([a, b]) => `${a} : ${b}`).join(" · ");
+  $("#signName").value = ""; $("#signNote").value = ""; $("#signDec").value = "ok"; openDlg("#signDlg");
+}
+$("#signBtn").addEventListener("click", openSign);
+$("#signClear").addEventListener("click", padClear);
+$("#signSave").addEventListener("click", async () => {
+  const name = $("#signName").value.trim(), dec = $("#signDec").value, note = $("#signNote").value.trim();
+  if (!name){ toast("Indiquez le nom du signataire."); $("#signName").focus(); return; }
+  if (dec === "ok" && !pad.signed){ toast("La signature est vide."); return; }
+  if (dec === "modif" && !note){ toast("Décrivez les corrections demandées."); $("#signNote").focus(); return; }
+  if (pfItems.some(x => x.level === "error") && dec === "ok"){ toast("Le contrôle prépresse signale des erreurs : corrigez-les avant de faire signer."); return; }
+  const small = document.createElement("canvas"); small.width = 450; small.height = 130; small.getContext("2d").drawImage(pad.cv, 0, 0, 450, 130);
+  const sig = {name, decision:dec, note, at:new Date().toISOString(), img:small.toDataURL("image/png")};
+  if (!meta.id) await saveProject(true);
+  await recordClientDecision(meta.id, {decision:dec, name, note, at:sig.at, source:"signature sur tablette", signature:sig.img});
+  closeDlg("#signDlg");
+  await saveFile(`${slug()}_BAT-signe.pdf`, batPDF(captureMockup(1200, 1200, "white", true), sig));
+});
+
+/* ================= Tableau de bord ================= */
+function renderDashboard(list){
+  const hs = p => p.history || [], st = p => p.status || "brouillon", ht = p => (p.summary && p.summary.ht) || 0, first = (p, ...s) => hs(p).find(h => s.includes(h.status));
+  const sent = list.filter(p => st(p) !== "brouillon" || first(p, "devis", "bat")), won = list.filter(p => ["valide","production","livre"].includes(st(p)));
+  const rate = sent.length ? won.length/sent.length : 0;
+  const delays = won.map(p => { const a = first(p, "devis", "bat"), b = first(p, "valide"); return a && b ? (new Date(b.at) - new Date(a.at))/864e5 : null; }).filter(v => v != null && v >= 0);
+  const avg = delays.length ? delays.reduce((s, v) => s + v, 0)/delays.length : null;
+  const now = new Date(), months = Array.from({length:12}, (_, i) => { const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1); return {k:`${d.getFullYear()}-${d.getMonth()}`, label:d.toLocaleDateString("fr-FR", {month:"short"}).replace(".", ""), full:d.toLocaleDateString("fr-FR", {month:"long", year:"numeric"}), sent:0, won:0}; });
+  const mk = d => { const x = new Date(d); return `${x.getFullYear()}-${x.getMonth()}`; };
+  for (const p of list){ const a = first(p, "devis", "bat"), b = first(p, "valide"); if (a){ const m = months.find(m => m.k === mk(a.at)); if (m) m.sent += ht(p); } if (b){ const m = months.find(m => m.k === mk(b.at)); if (m) m.won += ht(p); } }
+  const byC = new Map(); for (const p of won){ const c = (p.client || "").trim() || "Client non renseigné"; byC.set(c, (byC.get(c) || 0) + ht(p)); }
+  const top = [...byC].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const tile = (v, l, sub) => `<div class="kpi"><b>${v}</b><span>${l}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
+  const max = Math.max(1, ...months.flatMap(m => [m.sent, m.won])), W = clamp((($("#board").clientWidth || 900) - 26), 480, 1400), H = 240, pl = 52, pb = 26, pt = 10, cw = (W - pl - 8)/12, bw = Math.min(16, (cw - 10)/2), Y = v => pt + (H - pt - pb)*(1 - v/max);
+  const nice = (() => { const r = max/4, p = 10**Math.floor(Math.log10(r)), s = [1, 2, 2.5, 5, 10].find(x => x*p >= r)*p; return s; })();
+  const bar = (x, v, cls, m, lbl) => { if (v <= 0) return ""; const y = Y(v), h = H - pb - y, r = Math.min(4, h, bw/2); return `<path class="${cls}" d="M${x} ${H - pb}V${y + r}Q${x} ${y} ${x + r} ${y}H${x + bw - r}Q${x + bw} ${y} ${x + bw} ${y + r}V${H - pb}Z" data-tip="${esc(`${m.full} · ${lbl} : ${fmt0.format(v)} TND HT`)}"/>`; };
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="dchart" role="img" aria-label="Montants des devis envoyés et des BAT validés, 12 derniers mois">`;
+  for (let v = 0; v <= max + 1e-9; v += nice) svg += `<line x1="${pl}" x2="${W - 8}" y1="${Y(v)}" y2="${Y(v)}" class="grid"/><text x="${pl - 6}" y="${Y(v) + 3.5}" text-anchor="end" class="ax">${fmt0.format(v)}</text>`;
+  months.forEach((m, i) => { const x0 = pl + i*cw + (cw - 2*bw - 2)/2; svg += `<rect x="${pl + i*cw}" y="${pt}" width="${cw}" height="${H - pt - pb}" class="hit" data-tip="${esc(`${m.full} · devis ${fmt0.format(m.sent)} TND · validés ${fmt0.format(m.won)} TND`)}"/>` + bar(x0, m.sent, "s1", m, "devis envoyés") + bar(x0 + bw + 2, m.won, "s2", m, "BAT validés") + `<text x="${pl + i*cw + cw/2}" y="${H - 8}" text-anchor="middle" class="ax">${esc(m.label)}</text>`; });
+  svg += `<line x1="${pl}" x2="${W - 8}" y1="${H - pb}" y2="${H - pb}" class="base"/></svg>`;
+  return `<div class="dash">
+    <div class="kpis">${tile(String(list.length), "dossiers")}${tile(fmt0.format(sent.reduce((s, p) => s + ht(p), 0)) + " TND", "devis envoyés (HT)", `${sent.length} dossier(s)`)}${tile(fmt0.format(won.reduce((s, p) => s + ht(p), 0)) + " TND", "BAT validés (HT)", `${won.length} dossier(s)`)}${tile(fmt0.format(rate*100) + " %", "taux de transformation", "validés / devis envoyés")}${tile(avg == null ? "—" : fmt1.format(avg) + " j", "délai moyen de validation", "du devis au BAT validé")}${tile(String(list.filter(needsChase).length), "à relancer", "sans réponse depuis 7 jours")}</div>
+    <section class="dcard"><div class="row between"><h3>Devis envoyés et BAT validés, 12 derniers mois (TND HT)</h3><div class="dleg"><span><i class="s1"></i>Devis envoyés</span><span><i class="s2"></i>BAT validés</span></div></div>${svg}<div class="dtip" id="dTip" hidden></div>
+      <details><summary>Données du graphique</summary><table class="ctable"><thead><tr><th>Mois</th><th class="num">Devis envoyés</th><th class="num">BAT validés</th></tr></thead><tbody>${months.map(m => `<tr><td>${esc(m.full)}</td><td class="num">${fmt0.format(m.sent)}</td><td class="num">${fmt0.format(m.won)}</td></tr>`).join("")}</tbody></table></details></section>
+    <section class="dcard"><h3>Meilleurs clients (BAT validés, HT)</h3>${top.length ? `<table class="ctable"><tbody>${top.map(([c, v]) => `<tr><td><button type="button" class="linkbtn" data-client="${esc(c)}">${esc(c)}</button></td><td class="num">${fmt0.format(v)} TND</td></tr>`).join("")}</tbody></table>` : `<p class="hint">Aucun BAT validé pour le moment.</p>`}</section>
+    <p class="hint">Montants HT des devis enregistrés dans les dossiers (quantité choisie). Les dates viennent de l'historique des statuts.</p></div>`;
+}
+$("#board").addEventListener("mousemove", e => { const t = $("#dTip"); if (!t) return; const m = e.target.closest("[data-tip]"); if (!m || !e.target.closest(".dchart")){ t.hidden = true; return; } const r = $("#board").getBoundingClientRect(); t.textContent = m.dataset.tip; t.hidden = false; t.style.left = Math.min(e.clientX - r.left + 12, r.width - 260) + "px"; t.style.top = (e.clientY - r.top + 12 + $("#board").scrollTop) + "px"; });
+$("#board").addEventListener("mouseleave", () => { const t = $("#dTip"); if (t) t.hidden = true; });
 function moveEl(dir){ const i = state.elements.findIndex(x => x.id === selEl), j = i + dir; if (i < 0 || j < 0 || j >= state.elements.length) return; const a = state.elements; [a[i], a[j]] = [a[j], a[i]]; renderElEditor(); changed("art"); }
 $("#elUp").addEventListener("click", () => moveEl(1)); $("#elDown").addEventListener("click", () => moveEl(-1));
 $("#elDup").addEventListener("click", () => { const el = curEl(); if (!el) return; const c = structuredClone(el); c.id = newId(); c.x += 4; c.y -= 4; state.elements.push(c); selEl = c.id; renderElEditor(); changed("art"); });
@@ -5225,7 +5794,7 @@ $("#pStatus").addEventListener("change", e => { const s = e.target.value; if (s 
 /* ================= Projets ================= */
 let projects = [], unsubProjects = null;
 function localProjects(){ try { return JSON.parse(localStorage.getItem("lp-projects-v2") || "[]"); } catch (e) { return []; } }
-function writeLocalProjects(list){ try { localStorage.setItem("lp-projects-v2", JSON.stringify(list)); return true; } catch (e) { return false; } }
+function writeLocalProjects(list){ try { localStorage.setItem("lp-projects-v2", JSON.stringify(list)); fsSyncProjects(list); return true; } catch (e) { return false; } }
 function subscribeProjects(){
   if (unsubProjects) unsubProjects();
   if (cloud()){
@@ -5253,7 +5822,7 @@ async function saveProject(silent){
   if (!meta.name.trim()) meta.name = `${TPL().name} ${meta.client || ""}`.trim();
   const now = new Date().toISOString(), q = quote(state.qty);
   if (!meta.id){ meta.id = meta.draftId || newId(); meta.createdAt = now; meta.createdBy = cap.uid || null; if (!meta.history.length) meta.history = [{status:meta.status, at:now, by:cap.uid || null}]; }
-  const body = {name:meta.name, client:meta.client, status:meta.status, createdAt:meta.createdAt, createdBy:meta.createdBy, history:meta.history, updatedAt:now, updatedBy:cap.uid || null, summary:summary(q), config:configForSave()};
+  const body = {name:meta.name, client:meta.client, status:meta.status, createdAt:meta.createdAt, createdBy:meta.createdBy, history:meta.history, docs:meta.docs || [], cmf:meta.cmf || "", caddr:meta.caddr || "", updatedAt:now, updatedBy:cap.uid || null, summary:summary(q), config:configForSave()};
   const dropped = cloud() ? stripHeavy(body) : false;
   try {
     if (cloud()) await cap.db.collection("projects").doc(meta.id).set(body);
@@ -5264,7 +5833,7 @@ async function saveProject(silent){
 }
 function openProject(p){
   state = merge(DEFAULT, p.config || {}); sanitizeState();
-  meta = merge(NEW_META(), {id:p.id, name:p.name, client:p.client, status:p.status, createdAt:p.createdAt, createdBy:p.createdBy, history:p.history || []});
+  meta = merge(NEW_META(), {id:p.id, name:p.name, client:p.client, status:p.status, createdAt:p.createdAt, createdBy:p.createdBy, history:p.history || [], docs:p.docs || [], cmf:p.cmf || "", caddr:p.caddr || ""});
   selEl = null; dirty = false; savedAt = null; hist = []; hIndex = -1; pushHistory();
   showStudio(); renderControls(); refresh("geo", true);
 }
@@ -5294,8 +5863,8 @@ async function renderBoard(){
   const list = projects.filter(p => !q || `${p.name} ${p.client} ${p.summary && p.summary.template}`.toLowerCase().includes(q));
   let ps = {};
   if (cap.user){ const ids = [...new Set(list.map(p => p.updatedBy || p.createdBy).filter(Boolean))]; if (ids.length) try { ps = await cap.user.profiles(ids); } catch (e) {} }
-  $("#boardNote").textContent = cloud() ? "Projets partagés avec l'équipe ayant accès à cette page. Le statut se change directement sur la carte ; les validations de BAT faites en ligne par les clients s'inscrivent dans l'historique." : "Projets enregistrés dans ce navigateur uniquement.";
-  if (boardMode === "clients"){ $("#board").className = "board-list"; $("#board").innerHTML = renderClients(list); return; }
+  $("#boardNote").textContent = cloud() ? "Projets partagés avec l'équipe ayant accès à cette page. Le statut se change directement sur la carte ; les validations de BAT faites en ligne par les clients s'inscrivent dans l'historique." : FS.ready ? `Projets enregistrés dans le dossier partagé « ${FS.name} », visibles par tous les postes connectés à ce dossier.` : "Projets enregistrés dans ce navigateur uniquement. Paramètres › Dossier partagé de l'équipe pour les partager entre les postes.";
+  if (boardMode === "clients" || boardMode === "dash"){ $("#board").className = "board-list"; $("#board").innerHTML = boardMode === "dash" ? renderDashboard(list) : renderClients(list); return; }
   $("#board").className = "board";
   $("#board").innerHTML = STATUSES.map(([sk, sl]) => {
     const items = list.filter(p => (p.status || "brouillon") === sk);
@@ -5326,8 +5895,9 @@ $("#saveBtn").addEventListener("click", () => saveProject());
 /* ---- Suivi des dossiers : réponses client au BAT, relances, vue par client ---- */
 function needsChase(p){ return ["devis","bat"].includes(p.status) && (Date.now() - new Date(((p.history || []).slice(-1)[0] || {}).at || p.updatedAt || Date.now()))/864e5 > 7; }
 async function recordClientDecision(id, d){
-  const p = projects.find(x => x.id === id); if (!p) return false;
-  const status = d.decision === "ok" ? "valide" : "bat", entry = {status, at:d.at || new Date().toISOString(), by:cap.uid || null, client:d.name || "Client", decision:d.decision, note:d.note || "", source:d.source || "manuel", ...(d.approval ? {approval:d.approval} : {})};
+  const p = projects.find(x => x.id === id);
+  const status = d.decision === "ok" ? "valide" : "bat", entry = {status, at:d.at || new Date().toISOString(), by:cap.uid || null, client:d.name || "Client", decision:d.decision, note:d.note || "", source:d.source || "manuel", ...(d.approval ? {approval:d.approval} : {}), ...(d.signature ? {signature:d.signature} : {})};
+  if (!p){ if (meta.id !== id) return false; meta.status = status; meta.history = [...(meta.history || []), entry]; renderMeta(); await saveProject(true); toast(`${d.decision === "ok" ? "BAT validé" : "Correction demandée"} par ${entry.client}`); return true; }
   const upd = {status, history:[...(p.history || []), entry], updatedAt:new Date().toISOString()};
   try {
     if (cloud()) await cap.db.collection("projects").doc(id).update(upd);
@@ -5356,7 +5926,7 @@ function cardExtras(p){
   const h = p.history || [], appr = [...h].reverse().find(x => x.client), d = x => new Date(x).toLocaleDateString("fr-FR");
   return `${appr ? `<div><span class="badge ${appr.decision === "ok" ? "ok" : "warn"}">${appr.decision === "ok" ? "✓ BAT validé" : "✎ Correction demandée"} · ${esc(appr.client)} · ${d(appr.at)}</span>${appr.note ? `<div class="meta">« ${esc(appr.note)} »</div>` : ""}</div>` : ""}
     ${needsChase(p) ? `<div><span class="badge warn">À relancer · sans réponse depuis ${fmt0.format((Date.now() - new Date((h.slice(-1)[0] || {}).at || p.updatedAt))/864e5)} j</span></div>` : ""}
-    ${h.length ? `<details><summary>Historique (${h.length})</summary><ol class="hist">${h.slice().reverse().map(x => `<li>${d(x.at)} · ${esc((STATUSES.find(s => s[0] === x.status) || [0, x.status])[1])}${x.client ? ` · ${esc(x.client)}${x.source ? ` (${esc(x.source)})` : ""}` : ""}${x.note ? ` — ${esc(x.note)}` : ""}</li>`).join("")}</ol></details>` : ""}
+    ${h.length ? `<details><summary>Historique (${h.length})</summary><ol class="hist">${h.slice().reverse().map(x => `<li>${d(x.at)} · ${esc((STATUSES.find(s => s[0] === x.status) || [0, x.status])[1])}${x.client ? ` · ${esc(x.client)}${x.source ? ` (${esc(x.source)})` : ""}${x.signature ? " · signé" : ""}` : ""}${x.note ? ` — ${esc(x.note)}` : ""}</li>`).join("")}</ol></details>` : ""}
     <button type="button" class="btn small" data-appr="${esc(p.id)}">Réponse client au BAT…</button>`;
 }
 function renderClients(list){
@@ -5366,7 +5936,8 @@ function renderClients(list){
   if (!rows.length) return `<p class="hint">Aucun dossier.</p>`;
   return `<div class="ctable-wrap"><table class="ctable"><thead><tr><th>Client</th><th class="num">Dossiers</th><th class="num">En cours</th><th class="num">À relancer</th><th class="num">Montant HT</th><th>Dernière activité</th><th>Statuts</th></tr></thead><tbody>${rows.map(r => `<tr><td><button type="button" class="linkbtn" data-client="${esc(r.c)}">${esc(r.c)}</button></td><td class="num">${r.ps.length}</td><td class="num">${r.open}</td><td class="num">${r.chase ? `<span class="badge warn">${r.chase}</span>` : "—"}</td><td class="num">${fmt0.format(r.ht)}</td><td>${r.last ? new Date(r.last).toLocaleDateString("fr-FR") : ""}</td><td><div class="sts">${STATUSES.map(([k, l]) => { const n = r.ps.filter(p => (p.status || "brouillon") === k).length; return n ? `<span class="badge">${l} ${n}</span>` : ""; }).join("")}</div></td></tr>`).join("")}</tbody></table></div>`;
 }
-function setBoardMode(m){ boardMode = m; $("#bvStatus").setAttribute("aria-selected", m === "status"); $("#bvClients").setAttribute("aria-selected", m === "clients"); renderBoard(); }
+function setBoardMode(m){ boardMode = m; $("#bvStatus").setAttribute("aria-selected", m === "status"); $("#bvClients").setAttribute("aria-selected", m === "clients"); $("#bvDash").setAttribute("aria-selected", m === "dash"); renderBoard(); }
+$("#bvDash").addEventListener("click", () => setBoardMode("dash"));
 $("#bvStatus").addEventListener("click", () => setBoardMode("status")); $("#bvClients").addEventListener("click", () => setBoardMode("clients"));
 $("#board").addEventListener("click", e => {
   const c = e.target.closest("[data-client]"); if (c){ $("#boardSearch").value = c.dataset.client === "Client non renseigné" ? "" : c.dataset.client; setBoardMode("status"); return; }
@@ -5391,12 +5962,14 @@ const SETTINGS_FIELDS = [
   ["Boîtes — feuille & support", [["pricing.box.sheetW","Feuille, grand côté","mm"],["pricing.box.sheetH","Feuille, petit côté","mm"],["pricing.box.grip","Prise de pince","mm"],["pricing.box.gap","Écart entre poses","mm"],["pricing.box.sheet.gc1","GC1 300 g / feuille","TND"],["pricing.box.sheet.duplex","Duplex 350 g / feuille","TND"],["pricing.box.sheet.kraft","Kraft 350 g / feuille","TND"],["pricing.box.sheet.micro","Micro-cannelure / feuille","TND"],["pricing.box.sheet.ondB","Cannelure B / feuille","TND"],["pricing.cup.sheet","Carton gobelet PE / feuille","TND"],["pricing.box.sheetsCal","Feuilles de calage","f."]]],
   ["Boîtes — impression & finitions", [["pricing.box.platePrice","Plaque offset","TND"],["pricing.box.printCal.cmjn","Calage quadri","TND"],["pricing.box.printSheet.cmjn","Passage quadri / feuille","TND"],["pricing.box.printCal.cmjnp","Calage quadri + Pantone","TND"],["pricing.box.printSheet.cmjnp","Passage quadri + P. / feuille","TND"],["pricing.box.insideCal","Impression intérieure, calage","TND"],["pricing.box.insideSheet","Impression intérieure / feuille","TND"],["pricing.box.lam.mat","Pelliculage mat / feuille","TND"],["pricing.box.lam.brillant","Pelliculage brillant / feuille","TND"],["pricing.box.lam.soft","Soft-touch / feuille","TND"],["pricing.box.varnishCal","Vernis UV, calage","TND"],["pricing.box.varnishSheet","Vernis UV / feuille","TND"],["pricing.box.foilCal","Dorure, cliché + calage","TND"],["pricing.box.foilSheet","Dorure / feuille","TND"],["pricing.box.embossCal","Gaufrage, cliché + calage","TND"],["pricing.box.embossSheet","Gaufrage / feuille","TND"]]],
   ["Boîtes — façonnage", [["pricing.box.dieBase","Forme de découpe, base","TND"],["pricing.box.diePerM","Forme, filet au mètre","TND"],["pricing.box.cutCal","Découpe, calage","TND"],["pricing.box.cutSheet","Découpe / feuille","TND"],["pricing.box.windowCal","Fenêtre, calage","TND"],["pricing.box.windowPc","Fenêtre / pièce","TND"],["pricing.box.glueCal","Collage, calage","TND"],["pricing.box.bagPc","Façonnage sac / pièce","TND"],["pricing.box.handlePc","Poignées / paire","TND"],["pricing.box.sheet.kraftp","Papier kraft brun / feuille","TND"],["pricing.box.sheet.whitep","Papier kraft blanc / feuille","TND"],["pricing.box.gluePc","Collage / pièce","TND"]]],
+  ["Facturation", [["billing.timbre","Droit de timbre par facture","TND"],["billing.prefixInv","Préfixe des factures"],["billing.startInv","Premier numéro de facture de l'année",""],["billing.prefixBL","Préfixe des bons de livraison"],["billing.startBL","Premier numéro de BL de l'année",""],["billing.payment","Conditions de paiement"],["billing.rib","RIB"],["billing.accounts.client","Compte clients"],["billing.accounts.sales","Compte de ventes"],["billing.accounts.vat","Compte TVA collectée"],["billing.accounts.stamp","Compte droit de timbre"]]],
   ["Étiquettes", [["pricing.label.web","Laize machine","mm"],["pricing.label.m2.couche","Couché adhésif / m²","TND"],["pricing.label.m2.ppw","PP blanc / m²","TND"],["pricing.label.m2.ppt","PP transparent / m²","TND"],["pricing.label.m2.verge","Vergé / m²","TND"],["pricing.label.printCal","Impression, calage","TND"],["pricing.label.printM2.num","Quadri / m²","TND"],["pricing.label.printM2.numb","Quadri + blanc / m²","TND"],["pricing.label.fin.vernis","Vernis / m²","TND"],["pricing.label.fin.lam","Lamination / m²","TND"],["pricing.label.toolBase","Outil de découpe","TND"],["pricing.label.cutM","Découpe / m","TND"],["pricing.label.rollPer","Étiquettes par bobine","ex."],["pricing.label.rollCost","Rebobinage / bobine","TND"]]],
 ];
 const getPath = (o, p) => p.split(".").reduce((a, k) => a && a[k], o);
 const setPath = (o, p, val) => { const ks = p.split("."); let a = o; ks.slice(0, -1).forEach(k => a = a[k] = a[k] || {}); a[ks[ks.length-1]] = val; };
 let draftSettings = null, unsubSettings = null;
 function openSettings(from){
+  renderFsState(); renderSwatches(); renderICC();
   draftSettings = structuredClone(from && from.pricing ? from : settings);
   const ro = cloud() && !cap.admin;
   $("#settingsBody").innerHTML = SETTINGS_FIELDS.map(([title, fields]) => `<div class="field"><h3>${title}</h3></div><div class="pgrid">${fields.map(([p, l, u]) => {
@@ -5439,7 +6012,7 @@ $("#settingsSave").addEventListener("click", async () => {
   settings = merge(DEFAULT_SETTINGS, draftSettings);
   try {
     if (cloud()){ await cap.db.doc("settings/main").set({...settings, updatedAt:new Date().toISOString(), updatedBy:cap.uid}); publishCompany(); }
-    else localStorage.setItem("lp-settings-v2", JSON.stringify(settings));
+    else { localStorage.setItem("lp-settings-v2", JSON.stringify(settings)); fsWriteSettings(); }
     toast("Paramètres enregistrés"); closeDlg("#settingsDlg"); renderControls(); refresh("geo");
   } catch (e) { toast("Paramètres non enregistrés (droits d'édition requis)."); }
 });
@@ -5469,8 +6042,8 @@ function pdfText(doc, text, x, y, o = {}){
   cx.font = font;
   const wmm = Math.min(cx.measureText(text).width/px, o.maxWidth || 400);
   c.width = Math.ceil(wmm*px) + 4; c.height = Math.ceil(hmm*px);
-  const rtl = ARABIC.test(text);
-  cx.font = font; cx.fillStyle = "#141414"; cx.textBaseline = "middle"; cx.direction = rtl ? "rtl" : "ltr"; cx.textAlign = rtl ? "right" : "left";
+  const rtl = ARABIC.test(text) && !/^[\s\dA-Za-zÀ-ÿ(]/.test(text);
+  cx.font = font; cx.fillStyle = o.color || "#141414"; cx.textBaseline = "middle"; cx.direction = rtl ? "rtl" : "ltr"; cx.textAlign = rtl ? "right" : "left";
   cx.fillText(text, rtl ? c.width - 2 : 2, c.height/2);
   doc.addImage(c.toDataURL("image/png"), "PNG", o.align === "right" ? x - wmm : x, y - hmm*.7, wmm, hmm);
 }
@@ -5579,7 +6152,7 @@ function dieCheck(L = layout){
   const all = [...deg.keys()].map(k => k.split(",").map(Number));
   for (const e of ends) if (all.some(q => { const d = Math.hypot(q[0] - e[0], q[1] - e[1]); return d > .005 && d < .3; })) r.microGaps++;
   const g = dieGeometry(L); r.arcs = [...g.cut, ...g.crease].filter(x => x.t !== "L").length; r.entities = g.cut.length + g.crease.length;
-  r.slits = ["rte","ste","hang","hex","gable"].includes(state.model);
+  r.slits = ["rte","ste","hang","hex","gable","crash"].includes(state.model);
   r.ok = !r.tiny && !r.doubles && !r.creaseOnCut && !r.microGaps && (!r.freeEnds || r.slits);
   return r;
 }
@@ -5862,20 +6435,20 @@ function devisPDF(mockup){
   doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(20); pdfText(doc, co.name || "Label Pack", M, 22);
   doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(90);
   [co.address, co.mf ? "MF : " + co.mf : "", [co.phone, co.email].filter(Boolean).join(" · ")].filter(Boolean).forEach((l, i) => pdfText(doc, l, M, 28 + i*4));
-  doc.setTextColor(184,15,90); doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.text("DEVIS", 195, 22, {align:"right"});
+  doc.setTextColor(184,15,90); doc.setFont("helvetica", "bold"); doc.setFontSize(20); pdfText(doc, bi("DEVIS"), 195, 22, {align:"right", bold:true, color:"#b80f5a"});
   doc.setTextColor(40); doc.setFontSize(9); doc.setFont("helvetica", "normal");
-  doc.text(pdfTxt(`N° ${quoteNo()}`), 195, 28, {align:"right"}); doc.text(pdfTxt(`Date : ${new Date().toLocaleDateString("fr-FR")}`), 195, 32, {align:"right"}); doc.text("Validité : 30 jours", 195, 36, {align:"right"});
+  doc.text(pdfTxt(`N° ${quoteNo()}`), 195, 28, {align:"right"}); doc.text(pdfTxt(`Date : ${new Date().toLocaleDateString("fr-FR")}`), 195, 32, {align:"right"}); pdfText(doc, bi("Validité : 30 jours"), 195, 36, {align:"right"});
   doc.setDrawColor(210); doc.setFillColor(246,247,244); doc.roundedRect(M, 44, 95, 20, 2, 2, "FD");
-  doc.setFontSize(8); doc.setTextColor(110); doc.text("CLIENT", M + 4, 50); doc.setFontSize(11); doc.setTextColor(20); doc.setFont("helvetica", "bold");
+  doc.setFontSize(8); doc.setTextColor(110); pdfText(doc, bi("CLIENT"), M + 4, 50); doc.setFontSize(11); doc.setTextColor(20); doc.setFont("helvetica", "bold");
   pdfText(doc, meta.client || "—", M + 4, 56, {maxWidth:87, bold:true}); doc.setFont("helvetica", "normal"); doc.setFontSize(9); pdfText(doc, meta.name || "", M + 4, 61, {maxWidth:87});
   if (mockup) doc.addImage(mockup, "JPEG", 125, 42, 70, 70);
-  let y = 76; doc.setFontSize(8); doc.setTextColor(110); doc.text("DÉSIGNATION", M, y); y += 5;
+  let y = 76; doc.setFontSize(8); doc.setTextColor(110); pdfText(doc, bi("DÉSIGNATION"), M, y); y += 5; const lw = state.docLang === "ar" ? 52 : 32;
   doc.setFontSize(9.5);
-  for (const [a, b] of specRows()){ doc.setTextColor(110); doc.text(pdfTxt(a), M, y); doc.setTextColor(20); const ls = doc.splitTextToSize(pdfTxt(b), 75); doc.text(ls, M + 32, y); y += 5*ls.length; }
+  for (const [a, b] of specRows()){ doc.setTextColor(110); pdfText(doc, bi(a), M, y); doc.setTextColor(20); const ls = doc.splitTextToSize(pdfTxt(b), 107 - lw); doc.text(ls, M + lw, y); y += 5*ls.length; }
   y = Math.max(y, 116) + 4;
-  doc.setFontSize(8); doc.setTextColor(110); doc.text("PRIX PAR QUANTITÉ", M, y); y += 3;
-  doc.setFillColor(21,24,29); doc.rect(M, y, 180, 7, "F"); doc.setTextColor(255); doc.setFontSize(9);
-  doc.text("Quantité", M + 3, y + 4.8); doc.text("Prix unitaire HT", 140, y + 4.8, {align:"right"}); doc.text("Total HT", 192, y + 4.8, {align:"right"}); y += 7;
+  doc.setFontSize(8); doc.setTextColor(110); pdfText(doc, bi("PRIX PAR QUANTITÉ"), M, y); y += 3;
+  doc.setFillColor(21,24,29); doc.rect(M, y, 180, thH() - 1, "F"); doc.setTextColor(255); doc.setFontSize(9);
+  th(doc, "Quantité", M + 3, y + 4.8, {color:"#ffffff"}); th(doc, "Prix unitaire HT", 140, y + 4.8, {align:"right", color:"#ffffff"}); th(doc, "Total HT", 192, y + 4.8, {align:"right", color:"#ffffff"}); y += thH() - 1;
   doc.setTextColor(20);
   for (const n of [...new Set([...TIERS, state.qty])].sort((a, b) => a - b)){
     const t = quote(n); if (t.error) continue;
@@ -5885,16 +6458,16 @@ function devisPDF(mockup){
   }
   y += 6; doc.setFont("helvetica", "normal");
   if (q.error){ doc.setTextColor(200,30,30); doc.text(pdfTxt(q.error), M, y, {maxWidth:180}); y += 10; }
-  else [[`Total HT (${fmt0.format(state.qty)} ex.)`, money(q.ht)], [`TVA ${P().tva} %`, money(q.tva)], ["Total TTC", money(q.ttc)]].forEach(([a, b], i) => { doc.setFont("helvetica", i === 2 ? "bold" : "normal"); doc.setFontSize(i === 2 ? 11 : 9.5); doc.setTextColor(20); doc.text(pdfTxt(a), 140, y, {align:"right"}); doc.text(b, 192, y, {align:"right"}); y += 6; });
-  y += 6; doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(110); doc.text("CONDITIONS", M, y); y += 4.5;
+  else [[`Total HT (${pdfTxt(fmt0.format(state.qty))} ex.)${state.docLang === "ar" ? " / " + AR["Total HT"] : ""}`, money(q.ht)], [`${bi("TVA")} ${P().tva} %`, money(q.tva)], [bi("Total TTC"), money(q.ttc)]].forEach(([a, b], i) => { doc.setFont("helvetica", i === 2 ? "bold" : "normal"); doc.setFontSize(i === 2 ? 11 : 9.5); doc.setTextColor(20); pdfText(doc, a, 155, y, {align:"right", bold:i === 2}); doc.text(b, 192, y, {align:"right"}); y += 6; });
+  y += 6; doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(110); pdfText(doc, bi("CONDITIONS"), M, y); y += 4.5;
   doc.setTextColor(60); doc.setFontSize(8.5); doc.text(doc.splitTextToSize(pdfTxt(co.conditions), 180), M, y);
   if (P().example){ doc.setTextColor(168,91,0); doc.text("Document établi avec la grille tarifaire d'exemple : à remplacer par les tarifs réels avant envoi.", M, 280); }
   doc.setTextColor(150); doc.setFontSize(7.5); doc.text(pdfTxt(`${co.name} — devis généré avec Label Pack Studio`), 105, 289, {align:"center"});
   return doc.output("blob");
 }
-function batPDF(mockup){
+function batPDF(mockup, sig){
   const {jsPDF} = window.jspdf, doc = new jsPDF({unit:"mm", format:"a4", orientation:"landscape"}), M = 12;
-  doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(20); doc.text("BON À TIRER (BAT)", M, 16);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(20); pdfText(doc, bi("BON À TIRER (BAT)"), M, 16, {bold:true});
   doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(90);
   pdfText(doc, `${settings.company.name} · ${quoteNo()} · ${meta.client || ""} · ${meta.name || TPL().name} · ${new Date().toLocaleDateString("fr-FR")}`, M, 22);
   if (mockup) doc.addImage(mockup, "JPEG", M, 28, 95, 95);
@@ -5902,17 +6475,22 @@ function batPDF(mockup){
   const w = r > bw/bh ? bw : bh*r, h = r > bw/bh ? bw/r : bh;
   doc.addImage(proof.toDataURL("image/jpeg", .9), "JPEG", 120 + (bw - w)/2, 28 + (bh - h)/2, w, h);
   doc.setDrawColor(220); doc.rect(120, 28, bw, bh);
-  let y = 145; doc.setFontSize(8); doc.setTextColor(110); doc.text("CARACTÉRISTIQUES", M, y); y += 5; doc.setFontSize(8.5);
-  for (const [a, b] of specRows().concat([["Quantité", fmt0.format(state.qty) + " ex."]])){ doc.setTextColor(110); doc.text(pdfTxt(a), M, y); doc.setTextColor(20); const ls = doc.splitTextToSize(pdfTxt(b), 74); doc.text(ls, M + 30, y); y += 4.4*ls.length; }
+  let y = 145; doc.setFontSize(8); doc.setTextColor(110); pdfText(doc, bi("CARACTÉRISTIQUES"), M, y); y += 5; doc.setFontSize(8.5); const lw = state.docLang === "ar" ? 46 : 30;
+  for (const [a, b] of specRows().concat([["Quantité", fmt0.format(state.qty) + " ex."]])){ doc.setTextColor(110); pdfText(doc, bi(a), M, y); doc.setTextColor(20); const ls = doc.splitTextToSize(pdfTxt(b), 104 - lw); doc.text(ls, M + lw, y); y += 4.4*ls.length; }
   const pf = pfItems.filter(x => x.level !== "ok"), nE = pf.filter(x => x.level === "error").length;
-  doc.setFontSize(8); doc.setTextColor(110); doc.text("CONTRÔLE PRÉPRESSE", 120, 145);
+  doc.setFontSize(8); doc.setTextColor(110); pdfText(doc, bi("CONTRÔLE PRÉPRESSE"), 120, 145);
   let py = 150;
   if (!pf.length){ doc.setTextColor(23,120,74); doc.text("Aucun problème bloquant détecté.", 120, py); py += 4.5; }
   for (const x of pf.slice(0, 5)){ doc.setTextColor(...(x.level === "error" ? [200,30,30] : x.level === "warn" ? [168,91,0] : [90,90,90])); const ls = doc.splitTextToSize(pdfTxt((x.level === "error" ? "Erreur : " : x.level === "warn" ? "Alerte : " : "") + x.msg), 80); doc.text(ls, 120, py); py += 3.8*ls.length; }
   if (pf.length > 5){ doc.setTextColor(90); doc.text(pdfTxt(`… et ${pf.length - 5} autre(s) point(s)`), 120, py); }
   if (nE){ doc.setTextColor(200,30,30); doc.setFont("helvetica", "bold"); doc.text("BAT NON VALIDABLE EN L'ÉTAT", 120, 200); doc.setFont("helvetica", "normal"); }
-  doc.setDrawColor(60); doc.rect(205, 144, 80, 50); doc.setFontSize(9); doc.setTextColor(20); doc.setFont("helvetica", "bold"); doc.text("Bon pour accord", 209, 151);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.text("Nom :", 209, 160); doc.text("Date :", 209, 168); doc.text("Signature et cachet :", 209, 176);
+  doc.setDrawColor(60); doc.rect(205, 144, 80, 50); doc.setFontSize(9); doc.setTextColor(20); doc.setFont("helvetica", "bold"); pdfText(doc, bi("Bon pour accord"), 209, 151, {bold:true});
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); pdfText(doc, bi("Nom :"), 209, 160); pdfText(doc, bi("Date :"), 209, 168); pdfText(doc, bi("Signature et cachet :"), 209, 176);
+  if (sig){
+    const vx = state.docLang === "ar" ? 238 : 222; doc.setTextColor(20); pdfText(doc, sig.name, vx, 160, {maxWidth:283 - vx}); doc.text(new Date(sig.at).toLocaleString("fr-FR"), vx, 168);
+    if (sig.decision === "ok") doc.addImage(sig.img, "PNG", 210, 178, 70, 14);
+    doc.setFontSize(7); doc.setTextColor(...(sig.decision === "ok" ? [23,120,74] : [200,30,30])); doc.text(doc.splitTextToSize(pdfTxt(sig.decision === "ok" ? "Bon pour accord, signé sur tablette." : `Correction demandée : ${sig.note}`), 74), 209, sig.decision === "ok" ? 196 : 182);
+  }
   doc.setFontSize(7.5); doc.setTextColor(150); doc.text("Traits rouges : coupe · pointillés bleus : rainage · zone pâle : fond perdu (coupé à la fabrication). Couleurs écran non contractuelles.", M, 204);
   return doc.output("blob");
 }
@@ -5932,6 +6510,7 @@ async function runExport(kindName){
     else if (kindName === "range") await exportRange(base, bg);
     else if (kindName === "allbat") await exportAllBat(base);
     else if (kindName === "formiste") await exportFormiste(base);
+    else if (kindName === "of") await saveFile(`${base}_ordre-de-fabrication.pdf`, ofPDF());
     else if (kindName === "aijsx") await exportIllustratorZip(base);
     else if (kindName === "ai-send") await sendToIllustrator();
     else if (kindName === "printpdf"){ toast("Calcul du fichier d'impression…"); await new Promise(r => setTimeout(r, 30)); await saveFile(`${base}_impression.pdf`, printPDF()); }
@@ -5953,6 +6532,7 @@ async function runExport(kindName){
       zip.file(`${base}_maquette.png`, dataURLtoBlob(captureMockup(2000, 1500, bg)));
       zip.file(`${base}_BAT.pdf`, batPDF(captureMockup(1200, 1200, "white", true)));
       zip.file(`${base}_devis.pdf`, devisPDF(captureMockup(1000, 1000, "white", true)));
+      zip.file(`${base}_ordre-de-fabrication.pdf`, ofPDF());
       if (kind() === "box" && state.inside.on && state.images.inside){ const vc = versoCanvas(); if (vc) zip.file(`${base}_impression-interieure-verso.png`, await new Promise(r => vc.toBlob(r, "image/png"))); }
       zip.file("LISEZ-MOI.txt", `Pack fabrication ${quoteNo()} — ${meta.client || ""} ${meta.name || ""}\r\n\r\n` + specRows().map(([a,b]) => `${a} : ${b}`).join("\r\n") + `\r\nQuantité : ${state.qty}\r\n\r\nContrôle prépresse :\r\n` + pfItems.map(x => `- [${x.level}] ${x.msg}`).join("\r\n") + `\r\n\r\nFichiers :\r\n- impression.pdf : PDF/X-3 (TrimBox, BleedBox, intention de sortie FOGRA39 ou FOGRA47, images RVB calibrées sRGB, aucune police) ; visuel 300 dpi avec fond perdu et traits de coupe (page 1), forme de découpe vectorielle (page 2), puis un masque par finition (dorure, vernis sélectif, gaufrage, blanc de soutien)\r\n- plan-decoupe.pdf / .svg : échelle 1:1, calques COUPE (rouge) et RAINAGE (bleu), épaisseur du support compensée\r\n- plan-decoupe.dxf : pour table de découpe / CAO (mm)\r\n- visuel-a-plat.png : contrôle visuel avec traits\r\n- BAT.pdf : à faire signer par le client\r\n- devis.pdf : offre de prix\r\n\r\nGabarit à valider sur échantillon (table de découpe ou maquette blanche) avant la première production.\r\n`);
       await saveFile(`${base}_pack-fabrication.zip`, await zip.generateAsync({type:"blob"}));
@@ -6579,9 +7159,9 @@ function recapPDF(rows){
   [co.address, co.mf ? "MF : " + co.mf : "", [co.phone, co.email].filter(Boolean).join(" · ")].filter(Boolean).forEach((l, i) => pdfText(doc, l, M, 28 + i*4));
   doc.setTextColor(184,15,90); doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.text(pdfTxt("DEVIS RÉCAPITULATIF"), 195, 22, {align:"right"});
   doc.setTextColor(40); doc.setFontSize(9); doc.setFont("helvetica", "normal");
-  doc.text(pdfTxt(`N° ${quoteNo()}`), 195, 28, {align:"right"}); doc.text(pdfTxt(`Date : ${new Date().toLocaleDateString("fr-FR")}`), 195, 32, {align:"right"}); doc.text("Validité : 30 jours", 195, 36, {align:"right"});
+  doc.text(pdfTxt(`N° ${quoteNo()}`), 195, 28, {align:"right"}); doc.text(pdfTxt(`Date : ${new Date().toLocaleDateString("fr-FR")}`), 195, 32, {align:"right"}); pdfText(doc, bi("Validité : 30 jours"), 195, 36, {align:"right"});
   doc.setDrawColor(210); doc.setFillColor(246,247,244); doc.roundedRect(M, 44, 95, 16, 2, 2, "FD");
-  doc.setFontSize(8); doc.setTextColor(110); doc.text("CLIENT", M + 4, 50); doc.setFontSize(11); doc.setTextColor(20); doc.setFont("helvetica", "bold"); pdfText(doc, meta.client || "—", M + 4, 56, {maxWidth:87, bold:true});
+  doc.setFontSize(8); doc.setTextColor(110); pdfText(doc, bi("CLIENT"), M + 4, 50); doc.setFontSize(11); doc.setTextColor(20); doc.setFont("helvetica", "bold"); pdfText(doc, meta.client || "—", M + 4, 56, {maxWidth:87, bold:true});
   let y = 70; doc.setFont("helvetica", "normal");
   doc.setFillColor(21,24,29); doc.rect(M, y, 180, 7, "F"); doc.setTextColor(255); doc.setFontSize(8.5);
   doc.text("Produit", M + 24, y + 4.8); doc.text("Quantité", 128, y + 4.8, {align:"right"}); doc.text("PU HT", 158, y + 4.8, {align:"right"}); doc.text("Total HT", 193, y + 4.8, {align:"right"}); y += 7;
@@ -6600,7 +7180,7 @@ function recapPDF(rows){
   y += 8;
   [["Total HT", money(ht)], [`TVA ${P().tva} %`, money(tva)], ["Total TTC", money(ht + tva)]].forEach(([a, b], i) => { doc.setFont("helvetica", i === 2 ? "bold" : "normal"); doc.setFontSize(i === 2 ? 11 : 9.5); doc.setTextColor(20); doc.text(pdfTxt(a), 158, y, {align:"right"}); doc.text(b, 193, y, {align:"right"}); y += 6; });
   if (nErr){ doc.setFontSize(8.5); doc.setTextColor(200,30,30); doc.text(pdfTxt(`${nErr} produit(s) non chiffré(s) : voir le motif sur la ligne.`), M, y + 2); y += 6; }
-  y += 6; doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(110); doc.text("CONDITIONS", M, y); y += 4.5;
+  y += 6; doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(110); pdfText(doc, bi("CONDITIONS"), M, y); y += 4.5;
   doc.setTextColor(60); doc.setFontSize(8.5); doc.text(doc.splitTextToSize(pdfTxt(co.conditions), 180), M, y);
   return doc.output("blob");
 }
@@ -6678,7 +7258,7 @@ async function saveKit(){
   const logo = state.images.logo && !(state.images.logo.src.startsWith("data:") && state.images.logo.src.length > 90000) ? state.images.logo : null;
   const kit = {name, design:{bg:d.bg, accent:d.accent, brand:d.brand, pattern:d.pattern, mention:d.mention}, logo, foil:state.foil, foilColor:state.foilColor, fonts:[...new Set(state.elements.filter(e => e.type === "text").map(e => e.font))].slice(0, 3), updatedAt:new Date().toISOString()};
   if (cloud()){ try { await cap.db.doc("brands/" + id).set(kit); } catch (e) { toast("Enregistrement refusé : niveau d'accès insuffisant."); return; } }
-  else { brandKits = brandKits.filter(k => k.id !== id).concat({id, ...kit}).sort((a, b) => a.name.localeCompare(b.name)); try { localStorage.setItem("lp-brands", JSON.stringify(brandKits)); } catch (e) {} renderKits(); }
+  else { brandKits = brandKits.filter(k => k.id !== id).concat({id, ...kit}).sort((a, b) => a.name.localeCompare(b.name)); try { localStorage.setItem("lp-brands", JSON.stringify(brandKits)); } catch (e) {} fsWriteKits(); renderKits(); }
   $("#kitSel").value = id; renderKits(); toast(`Charte « ${name} » enregistrée${state.images.logo && !logo ? " (logo trop lourd non inclus)" : ""}`);
 }
 function applyKit(){
@@ -6691,7 +7271,7 @@ function applyKit(){
 async function deleteKit(){
   const id = $("#kitSel").value; if (!id) return;
   if (cloud()){ try { await cap.db.doc("brands/" + id).delete(); } catch (e) { toast("Suppression refusée."); return; } }
-  else { brandKits = brandKits.filter(k => k.id !== id); try { localStorage.setItem("lp-brands", JSON.stringify(brandKits)); } catch (e) {} renderKits(); }
+  else { brandKits = brandKits.filter(k => k.id !== id); try { localStorage.setItem("lp-brands", JSON.stringify(brandKits)); } catch (e) {} fsWriteKits(); renderKits(); }
 }
 $("#kitSel").addEventListener("change", renderKits); $("#kitSave").addEventListener("click", saveKit); $("#kitApply").addEventListener("click", applyKit); $("#kitDel").addEventListener("click", deleteKit);
 
@@ -6769,6 +7349,8 @@ const GUIDE = [
     {t:"Quantité", d:"Saisissez la quantité ou choisissez un palier : le devis et le BAT se mettent à jour.", el:gq("#qty"), prep:G.studio},
     {t:"Devis PDF et mail", d:"Devis PDF à en-tête de l'imprimerie et texte de mail prêt à copier.", el:gq("#devisPdf"), prep:G.studio},
     {t:"Bon à tirer (BAT)", d:"Maquette, visuel avec traits, contrôle prépresse et case « Bon pour accord » à faire signer avant impression.", el:gq('[data-exp="bat"]'), prep:G.pop},
+    {t:"Signature sur tablette", d:"« Faire signer le BAT » : le client vérifie la maquette et le visuel, signe au doigt ou au stylet, et le BAT signé est produit en PDF ; la signature s'inscrit dans l'historique du dossier.", el:gq("#signBtn"), prep:G.studio},
+    {t:"Facture, bon de livraison, ordre de fabrication", d:"Facture et bon de livraison numérotés (matricules fiscaux, TVA, droit de timbre, montant en lettres), export comptable pour Excel, et ordre de fabrication pour l'atelier. Documents client en français ou en français + arabe.", el:gq("#invBtn"), prep:G.studio},
     {t:"Validation du BAT en ligne", d:"Le lien client 3D peut demander la validation : le client valide ou demande une correction, son nom, la date et son commentaire s'inscrivent dans le dossier. Réponse reçue par téléphone ou par mail : bouton « Réponse client au BAT… » sur la carte du projet.", el:gq("#shareBtn"), prep:G.studio},
     {t:"BAT et devis de toute la gamme", d:"Un BAT et un devis par produit (projet, déclinaisons, composition) et un devis récapitulatif.", el:gq('[data-exp="allbat"]'), prep:G.pop},
   ]},
@@ -6776,6 +7358,8 @@ const GUIDE = [
     {t:"Enregistrer", d:"Enregistre le projet (gabarit, cotes, visuel, quantité). Ensuite, chaque modification est enregistrée automatiquement. Raccourci : Ctrl+S. Annuler / rétablir : Ctrl+Z / Ctrl+Y.", el:gq("#saveBtn"), prep:G.studio},
     {t:"Projets", d:"Tableau par statut (brouillon, BAT envoyé, validé, en production, livré) avec historique, réponses client et dossiers à relancer (sans réponse depuis 7 jours). La vue « Par client » totalise dossiers et montants.", el:gq("#boardBtn"), prep:G.studio},
     {t:"Catalogue", d:"Toutes les structures avec visuels et prix indicatifs ; catalogue PDF à envoyer aux prospects.", el:gq("#catBtn"), prep:G.studio},
+    {t:"Tableau de bord", d:"Dans Projets › Tableau de bord : montants des devis et des BAT validés, taux de transformation, délai moyen de validation, dossiers à relancer, meilleurs clients.", el:gq("#boardBtn"), prep:G.studio},
+    {t:"Dossier partagé, nuancier, profil couleur", d:"Dans Paramètres : dossier réseau commun pour partager projets et tarifs entre les postes de la version installée, nuancier des tons directs (import .ase depuis Illustrator) et profil CMJN de la presse pour un PDF/X-4.", el:gq("#settingsBtn"), prep:G.studio},
     {t:"Paramètres et sauvegarde", d:"Tarifs de l'imprimerie, coordonnées, conditions. Pensez à « Sauvegarder les données » régulièrement (fichier .json) ; « Restaurer » sur un autre poste.", el:gq("#settingsBtn"), prep:G.studio},
   ]},
   {id:"illustrator", title:"Travailler avec Illustrator", intro:"Le circuit conseillé entre le studio et Illustrator.", check:[
@@ -6927,7 +7511,7 @@ function onCapsReady(){
     if (unsubSettings) unsubSettings();
     unsubSettings = cap.db.doc("settings/main").onSnapshot(s => { if (s.exists){ settings = merge(DEFAULT_SETTINGS, s.data()); if (layout){ renderControls(); refresh("geo"); } } }, () => {});
   }
-  subscribeProjects(); subscribeApprovals(); loadKits();
+  subscribeProjects(); subscribeApprovals(); loadKits(); fsAutoConnect(); renderFsState(); renderICC();
 }
 renderControls();
 showView("3d");
