@@ -173,6 +173,17 @@ body.pinning #v2d svg[role=img]{cursor:crosshair}
 .dleg .s1{background:var(--c-s1)} .dleg .s2{background:var(--c-s2)}
 .dtip{position:absolute;pointer-events:none;background:var(--ink);color:var(--surface);font-size:12px;padding:6px 8px;border-radius:5px;max-width:250px;z-index:5}
 #board{position:relative}
+.gantt .bar{fill:var(--c-s1)} .gantt .bar.late{fill:var(--c-s2)} .gantt .lab{fill:var(--ink);font-family:var(--f-sans,inherit);font-size:12px} .gantt .bl{fill:#fff;font-size:10px}
+.diematch{margin-top:8px;padding:8px 10px;border-radius:6px;background:var(--accent-soft);font-size:12.5px;line-height:1.5}
+.diematch .btn{margin-left:4px}
+.ver-out{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px} .ver-out figure{margin:0} .ver-out canvas{width:100%;height:auto;border:1px solid var(--line);border-radius:4px;background:#fff} .ver-out figcaption{font-size:12px;color:var(--muted);margin-top:4px}
+.gang-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto} .gang-list li{display:flex;gap:8px;align-items:center;justify-content:space-between} .gang-list input[type=number]{width:90px}
+.proof{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px} .proof .sugg{margin:4px 0;padding:6px 8px;border-left:3px solid var(--accent);background:var(--surface-2);white-space:pre-wrap}
+.cost-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.ok-txt{color:var(--ok,#17784a)}
+.portalview a.btn{color:inherit;text-decoration:none;text-align:center}
+.portalview .catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.dossier{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px} .dossier .field:first-child{grid-column:1/-1}
 @media (pointer:coarse){.btn{min-height:42px} .btn.small{min-height:36px} input,select,textarea{font-size:16px} .seg button,.tabs button{min-height:40px} .ellist button{min-height:40px}}
 .die-opts{border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--surface-2)}
 .die-opts > summary{cursor:pointer;font-size:13px;font-weight:600}
@@ -570,7 +581,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <button type="button" class="btn small" id="addText">+ Texte</button>
           <button type="button" class="btn small" id="addShape">+ Forme</button>
           <label class="btn small file-btn">+ Image<input type="file" id="addImg" accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>
-          <select id="addMore" class="addmore" aria-label="Ajouter un code-barres, du braille, un pictogramme ou un kit de mentions"><option value="">+ Code, braille, picto…</option><optgroup label="Codes-barres"><option value="ean">Code EAN-13 (vente)</option><option value="gs1">Code GS1-128 (lot, date, logistique)</option></optgroup><optgroup label="Réglementaire"><option value="braille">Braille (médicaments)</option><option value="picto">Pictogramme</option><option value="zone">Zone de marquage lot / date</option></optgroup><optgroup label="Kits de mentions"><option value="kit-cosmetique">Cosmétique : PAO, ℮, recyclage, lot</option><option value="kit-alimentaire">Alimentaire : contact alimentaire, ℮, DDM</option><option value="kit-pharma">Pharmacie : braille, lot, péremption</option><option value="kit-transport">Transport : haut, fragile, humidité</option></optgroup></select>
+          <select id="addMore" class="addmore" aria-label="Ajouter un code-barres, du braille, un pictogramme ou un kit de mentions"><option value="">+ Code, braille, picto…</option><optgroup label="Codes-barres"><option value="ean">Code EAN-13 (vente)</option><option value="gs1">Code GS1-128 (lot, date, logistique)</option><option value="qr">QR code (site, notice, traçabilité)</option></optgroup><optgroup label="Réglementaire"><option value="braille">Braille (médicaments)</option><option value="picto">Pictogramme</option><option value="zone">Zone de marquage lot / date</option></optgroup><optgroup label="Kits de mentions"><option value="kit-cosmetique">Cosmétique : PAO, ℮, recyclage, lot</option><option value="kit-alimentaire">Alimentaire : contact alimentaire, ℮, DDM</option><option value="kit-pharma">Pharmacie : braille, lot, péremption</option><option value="kit-transport">Transport : haut, fragile, humidité</option></optgroup></select>
         </div>
         <ul class="ellist" id="elList"></ul>
         <div class="props" id="elProps" hidden>
@@ -584,7 +595,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
             <select id="elAlign" aria-label="Alignement" style="padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)"><option value="center">Centré</option><option value="left">Gauche</option><option value="right">Droite</option></select>
           </div>
           <div class="grid2" data-for="barcode">
-            <div class="field"><label for="elSym">Symbologie</label><select id="elSym"><option value="ean13">EAN-13 (vente au détail)</option><option value="gs1">GS1-128 (lot, date, logistique)</option></select></div>
+            <div class="field"><label for="elSym">Symbologie</label><select id="elSym"><option value="ean13">EAN-13 (vente au détail)</option><option value="gs1">GS1-128 (lot, date, logistique)</option><option value="qr">QR code</option></select></div>
             <div class="field" id="elMagF"><label for="elMag">Grossissement</label><div class="unit" data-unit="%"><input type="number" id="elMag" min="80" max="200" step="5"></div></div>
           </div>
           <div class="field" data-for="barcode"><label for="elCode">Données du code</label><input type="text" id="elCode" spellcheck="false" autocomplete="off"><p class="hint" id="elCodeHint"></p></div>
@@ -679,6 +690,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <button class="exp" data-exp="tplsvg" type="button"><b>Gabarit graphiste</b><small>Calques COUPE, RAINAGE, FOND_PERDU, SECURITE</small><span>.svg</span></button>
       <button class="exp" data-exp="bat" type="button"><b>Bon à tirer (BAT)</b><small>Maquette, visuel, contrôle prépresse, accord</small><span>.pdf</span></button>
       <button class="exp" data-exp="png3d" type="button"><b>Maquette 3D haute définition</b><small id="resNote">Résolution et format ci-dessous, angle de vue actuel</small><span>.png</span></button>
+      <button class="exp" data-exp="ar" type="button"><b>Maquette 3D et réalité augmentée</b><small>Modèle 3D standard (.glb) et page pour téléphone : le client pose l'emballage en taille réelle sur sa table</small><span>.zip</span></button>
       <button class="exp" data-exp="video" type="button"><b>Animation de pliage</b><small>Vidéo Full HD, pliage puis rotation</small><span class="vext">.mp4</span></button>
       <button class="exp" data-exp="spin" type="button"><b>Vidéo 360°</b><small>Rotation complète, idéale pour les réseaux sociaux</small><span class="vext">.mp4</span></button>
       <button class="exp" data-exp="multiview" type="button"><b>Pack e-commerce multi-vues</b><small>5 angles, 2000 × 2000 px, fond transparent et fond blanc</small><span>.zip</span></button>
@@ -748,9 +760,15 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
         <button class="btn" id="signBtn" type="button">Faire signer le BAT</button>
         <button class="btn" id="invBtn" type="button">Facture / BL</button>
         <button class="btn" id="ofBtn" type="button">Ordre de fabrication</button>
+        <button class="btn" id="diesBtn" type="button">Formes en stock</button>
+        <button class="btn" id="verBtn" type="button">Versions du visuel</button>
+        <button class="btn" id="costBtn" type="button">Coût réel</button>
+        <button class="btn" id="proofBtn" type="button" hidden>Relecture des textes (IA)</button>
       </div>
+      <div class="diematch" id="dieMatch" hidden></div>
       <div class="reuse"><label class="check"><input type="checkbox" id="reuseDie"> Forme de découpe en stock (réimpression)</label><label class="check"><input type="checkbox" id="reusePlates"> Plaques déjà gravées (même visuel)</label></div>
       <div class="field" style="margin-top:10px"><label for="docLang">Langue du devis, du BAT et de la facture</label><select id="docLang"><option value="fr">Français</option><option value="ar">Français + arabe</option></select></div>
+      <div class="dossier"><div class="field"><label for="pDue">Date de livraison promise</label><input type="date" id="pDue"></div><div class="field"><label for="pPhone">Téléphone / WhatsApp du client</label><input type="tel" id="pPhone" placeholder="216 xx xxx xxx"></div><div class="field"><label for="pMail">E-mail du client</label><input type="email" id="pMail"></div></div>
     </section>
     <section class="sec" id="clientCard" hidden></section>
   </aside>
@@ -759,8 +777,9 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
 <main class="boardview gutter" id="boardView" hidden>
   <div class="board-head">
     <h2>Projets</h2>
-    <div class="seg" role="tablist" aria-label="Affichage des dossiers"><button type="button" role="tab" id="bvStatus" aria-selected="true">Par statut</button><button type="button" role="tab" id="bvClients" aria-selected="false">Par client</button><button type="button" role="tab" id="bvDash" aria-selected="false">Tableau de bord</button></div>
+    <div class="seg" role="tablist" aria-label="Affichage des dossiers"><button type="button" role="tab" id="bvStatus" aria-selected="true">Par statut</button><button type="button" role="tab" id="bvClients" aria-selected="false">Par client</button><button type="button" role="tab" id="bvPlan" aria-selected="false">Planning</button><button type="button" role="tab" id="bvDash" aria-selected="false">Tableau de bord</button></div>
     <input type="search" class="search" id="boardSearch" placeholder="Client, projet…" aria-label="Rechercher un projet">
+    <button class="btn" id="gangBtn" type="button">Feuille partagée</button>
     <button class="btn" id="boardBack" type="button">Retour au studio</button>
     <button class="btn primary" id="boardNew" type="button">Nouveau projet</button>
   </div>
@@ -779,6 +798,11 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
   <p class="hint" id="catNote"></p>
   <div class="catgrid" id="catGrid"></div>
 </main>
+<main class="boardview portalview gutter" id="portalView" hidden>
+  <div class="board-head"><h2>Vos emballages</h2></div>
+  <p class="hint">Retrouvez vos maquettes, l'état de vos dossiers et demandez une réimpression en un clic.</p>
+  <div class="catgrid" id="portalList"></div>
+</main>
 <p class="foot gutter">Label Pack Studio — configurateur d'emballage. Prix estimatifs à valider par l'atelier ; rendu écran des couleurs non contractuel ; gabarits à faire valider sur échantillon avant première production.</p>
 
 <div class="overlay" id="settingsDlg" hidden role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
@@ -792,6 +816,9 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <div class="setbox" id="swBox"><h3 class="eyebrow">Nuancier des tons directs (Pantone…)</h3><p class="hint">Importez le nuancier depuis Illustrator (palette Nuancier, menu « Enregistrer la bibliothèque de nuances au format ASE ») ou ajoutez vos teintes de marque. Utilisables sur les textes, formes et pictogrammes ; chaque ton direct a sa plaque dans le PDF d'impression.</p>
         <ul class="swlist" id="swList"></ul>
         <div class="row" id="swAddRow"><input type="text" id="swName" placeholder="Nom, ex. PANTONE 186 C" aria-label="Nom du ton direct"><input type="color" id="swHex" value="#c8102e" aria-label="Couleur à l'écran"><button class="btn small" type="button" id="swAdd">Ajouter</button><label class="btn small file-btn">Importer un .ase<input type="file" id="swAse" accept=".ase"></label></div></div>
+      <div class="setbox" id="rateBox"><h3 class="eyebrow">Tarifs par client</h3><p class="hint">Remise et marge propres à un client, appliquées automatiquement au devis dès que le nom du client du projet correspond.</p>
+        <ul class="swlist" id="rateList"></ul>
+        <div class="row" id="rateAddRow"><input type="text" id="rateClient" placeholder="Client" aria-label="Client"><input type="number" id="rateRem" placeholder="Remise %" min="0" max="50" step="0.5" aria-label="Remise en %" style="width:90px"><input type="number" id="rateMarge" placeholder="Marge %" min="0" step="0.5" aria-label="Marge en % (vide : marge générale)" style="width:90px"><input type="text" id="rateNote" placeholder="Note (contrat…)" aria-label="Note"><button class="btn small" type="button" id="rateAdd">Ajouter</button></div></div>
       <div class="setbox" id="iccBox"><h3 class="eyebrow">Profil de sortie CMJN (PDF/X-4)</h3><p class="hint" id="iccState"></p>
         <div class="row"><label class="btn small file-btn">Charger un profil .icc<input type="file" id="iccFile" accept=".icc,.icm"></label><button class="btn small ghost" type="button" id="iccClear">Retirer</button></div></div>
     </div>
@@ -849,6 +876,78 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <span class="lbl">Signature (doigt, stylet ou souris)</span><canvas id="signPad" class="sign-pad" width="900" height="260" aria-label="Zone de signature"></canvas>
       <div class="row"><button class="btn" type="button" id="signClear">Effacer</button><button class="btn primary" type="button" id="signSave">Enregistrer et produire le BAT signé</button></div>
     </div>
+  </div>
+</div>
+<div class="overlay" id="diesDlg" hidden role="dialog" aria-modal="true" aria-labelledby="diesTitle">
+  <div class="dialog wide-dlg">
+    <header><h2 id="diesTitle">Formes de découpe en stock</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body">
+      <p class="hint">Les formes déjà fabriquées sont proposées automatiquement quand un nouveau projet a le même gabarit et des cotes identiques ou proches (5 mm) : pas de frais de forme, délai raccourci.</p>
+      <div class="ctable-wrap"><table class="ctable"><thead><tr><th>Réf.</th><th>Gabarit</th><th>Cotes</th><th class="num">Épaisseur</th><th class="num">Poses</th><th>Emplacement</th><th>Projet d'origine</th><th></th></tr></thead><tbody id="diesList"></tbody></table></div>
+      <h3 class="eyebrow">Ajouter la forme du projet en cours</h3>
+      <div class="row"><input type="text" id="dieRef" placeholder="Référence, ex. F-012" aria-label="Référence de la forme"><input type="text" id="diePlace" placeholder="Emplacement, ex. rack B3" aria-label="Emplacement"><button class="btn primary small" type="button" id="dieAdd">Ajouter au stock</button></div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="verDlg" hidden role="dialog" aria-modal="true" aria-labelledby="verTitle">
+  <div class="dialog wide-dlg">
+    <header><h2 id="verTitle">Versions du visuel</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body">
+      <p class="hint">Une version est gardée à chaque BAT exporté, signé ou envoyé en lien client (4 dernières). Comparez-en deux pour voir ce qui a changé.</p>
+      <p class="hint" id="verEmpty">Aucune version enregistrée pour ce projet : enregistrez-en une ci-dessous.</p>
+      <div class="row"><label class="lbl" for="verA">Avant</label><select id="verA"></select><label class="lbl" for="verB">Après</label><select id="verB"></select></div>
+      <div class="ver-out" id="verOut"></div>
+      <p id="verNote" role="status"></p>
+      <div class="row"><input type="text" id="verLabel" placeholder="Nom de la version (facultatif)" aria-label="Nom de la version"><button class="btn small" type="button" id="verSave">Enregistrer le visuel actuel comme version</button></div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="gangDlg" hidden role="dialog" aria-modal="true" aria-labelledby="gangTitle">
+  <div class="dialog wide-dlg">
+    <header><h2 id="gangTitle">Feuille partagée : plusieurs produits sur une même feuille</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body">
+      <p class="hint">Cochez des projets de même support, même impression et même finition (souvent les produits d'une gamme ou de clients différents) : l'application répartit les poses selon les quantités et compare au coût de commandes séparées.</p>
+      <ul class="gang-list" id="gangList"></ul>
+      <div class="row"><button class="btn primary" type="button" id="gangRun">Calculer la feuille partagée</button><button class="btn" type="button" id="gangPdf" disabled>Montage PDF</button><button class="btn" type="button" id="gangDxf" disabled>Montage DXF</button></div>
+      <div id="gangOut"></div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="costDlg" hidden role="dialog" aria-modal="true" aria-labelledby="costTitle">
+  <div class="dialog">
+    <header><h2 id="costTitle">Coût réel du dossier</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body">
+      <p class="hint" id="costFor"></p>
+      <div class="cost-grid">
+        <div class="field"><label for="cost-sheets">Feuilles consommées</label><input type="number" min="0" id="cost-sheets"></div>
+        <div class="field"><label for="cost-hPrint">Heures impression</label><input type="number" min="0" step="0.25" id="cost-hPrint"></div>
+        <div class="field"><label for="cost-hFinish">Heures finitions</label><input type="number" min="0" step="0.25" id="cost-hFinish"></div>
+        <div class="field"><label for="cost-hCut">Heures découpe</label><input type="number" min="0" step="0.25" id="cost-hCut"></div>
+        <div class="field"><label for="cost-hGlue">Heures collage</label><input type="number" min="0" step="0.25" id="cost-hGlue"></div>
+        <div class="field"><label for="cost-buy">Achats extérieurs (TND)</label><input type="number" min="0" id="cost-buy"></div>
+        <div class="field"><label for="cost-other">Autres frais (TND)</label><input type="number" min="0" id="cost-other"></div>
+      </div>
+      <p id="costRes" role="status"></p>
+      <p class="hint">Coûts horaires des postes dans Paramètres › Coûts horaires ; prix de la feuille selon le support du dossier.</p>
+    </div>
+    <footer><button class="btn primary" type="button" id="costSave">Enregistrer</button></footer>
+  </div>
+</div>
+<div class="overlay" id="chaseDlg" hidden role="dialog" aria-modal="true" aria-labelledby="chaseTitle">
+  <div class="dialog">
+    <header><h2 id="chaseTitle">Relancer le client</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body">
+      <p class="hint" id="chaseFor"></p>
+      <div class="field"><label for="chaseText">Message</label><textarea id="chaseText" rows="9"></textarea></div>
+      <div class="row"><input type="tel" id="chasePhone" placeholder="WhatsApp, ex. 216 98 123 456" aria-label="Numéro WhatsApp"><input type="email" id="chaseMail" placeholder="E-mail" aria-label="E-mail du client"></div>
+    </div>
+    <footer><button class="btn" type="button" id="chaseCopy">Copier</button><button class="btn" type="button" id="chaseMailBtn">Envoyer par e-mail</button><button class="btn primary" type="button" id="chaseWa">Envoyer par WhatsApp</button></footer>
+  </div>
+</div>
+<div class="overlay" id="proofDlg" hidden role="dialog" aria-modal="true" aria-labelledby="proofTitle">
+  <div class="dialog">
+    <header><h2 id="proofTitle">Relecture des textes</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body" id="proofOut"></div>
   </div>
 </div>
 <div class="overlay" id="cmpDlg" hidden role="dialog" aria-modal="true" aria-labelledby="cmpTitle">
@@ -919,6 +1018,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
@@ -1083,14 +1183,16 @@ const LINE_TYPES = {
 };
 const DIE_DEFAULT = {nicks:4, nickW:.5, eject:false, sheetGrain:"auto", grainLock:true};
 const EL_TYPES = {text:"TEXTE", image:"IMAGE", shape:"FORME", barcode:"CODE", braille:"BRAILLE", picto:"PICTO", zone:"ZONE"};
-function elName(el){ return el.type === "text" ? `Texte « ${String(el.text).slice(0, 20)} »` : el.type === "image" ? "Image ajoutée" : el.type === "barcode" ? (el.sym === "gs1" ? "Code GS1-128" : "Code EAN-13") : el.type === "braille" ? `Braille « ${String(el.text || "").slice(0, 20)} »` : el.type === "picto" ? `Pictogramme « ${PICTOS[el.pic] || el.pic} »` : el.type === "zone" ? "Zone de marquage lot / date" : "Forme"; }
+function elName(el){ return el.type === "text" ? `Texte « ${String(el.text).slice(0, 20)} »` : el.type === "image" ? "Image ajoutée" : el.type === "barcode" ? (el.sym === "qr" ? "QR code" : el.sym === "gs1" ? "Code GS1-128" : "Code EAN-13") : el.type === "braille" ? `Braille « ${String(el.text || "").slice(0, 20)} »` : el.type === "picto" ? `Pictogramme « ${PICTOS[el.pic] || el.pic} »` : el.type === "zone" ? "Zone de marquage lot / date" : "Forme"; }
 let hiLine = null, approvals = [], unsubAppr = null, applying = false, boardMode = "status", apprTarget = null, shareId = null;
 const TIERS = [500, 1000, 2500, 5000, 10000];
 
 const DEFAULT_SETTINGS = {
   billing:{timbre:1, prefixInv:"FA", prefixBL:"BL", startInv:1, startBL:1, payment:"Paiement à 30 jours fin de mois", rib:"", accounts:{client:"411", sales:"701", vat:"4366", stamp:"4371"}},
   swatches:[],
-  production:{hours:8, prepress:1, dieDays:4, drying:1, ship:1, sheetsH:{print:4000, lam:3000, varnish:3000, foil:2500, emboss:2500, cut:3500}, setupH:{print:1.5, lam:.5, varnish:1, foil:1.5, emboss:1.5, cut:1.5, glue:1}, glueH:12000, labelMH:2400, labelSetupH:1},
+  clientRates:[],
+  stock:{gc1:0, duplex:0, kraft:0, micro:0, ondB:0, kraftp:0, whitep:0},
+  production:{rate:{print:120, finish:80, cut:70, glue:50}, hours:8, prepress:1, dieDays:4, drying:1, ship:1, sheetsH:{print:4000, lam:3000, varnish:3000, foil:2500, emboss:2500, cut:3500}, setupH:{print:1.5, lam:.5, varnish:1, foil:1.5, emboss:1.5, cut:1.5, glue:1}, glueH:12000, labelMH:2400, labelSetupH:1},
   company:{name:"Label Pack", address:"", mf:"", phone:"", email:"", whatsapp:"", conditions:"Prix établis sur la base des informations transmises, à confirmer après validation du BAT. Validité de l'offre : 30 jours. Délai de fabrication communiqué à la validation du BAT. Rendu écran des couleurs non contractuel."},
   pricing:{
     marge:25, gache:6, tva:19, example:true,
@@ -1122,7 +1224,7 @@ const DEFAULT = {
   images:{logo:null, full:null, inside:null, bg:null}, faces:{}, fullHide:false, elements:[],
   qty:2500, fold:1, showArt:true, showSafe:true
 };
-const NEW_META = () => ({id:null, draftId:null, name:"", client:"", status:"brouillon", createdAt:null, createdBy:null, history:[], docs:[], cmf:"", caddr:""});
+const NEW_META = () => ({id:null, draftId:null, name:"", client:"", status:"brouillon", createdAt:null, createdBy:null, history:[], docs:[], cmf:"", caddr:"", versions:[], shares:[], due:"", cphone:"", cemail:"", actual:null});
 let state = structuredClone(DEFAULT), meta = NEW_META(), dirty = false, savedAt = null;
 const CEP = !!(window.__adobe_cep__ && window.cep && window.cep.fs);
 let compoT = 0;
@@ -1881,6 +1983,87 @@ function eanBits(code){
   return bits + "101";
 }
 const EAN_W = 37.29, EAN_H = 25.93; // dimensions nominales (100 %) d'un EAN-13, zones de silence incluses
+/* ---- QR code (mode octets, versions 1 à 10, correction L/M/Q/H) ---- */
+const QR_EC = {L:1, M:0, Q:3, H:2};
+// [codes EC par bloc, blocs gr.1, données gr.1, blocs gr.2, données gr.2] par version (1 à 10) et niveau.
+const QR_BLOCKS = {
+  L:[[7,1,19],[10,1,34],[15,1,55],[20,1,80],[26,1,108],[18,2,68],[20,2,78],[24,2,97],[30,2,116],[18,2,68,2,69]],
+  M:[[10,1,16],[16,1,28],[26,1,44],[18,2,32],[24,2,43],[16,4,27],[18,4,31],[22,2,38,2,39],[22,3,36,2,37],[26,4,43,1,44]],
+  Q:[[13,1,13],[22,1,22],[18,2,17],[26,2,24],[18,2,15,2,16],[24,4,19],[18,2,14,4,15],[22,4,18,2,19],[20,4,16,4,17],[24,6,19,2,20]],
+  H:[[17,1,9],[28,1,16],[22,2,13],[16,4,9],[22,2,11,2,12],[28,4,15],[26,4,13,1,14],[26,4,14,2,15],[24,4,12,4,13],[28,6,15,2,16]],
+};
+const QR_ALIGN = [[], [6,18], [6,22], [6,26], [6,30], [6,34], [6,22,38], [6,24,42], [6,26,46], [6,28,50]];
+function qrEncode(text, ecl = "M"){
+  const bytes = [...new TextEncoder().encode(String(text))], T = QR_BLOCKS[ecl];
+  let ver = 0; for (; ver < 10; ver++){ const b = T[ver], cap = b[1]*b[2] + (b[3] || 0)*(b[4] || 0), bits = 4 + (ver < 9 ? 8 : 16) + 8*bytes.length; if (bits <= cap*8) break; }
+  if (ver >= 10) return null;
+  const blk = T[ver], dataCw = blk[1]*blk[2] + (blk[3] || 0)*(blk[4] || 0), size = 17 + 4*(ver + 1);
+  // flux de bits
+  const bits = []; const put = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push((v >> i) & 1); };
+  put(4, 4); put(bytes.length, ver < 9 ? 8 : 16); bytes.forEach(b => put(b, 8));
+  put(0, Math.min(4, dataCw*8 - bits.length)); while (bits.length % 8) bits.push(0);
+  const data = []; for (let i = 0; i < bits.length; i += 8) data.push(parseInt(bits.slice(i, i + 8).join(""), 2));
+  for (let p = 0; data.length < dataCw; p ^= 1) data.push(p ? 0x11 : 0xEC);
+  // Reed-Solomon sur GF(256)
+  const EXP = new Array(512), LOG = new Array(256); for (let i = 0, x = 1; i < 255; i++){ EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 256) x ^= 0x11D; } for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  const mul = (a, b) => a && b ? EXP[LOG[a] + LOG[b]] : 0, ecn = blk[0];
+  let gen = [1]; for (let i = 0; i < ecn; i++){ const g = new Array(gen.length + 1).fill(0); gen.forEach((c, j) => { g[j] ^= c; g[j + 1] ^= mul(c, EXP[i]); }); gen = g; }
+  const rs = msg => { const r = [...msg, ...new Array(ecn).fill(0)]; for (let i = 0; i < msg.length; i++){ const c = r[i]; if (c) gen.forEach((g, j) => { r[i + j] ^= mul(g, c); }); } return r.slice(msg.length); };
+  const blocks = []; let o = 0;
+  for (let g = 0; g < 2; g++){ const n = blk[1 + 2*g] || 0, len = blk[2 + 2*g] || 0; for (let i = 0; i < n; i++){ const d = data.slice(o, o + len); o += len; blocks.push({d, e:rs(d)}); } }
+  const cw = []; const maxD = Math.max(...blocks.map(b => b.d.length));
+  for (let i = 0; i < maxD; i++) for (const b of blocks) if (i < b.d.length) cw.push(b.d[i]);
+  for (let i = 0; i < ecn; i++) for (const b of blocks) cw.push(b.e[i]);
+  // matrice
+  const M = Array.from({length:size}, () => new Array(size).fill(null)), fn = Array.from({length:size}, () => new Array(size).fill(false));
+  const set = (r, c, v) => { M[r][c] = v ? 1 : 0; fn[r][c] = true; };
+  const finder = (r, c) => { for (let i = -1; i <= 7; i++) for (let j = -1; j <= 7; j++){ const rr = r + i, cc = c + j; if (rr < 0 || cc < 0 || rr >= size || cc >= size) continue; const on = i >= 0 && i <= 6 && j >= 0 && j <= 6 && (i === 0 || i === 6 || j === 0 || j === 6 || (i >= 2 && i <= 4 && j >= 2 && j <= 4)); set(rr, cc, on); } };
+  finder(0, 0); finder(0, size - 7); finder(size - 7, 0);
+  const al = QR_ALIGN[ver], last = al[al.length - 1];
+  for (const r of al) for (const c of al){ if ((r === 6 && c === 6) || (r === 6 && c === last) || (r === last && c === 6)) continue; for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) set(r + i, c + j, Math.max(Math.abs(i), Math.abs(j)) !== 1); }
+  for (let i = 8; i < size - 8; i++){ if (!fn[6][i]) set(6, i, i % 2 === 0); if (!fn[i][6]) set(i, 6, i % 2 === 0); }
+  for (let i = 0; i < 9; i++){ if (!fn[8][i]) set(8, i, 0); if (!fn[i][8]) set(i, 8, 0); }
+  for (let i = 0; i < 8; i++){ set(8, size - 1 - i, 0); set(size - 1 - i, 8, 0); }
+  set(size - 8, 8, 1);
+  if (ver >= 6){ let v = ver + 1, r = v << 12; for (let i = 17; i >= 12; i--) if (r >> i & 1) r ^= 0x1F25 << (i - 12); const vb = (v << 12) | r; for (let i = 0; i < 18; i++){ const b = vb >> i & 1, a = Math.floor(i/3), c = i % 3 + size - 11; set(a, c, b); set(c, a, b); } }
+  // placement des données
+  const dbits = []; cw.forEach(b => { for (let i = 7; i >= 0; i--) dbits.push(b >> i & 1); });
+  let k = 0;
+  for (let c = size - 1; c > 0; c -= 2){ if (c === 6) c--; for (let n = 0; n < size; n++){ const up = ((size - 1 - c) >> 1) % 2 === 0, r = up ? size - 1 - n : n; for (const cc of [c, c - 1]) if (!fn[r][cc]){ M[r][cc] = k < dbits.length ? dbits[k] : 0; k++; } } }
+  const MASKS = [(r, c) => (r + c) % 2 === 0, (r) => r % 2 === 0, (r, c) => c % 3 === 0, (r, c) => (r + c) % 3 === 0, (r, c) => (Math.floor(r/2) + Math.floor(c/3)) % 2 === 0, (r, c) => (r*c) % 2 + (r*c) % 3 === 0, (r, c) => ((r*c) % 2 + (r*c) % 3) % 2 === 0, (r, c) => ((r + c) % 2 + (r*c) % 3) % 2 === 0];
+  const withMask = m => {
+    const A = M.map((row, r) => row.map((v, c) => fn[r][c] ? v : v ^ (MASKS[m](r, c) ? 1 : 0)));
+    let f = (QR_EC[ecl] << 3) | m, rem = f << 10; for (let i = 14; i >= 10; i--) if (rem >> i & 1) rem ^= 0x537 << (i - 10);
+    const fb = ((f << 10) | rem) ^ 0x5412;
+    for (let i = 0; i < 15; i++){ const b = fb >> i & 1;
+      if (i < 6) A[i][8] = b; else if (i < 8) A[i + 1][8] = b; else A[size - 15 + i][8] = b;
+      if (i < 8) A[8][size - 1 - i] = b; else if (i < 9) A[8][15 - i - 1 + 1] = b; else A[8][15 - i - 1] = b; }
+    A[size - 8][8] = 1; return A;
+  };
+  const penalty = A => {
+    let p = 0; const n = size;
+    for (let r = 0; r < n; r++) for (const line of [A[r], A.map(row => row[r])]){ let run = 1; for (let i = 1; i <= n; i++){ if (i < n && line[i] === line[i - 1]) run++; else { if (run >= 5) p += run - 2; run = 1; } }
+      for (let i = 0; i + 10 < n; i++){ const s = line.slice(i, i + 11).join(""); if (s === "10111010000" || s === "00001011101") p += 40; } }
+    for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++){ const v = A[r][c]; if (v === A[r][c + 1] && v === A[r + 1][c] && v === A[r + 1][c + 1]) p += 3; }
+    const dark = A.flat().reduce((s, v) => s + v, 0); p += Math.floor(Math.abs(dark*100/(n*n) - 50)/5)*10;
+    return p;
+  };
+  let best = null; for (let m = 0; m < 8; m++){ const A = withMask(m), pen = penalty(A); if (!best || pen < best.pen) best = {A, pen, m}; }
+  return {size, ver:ver + 1, mask:best.m, matrix:best.A, withMask};
+}
+const qrCache = new Map();
+// Modèle du QR code d'un élément : matrice, taille du module (mm), zone de silence de 4 modules comprise dans la largeur.
+function qrModel(el){
+  const t = String(el.value || ""), w = el.w || 20; if (!t.trim()) return {error:"saisissez le lien ou le texte à encoder", w};
+  const k = (el.ecl || "M") + "|" + t; if (!qrCache.has(k)) qrCache.set(k, qrEncode(t, el.ecl || "M"));
+  const r = qrCache.get(k); if (!r) return {error:"texte trop long pour un QR code imprimé (raccourcissez le lien)", w};
+  return {...r, w, X:w/(r.size + 8), len:new TextEncoder().encode(t).length};
+}
+function drawQR(ctx, x, y, w, m){
+  const X = w/(m.size + 8); ctx.fillStyle = "#ffffff"; ctx.fillRect(x, y, w, w); ctx.fillStyle = "#000000";
+  for (let r = 0; r < m.size; r++) for (let c = 0; c < m.size; c++) if (m.matrix[r][c]) ctx.fillRect(x + (c + 4)*X, y + (r + 4)*X, X*1.02, X*1.02);
+}
+
 function drawEAN(ctx, x, y, w, h, code){
   const bits = eanBits(code), qz = w*11/113, mw = (w - qz - w*7/113)/95, barH = h*.8;
   ctx.fillStyle = "#ffffff"; ctx.fillRect(x, y, w, h); ctx.fillStyle = "#000000";
@@ -2175,7 +2358,8 @@ function drawElements(ctx, mode){
       }
     } else if (el.type === "barcode"){
       let w, h;
-      if (el.sym === "gs1"){ w = el.w || 80; h = el.h || 25; const m = gs1Model(el); if (!pbr){ if (m.error) drawBadCode(ctx, w, h); else drawCode128(ctx, -w/2, -h/2, w, h, m); metrics.codes.push({el, sym:"gs1", m}); } }
+      if (el.sym === "qr"){ const m = qrModel(el); w = h = m.w; if (!pbr){ if (m.error) drawBadCode(ctx, w, h); else drawQR(ctx, -w/2, -h/2, w, m); metrics.codes.push({el, sym:"qr", m}); } }
+      else if (el.sym === "gs1"){ w = el.w || 80; h = el.h || 25; const m = gs1Model(el); if (!pbr){ if (m.error) drawBadCode(ctx, w, h); else drawCode128(ctx, -w/2, -h/2, w, h, m); metrics.codes.push({el, sym:"gs1", m}); } }
       else { const mag = (el.mag || 100)/100, ok = eanValid(el.value || ""); w = EAN_W*mag; h = EAN_H*mag; if (!pbr){ if (ok) drawEAN(ctx, -w/2, -h/2, w, h, el.value); else drawBadCode(ctx, w, h); metrics.codes.push({el, sym:"ean13", mag, ok}); } }
       el._w = w; el._h = h;
       if (pbr){ ctx.fillStyle = `rgb(128,${pbrBaseG},0)`; ctx.fillRect(-w/2, -h/2, w, h); }
@@ -2984,6 +3168,7 @@ $("#v2d").addEventListener("pointermove", e => {
     const u = Math.abs(dx*Math.cos(r) + dy*Math.sin(r)), vv = Math.abs(-dx*Math.sin(r) + dy*Math.cos(r));
     if (el.type === "text") el.size = +clamp(o.size*(2*u)/Math.max(o.w, .1), 4, 200).toFixed(1);
     else if (el.type === "image") el.w = +Math.max(2, 2*u).toFixed(1);
+    else if (el.type === "barcode" && el.sym === "qr") el.w = +Math.max(8, 2*Math.max(u, vv)).toFixed(1);
     else if (el.type === "barcode" && el.sym !== "gs1") el.mag = clamp(Math.round(200*u/EAN_W), 80, 200);
     else if (el.type === "braille") return;
     else if (el.type === "picto") el.w = +Math.max(3, 2*u).toFixed(1);
@@ -3062,8 +3247,10 @@ function quote(qty){
   for (let i = lines.length - 1; i >= 0; i--) if ((RU.die && /^(Forme de découpe|Outil de découpe)/.test(lines[i].label)) || (RU.plates && lines[i].label === "Plaques offset")) lines.splice(i, 1);
   if (RU.die) tech.push(["Forme de découpe", "en stock, réutilisée (non facturée)"]);
   if (RU.plates && k !== "label") tech.push(["Plaques", "réutilisées (réimpression à l'identique)"]);
-  const cost = lines.reduce((s,l) => s + l.amount, 0), ht = cost*(1 + Pr.marge/100), tva = ht*Pr.tva/100;
-  return {lines, tech, cost, ht, tva, ttc:ht + tva, unit:ht/qty, qty};
+  const CR = clientRate(meta.client), mg = CR && CR.marge !== "" && CR.marge != null ? +CR.marge : Pr.marge, rem = CR ? clamp(+CR.remise || 0, 0, 90) : 0;
+  if (CR) tech.push(["Conditions client", `${rem ? `remise ${fmt1.format(rem)} %` : "tarif spécifique"}${CR.note ? " · " + CR.note : ""}`]);
+  const cost = lines.reduce((s,l) => s + l.amount, 0), ht = cost*(1 + mg/100)*(1 - rem/100), tva = ht*Pr.tva/100;
+  return {lines, tech, cost, ht, tva, ttc:ht + tva, unit:ht/qty, qty, remise:rem};
 }
 function renderQuote(){
   const q = quote(state.qty);
@@ -3076,10 +3263,11 @@ function renderQuote(){
       <dl class="totals"><dt>Total HT</dt><dd>${tnd(q.ht)}</dd><dt>TVA ${P().tva} %</dt><dd>${tnd(q.tva)}</dd><dt class="ttc">Total TTC</dt><dd class="ttc">${tnd(q.ttc)}</dd></dl>`;
     $("#tiers").innerHTML = TIERS.map(n => { const t = quote(n); return `<tr data-q="${n}" class="${n === state.qty ? "on" : ""}"><td>${fmt0.format(n)}</td><td>${fmt0.format(t.ht)}</td><td>${fmt3.format(t.unit)}</td></tr>`; }).join("");
     $("#qLines").innerHTML = q.lines.map(l => `<li><span>${esc(l.label)}</span><b>${fmt3.format(l.amount)}</b><small>${esc(l.detail)}</small></li>`).join("")
-      + `<li><span>Marge atelier ${P().marge} %</span><b>${fmt3.format(q.ht - q.cost)}</b><small>sur coût de revient ${fmt3.format(q.cost)}</small></li>`;
+      + `<li><span>Marge atelier ${fmt1.format(q.cost ? (q.ht/q.cost - 1)*100 : 0)} %${q.remise ? ` (après remise client ${fmt1.format(q.remise)} %)` : ""}</span><b>${fmt3.format(q.ht - q.cost)}</b><small>sur coût de revient ${fmt3.format(q.cost)}</small></li>`;
   }
   $("#tech").innerHTML = q.tech.map(([a,b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("");
   renderPreflight(q);
+  try { renderDieMatch(); } catch (e) {}
   return q;
 }
 
@@ -3131,8 +3319,19 @@ function preflight(q){
       if (hit) add(el.type === "barcode" || el.type === "braille" ? "error" : "warn", `${name} : chevauche ${hit.type === "zip" ? "la bande d'ouverture" : hit.type === "perfo" ? "une perforation" : "un pli"}${el.type === "text" && hit.type !== "zip" ? ", le texte sera coupé en deux faces" : el.type === "barcode" ? ", il ne sera pas lisible" : ""}.`, () => moveInside(el)); }
     if (L.panels.some(p => p.glue && q4.some(c => inPoly(c, p.gpoly)))) add("warn", `${name} : sur une zone de collage (pas d'encre ni de vernis).`);
   }
+  if (q && !q.error && kind() !== "label"){ const sh = parseFloat(String(((q.tech || []).find(([a]) => a === "Feuilles (gâche incluse)") || [])[1] || "").replace(/[\s\u202f\u00a0]/g, "")) || 0, S = stockFor(state.mat[kind()], meta.id);
+    if (S.st > 0 && sh > S.free) add("warn", `Stock de ${MAT[kind()][state.mat[kind()]].name.split(" ·")[0]} : ${fmt0.format(sh)} feuilles nécessaires, ${fmt0.format(Math.max(0, S.free))} disponibles (${fmt0.format(S.st)} en stock, ${fmt0.format(S.res)} réservées par d'autres dossiers). Commande à prévoir.`); }
   for (const c of metrics.codes || []){
-    const nm = c.sym === "gs1" ? "Code GS1-128" : "Code EAN-13";
+    const nm = c.sym === "qr" ? "QR code" : c.sym === "gs1" ? "Code GS1-128" : "Code EAN-13";
+    if (c.sym === "qr"){
+      const m = c.m;
+      if (m.error) add("error", `${nm} : ${m.error}.`);
+      else if (m.X < .33) add("error", `${nm} : module de ${fmt2.format(m.X)} mm, trop petit pour une lecture fiable au téléphone (minimum 0,33 mm).`, () => { c.el.w = +Math.ceil((m.size + 8)*.4).toFixed(0); });
+      else if (m.w < 15) add("warn", `${nm} : ${fmt0.format(m.w)} mm de côté, zone de silence comprise ; 15 mm au moins sont conseillés.`, () => { c.el.w = 18; });
+      else if (/^https?:/i.test(c.el.value || "") && !/^https:/i.test(c.el.value)) add("info", `${nm} : lien en http, préférez https.`);
+      else add("ok", `${nm} lisible : version ${m.ver}, module ${fmt2.format(m.X)} mm.`);
+      continue;
+    }
     if (c.sym === "ean13"){
       const v = c.el.value || "";
       if (!c.ok) add("error", `${nm} « ${v} » invalide : ${/^\d{13}$/.test(v) ? `clé de contrôle attendue ${eanCheck(v.slice(0, 12))}` : /^\d{12}$/.test(v) ? `ajoutez la clé de contrôle ${eanCheck(v)}` : "13 chiffres requis"}.`);
@@ -3357,7 +3556,7 @@ function renderControls(){
   renderMeta(); renderElEditor();
 }
 function renderMeta(){
-  $("#pName").value = meta.name; $("#pClient").value = meta.client;
+  $("#pName").value = meta.name; $("#pClient").value = meta.client; $("#pDue").value = meta.due || ""; $("#pPhone").value = meta.cphone || ""; $("#pMail").value = meta.cemail || "";
   $("#pStatus").innerHTML = STATUSES.map(([k, l]) => `<option value="${k}"${k === meta.status ? " selected" : ""}>${l}</option>`).join("");
   renderSaveState();
 }
@@ -3385,8 +3584,9 @@ function renderElEditor(){
   const el = state.elements.find(x => x.id === selEl);
   $("#elProps").hidden = !el; if (!el) return;
   document.querySelectorAll("#elProps [data-for]").forEach(n => n.hidden = !n.dataset.for.split(" ").includes(el.type));
-  const isEan = el.type === "barcode" && el.sym !== "gs1";
+  const isEan = el.type === "barcode" && el.sym !== "gs1" && el.sym !== "qr";
   if (isEan){ $("#elW").closest(".field").hidden = true; $("#elH").closest(".field").hidden = true; }
+  if (el.type === "barcode" && el.sym === "qr") $("#elH").closest(".field").hidden = true;
   $("#elMagF").hidden = !isEan; $("#elPicTxtF").hidden = !(el.type === "picto" && el.pic === "pao");
   if (!$("#elFont").options.length) $("#elFont").innerHTML = Object.entries(FONTS).map(([k, f]) => `<option value="${k}">${f.label}</option>`).join("");
   const set = (id, val) => { const n = $("#" + id); if (document.activeElement !== n) n.value = val; };
@@ -3559,6 +3759,7 @@ function placeOn(p, fx, fy){
   return {x:+(b.minX + b.w/2 + rt[0]*fx*pw + up[0]*fy*ph).toFixed(1), y:+(b.minY + b.h/2 + rt[1]*fx*pw + up[1]*fy*ph).toFixed(1), rot:Math.round(Math.atan2(up[0], up[1])*180/Math.PI)};
 }
 function estSize(el){
+  if (el.type === "barcode" && el.sym === "qr") return [el.w || 20, el.w || 20];
   if (el.type === "barcode") return el.sym === "gs1" ? [el.w || 70, el.h || 22] : [EAN_W*(el.mag || 100)/100, EAN_H*(el.mag || 100)/100];
   if (el.type === "braille"){ const B = brailleLayout(el); return [B.w, B.h]; }
   if (el.type === "picto") return [el.w || 12, el.w || 12];
@@ -3581,6 +3782,7 @@ function insertKit(v){
   const ean = eanValid(state.design.ean || "") ? state.design.ean : "", brl = (state.design.product || state.design.brand || "").toLowerCase().slice(0, 30);
   if (v === "ean") put(back, 0, -.28, {type:"barcode", sym:"ean13", value:ean, mag:100});
   else if (v === "gs1") put(back, 0, -.28, {type:"barcode", sym:"gs1", value:"", w:70, h:22});
+  else if (v === "qr") put(back, .28, -.3, {type:"barcode", sym:"qr", value:"", w:20});
   else if (v === "braille") put(main, 0, .3, {type:"braille", text:brl});
   else if (v === "picto") put(back, 0, -.3, {type:"picto", pic:"recycle", w:12});
   else if (v === "zone") put(back, 0, -.38, {type:"zone", w:40, h:12, color:"#ffffff"});
@@ -3596,11 +3798,12 @@ $("#addMore").addEventListener("change", e => { const v = e.target.value; e.targ
 $("#elPic").innerHTML = Object.entries(PICTOS).map(([k2, l]) => `<option value="${k2}">${l}</option>`).join("");
 [["elSym","sym",String],["elMag","mag",Number],["elCode","value",String],["elBraille","text",String],["elPic","pic",String],["elPicTxt","text",String]]
   .forEach(([id, key, conv]) => $("#" + id).addEventListener("input", e => { const el = curEl(); if (!el) return; const val = conv(e.target.value); if (conv === Number && !Number.isFinite(val)) return; el[key] = val;
-    if (key === "sym" && val === "gs1" && !el.w){ el.w = 70; el.h = 22; } if (key === "sym" || key === "pic") renderElEditor(); else renderElHints(el); changed("art"); }));
+    if (key === "sym" && val === "gs1" && !el.w){ el.w = 70; el.h = 22; } if (key === "sym" && val === "qr" && !el.w) el.w = 20; if (key === "sym" || key === "pic") renderElEditor(); else renderElHints(el); changed("art"); }));
 function renderElHints(el){
   if (el.type === "barcode"){
     let h;
-    if (el.sym === "gs1"){ const m = gs1Model(el); h = m.error || `Module ${fmt2.format(m.X)} mm · ${m.dataLen} caractères · ${m.hri}`; $("#elCode").placeholder = "(01)06191234567897(17)271231(10)LOT42"; }
+    if (el.sym === "qr"){ const m = qrModel(el); h = m.error ? m.error[0].toUpperCase() + m.error.slice(1) + "." : `Version ${m.ver} (${m.size} × ${m.size} modules) · module ${fmt2.format(m.X)} mm · ${m.len} octets · correction M (15 %)`; $("#elCode").placeholder = "https://www.marque.tn/produit"; }
+    else if (el.sym === "gs1"){ const m = gs1Model(el); h = m.error || `Module ${fmt2.format(m.X)} mm · ${m.dataLen} caractères · ${m.hri}`; $("#elCode").placeholder = "(01)06191234567897(17)271231(10)LOT42"; }
     else { const c = el.value || ""; h = eanValid(c) ? "Code valide." : /^\d{12}$/.test(c) ? `Clé de contrôle : ${eanCheck(c)} → ${c}${eanCheck(c)}` : "13 chiffres, clé de contrôle comprise (12 chiffres : la clé est calculée)."; $("#elCode").placeholder = "6191234567897"; }
     $("#elCodeHint").textContent = h;
   }
@@ -3674,6 +3877,7 @@ async function fsPull(first){
     const mtp = get("modeles.json");
     if (mtp && FS.mt.get("@mytpl") !== mtp.mtime){ FS.mt.set("@mytpl", mtp.mtime); try { myTpls = JSON.parse(await fsb.read("modeles.json")); try { localStorage.setItem("lp-mytpl", JSON.stringify(myTpls)); } catch (e) {} renderMyTpls(); } catch (e) {} }
     else if (!mtp && first && myTpls.length) await writeMyTpls();
+    await DIES.pull(top, first);
     const ic = get("profil-sortie.icc");
     if (ic && FS.mt.get("@icc") !== ic.mtime){ FS.mt.set("@icc", ic.mtime); try { await setOutputProfile(await fsb.read("profil-sortie.icc", true), true); } catch (e) {} }
   } finally { FS.busy = false; }
@@ -4000,6 +4204,7 @@ $("#signSave").addEventListener("click", async () => {
   const small = document.createElement("canvas"); small.width = 450; small.height = 130; small.getContext("2d").drawImage(pad.cv, 0, 0, 450, 130);
   const sig = {name, decision:dec, note, at:new Date().toISOString(), img:small.toDataURL("image/png")};
   if (!meta.id) await saveProject(true);
+  addVersion(`BAT signé par ${name}`);
   await recordClientDecision(meta.id, {decision:dec, name, note, at:sig.at, source:"signature sur tablette", signature:sig.img});
   closeDlg("#signDlg");
   await saveFile(`${slug()}_BAT-signe.pdf`, batPDF(captureMockup(1200, 1200, "white", true), sig));
@@ -4252,7 +4457,8 @@ function subscribeProjects(){
 function configForSave(){ return JSON.parse(snap()); }
 function summary(q){
   const t = TPL(), d = state.dims[state.model];
-  return {template:t.name, dims: dimsText(), qty:state.qty, ht:q.error ? null : Math.round(q.ht*1000)/1000, unit:q.error ? null : Math.round(q.unit*1000)/1000};
+  const sh = q.error ? null : parseFloat(String(((q.tech || []).find(([a]) => a === "Feuilles (gâche incluse)") || [])[1] || "").replace(/[\s\u202f\u00a0]/g, "")) || null;
+  return {template:t.name, dims: dimsText(), qty:state.qty, ht:q.error ? null : Math.round(q.ht*1000)/1000, unit:q.error ? null : Math.round(q.unit*1000)/1000, cost:q.error ? null : Math.round(q.cost*1000)/1000, mat:state.mat[kind()], sheets:sh};
 }
 function stripHeavy(body){
   let dropped = false;
@@ -4268,7 +4474,7 @@ async function saveProject(silent){
   if (!meta.name.trim()) meta.name = `${TPL().name} ${meta.client || ""}`.trim();
   const now = new Date().toISOString(), q = quote(state.qty);
   if (!meta.id){ meta.id = meta.draftId || newId(); meta.createdAt = now; meta.createdBy = cap.uid || null; if (!meta.history.length) meta.history = [{status:meta.status, at:now, by:cap.uid || null}]; }
-  const body = {name:meta.name, client:meta.client, status:meta.status, createdAt:meta.createdAt, createdBy:meta.createdBy, history:meta.history, docs:meta.docs || [], cmf:meta.cmf || "", caddr:meta.caddr || "", updatedAt:now, updatedBy:cap.uid || null, summary:summary(q), config:configForSave()};
+  const body = {name:meta.name, client:meta.client, status:meta.status, createdAt:meta.createdAt, createdBy:meta.createdBy, history:meta.history, docs:meta.docs || [], cmf:meta.cmf || "", caddr:meta.caddr || "", versions:meta.versions || [], shares:meta.shares || [], due:meta.due || "", cphone:meta.cphone || "", cemail:meta.cemail || "", actual:meta.actual || null, updatedAt:now, updatedBy:cap.uid || null, summary:summary(q), config:configForSave()};
   const dropped = cloud() ? stripHeavy(body) : false;
   try {
     if (cloud()) await cap.db.collection("projects").doc(meta.id).set(body);
@@ -4279,7 +4485,7 @@ async function saveProject(silent){
 }
 function openProject(p){
   state = merge(DEFAULT, p.config || {}); sanitizeState();
-  meta = merge(NEW_META(), {id:p.id, name:p.name, client:p.client, status:p.status, createdAt:p.createdAt, createdBy:p.createdBy, history:p.history || [], docs:p.docs || [], cmf:p.cmf || "", caddr:p.caddr || ""});
+  meta = merge(NEW_META(), {id:p.id, name:p.name, client:p.client, status:p.status, createdAt:p.createdAt, createdBy:p.createdBy, history:p.history || [], docs:p.docs || [], cmf:p.cmf || "", caddr:p.caddr || "", versions:p.versions || [], shares:p.shares || [], due:p.due || "", cphone:p.cphone || "", cemail:p.cemail || "", actual:p.actual || null});
   selEl = null; dirty = false; savedAt = null; hist = []; hIndex = -1; pushHistory();
   showStudio(); renderControls(); refresh("geo", true);
 }
@@ -4310,7 +4516,7 @@ async function renderBoard(){
   let ps = {};
   if (cap.user){ const ids = [...new Set(list.map(p => p.updatedBy || p.createdBy).filter(Boolean))]; if (ids.length) try { ps = await cap.user.profiles(ids); } catch (e) {} }
   $("#boardNote").textContent = cloud() ? "Projets partagés avec l'équipe ayant accès à cette page. Le statut se change directement sur la carte ; les validations de BAT faites en ligne par les clients s'inscrivent dans l'historique." : FS.ready ? `Projets enregistrés dans le dossier partagé « ${FS.name} », visibles par tous les postes connectés à ce dossier.` : "Projets enregistrés dans ce navigateur uniquement. Paramètres › Dossier partagé de l'équipe pour les partager entre les postes.";
-  if (boardMode === "clients" || boardMode === "dash"){ $("#board").className = "board-list"; $("#board").innerHTML = boardMode === "dash" ? renderDashboard(list) : renderClients(list); return; }
+  if (["clients","dash","plan"].includes(boardMode)){ $("#board").className = "board-list"; $("#board").innerHTML = boardMode === "dash" ? renderDashboard(list) + renderDashExtra(list) : boardMode === "plan" ? renderPlanning(list) : renderClients(list); return; }
   $("#board").className = "board";
   $("#board").innerHTML = STATUSES.map(([sk, sl]) => {
     const items = list.filter(p => (p.status || "brouillon") === sk);
@@ -4371,22 +4577,28 @@ async function applyApprovals(){
 function cardExtras(p){
   const h = p.history || [], appr = [...h].reverse().find(x => x.client), d = x => new Date(x).toLocaleDateString("fr-FR");
   return `${appr ? `<div><span class="badge ${appr.decision === "ok" ? "ok" : "warn"}">${appr.decision === "ok" ? "✓ BAT validé" : "✎ Correction demandée"} · ${esc(appr.client)} · ${d(appr.at)}</span>${appr.note ? `<div class="meta">« ${esc(appr.note)} »</div>` : ""}</div>` : ""}
+    ${p.due && !["livre"].includes(p.status) ? `<div><span class="badge${new Date(p.due + "T23:59:00") < new Date() ? " warn" : ""}">Livraison promise ${d(p.due + "T12:00:00")}</span></div>` : ""}
+    ${p.actual && p.summary && p.summary.ht ? `<div class="meta">Marge réelle ${fmt1.format((p.summary.ht - p.actual.cost)*100/p.summary.ht)} %</div>` : ""}
     ${needsChase(p) ? `<div><span class="badge warn">À relancer · sans réponse depuis ${fmt0.format((Date.now() - new Date((h.slice(-1)[0] || {}).at || p.updatedAt))/864e5)} j</span></div>` : ""}
     ${h.length ? `<details><summary>Historique (${h.length})</summary><ol class="hist">${h.slice().reverse().map(x => `<li>${d(x.at)} · ${esc((STATUSES.find(s => s[0] === x.status) || [0, x.status])[1])}${x.client ? ` · ${esc(x.client)}${x.source ? ` (${esc(x.source)})` : ""}${x.signature ? " · signé" : ""}${x.pins && x.pins.length ? ` · ${x.pins.length} remarque(s) sur le plan` : ""}` : ""}${x.note ? ` — ${esc(x.note)}` : ""}</li>`).join("")}</ol></details>` : ""}
-    <div class="row wrap"><button type="button" class="btn small" data-appr="${esc(p.id)}">Réponse client au BAT…</button><button type="button" class="btn small ghost" data-dup="${esc(p.id)}">Dupliquer</button><button type="button" class="btn small ghost" data-repeat="${esc(p.id)}" title="Nouveau dossier avec forme et plaques en stock">Réimpression</button></div>`;
+    <div class="row wrap"><button type="button" class="btn small" data-appr="${esc(p.id)}">Réponse client au BAT…</button>${["devis","bat"].includes(p.status) ? `<button type="button" class="btn small ghost" data-chase="${esc(p.id)}">Relancer…</button>` : ""}${["valide","production","livre"].includes(p.status) ? `<button type="button" class="btn small ghost" data-cost="${esc(p.id)}">${p.actual ? "Coût réel ✓" : "Coût réel…"}</button>` : ""}<button type="button" class="btn small ghost" data-dup="${esc(p.id)}">Dupliquer</button><button type="button" class="btn small ghost" data-repeat="${esc(p.id)}" title="Nouveau dossier avec forme et plaques en stock">Réimpression</button></div>`;
 }
 function renderClients(list){
   const by = new Map();
   for (const p of list){ const c = (p.client || "").trim() || "Client non renseigné"; if (!by.has(c)) by.set(c, []); by.get(c).push(p); }
   const rows = [...by].map(([c, ps]) => ({c, ps, ht:ps.reduce((s, p) => s + (p.summary && p.summary.ht || 0), 0), open:ps.filter(p => p.status !== "livre").length, chase:ps.filter(needsChase).length, last:ps.map(p => p.updatedAt || "").sort().pop()})).sort((a, b) => (b.last || "").localeCompare(a.last || ""));
   if (!rows.length) return `<p class="hint">Aucun dossier.</p>`;
-  return `<div class="ctable-wrap"><table class="ctable"><thead><tr><th>Client</th><th class="num">Dossiers</th><th class="num">En cours</th><th class="num">À relancer</th><th class="num">Montant HT</th><th>Dernière activité</th><th>Statuts</th></tr></thead><tbody>${rows.map(r => `<tr><td><button type="button" class="linkbtn" data-client="${esc(r.c)}">${esc(r.c)}</button></td><td class="num">${r.ps.length}</td><td class="num">${r.open}</td><td class="num">${r.chase ? `<span class="badge warn">${r.chase}</span>` : "—"}</td><td class="num">${fmt0.format(r.ht)}</td><td>${r.last ? new Date(r.last).toLocaleDateString("fr-FR") : ""}</td><td><div class="sts">${STATUSES.map(([k, l]) => { const n = r.ps.filter(p => (p.status || "brouillon") === k).length; return n ? `<span class="badge">${l} ${n}</span>` : ""; }).join("")}</div></td></tr>`).join("")}</tbody></table></div>`;
+  return `<div class="ctable-wrap"><table class="ctable"><thead><tr><th>Client</th><th class="num">Dossiers</th><th class="num">En cours</th><th class="num">À relancer</th><th class="num">Montant HT</th><th class="num">Marge réelle</th><th>Dernière activité</th><th>Statuts</th><th></th></tr></thead><tbody>${rows.map(r => `<tr><td><button type="button" class="linkbtn" data-client="${esc(r.c)}">${esc(r.c)}</button></td><td class="num">${r.ps.length}</td><td class="num">${r.open}</td><td class="num">${r.chase ? `<span class="badge warn">${r.chase}</span>` : "—"}</td><td class="num">${fmt0.format(r.ht)}</td><td class="num">${(() => { const a = r.ps.filter(p => p.actual && p.summary && p.summary.ht), h = a.reduce((s, p) => s + p.summary.ht, 0); return h ? fmt1.format((h - a.reduce((s, p) => s + p.actual.cost, 0))*100/h) + " %" : "—"; })()}</td><td>${r.last ? new Date(r.last).toLocaleDateString("fr-FR") : ""}</td><td><div class="sts">${STATUSES.map(([k, l]) => { const n = r.ps.filter(p => (p.status || "brouillon") === k).length; return n ? `<span class="badge">${l} ${n}</span>` : ""; }).join("")}</div></td><td>${cloud() && r.c !== "Client non renseigné" ? `<button type="button" class="btn small ghost" data-portal="${esc(r.c)}">Espace client</button>` : ""}</td></tr>`).join("")}</tbody></table></div>`;
 }
-function setBoardMode(m){ boardMode = m; $("#bvStatus").setAttribute("aria-selected", m === "status"); $("#bvClients").setAttribute("aria-selected", m === "clients"); $("#bvDash").setAttribute("aria-selected", m === "dash"); renderBoard(); }
+function setBoardMode(m){ boardMode = m; $("#bvStatus").setAttribute("aria-selected", m === "status"); $("#bvClients").setAttribute("aria-selected", m === "clients"); $("#bvDash").setAttribute("aria-selected", m === "dash"); $("#bvPlan").setAttribute("aria-selected", m === "plan"); renderBoard(); }
+$("#bvPlan").addEventListener("click", () => setBoardMode("plan"));
 $("#bvDash").addEventListener("click", () => setBoardMode("dash"));
 $("#bvStatus").addEventListener("click", () => setBoardMode("status")); $("#bvClients").addEventListener("click", () => setBoardMode("clients"));
 $("#board").addEventListener("click", e => {
   const c = e.target.closest("[data-client]"); if (c){ $("#boardSearch").value = c.dataset.client === "Client non renseigné" ? "" : c.dataset.client; setBoardMode("status"); return; }
+  const ch = e.target.closest("[data-chase]"); if (ch){ openChase(ch.dataset.chase); return; }
+  const co = e.target.closest("[data-cost]"); if (co){ openCost(co.dataset.cost); return; }
+  const po = e.target.closest("[data-portal]"); if (po){ publishPortal(po.dataset.portal); return; }
   const a = e.target.closest("[data-appr]"); if (!a) return;
   const p = projects.find(x => x.id === a.dataset.appr); if (!p) return; apprTarget = p.id;
   $("#apprFor").textContent = `${p.name || "Projet"} · ${p.client || "client non renseigné"}`; $("#apprDecision").value = "ok"; $("#apprName").value = ""; $("#apprNote").value = ""; $("#apprDate").value = new Date().toISOString().slice(0, 10);
@@ -4409,6 +4621,8 @@ const SETTINGS_FIELDS = [
   ["Boîtes — impression & finitions", [["pricing.box.platePrice","Plaque offset","TND"],["pricing.box.printCal.cmjn","Calage quadri","TND"],["pricing.box.printSheet.cmjn","Passage quadri / feuille","TND"],["pricing.box.printCal.cmjnp","Calage quadri + Pantone","TND"],["pricing.box.printSheet.cmjnp","Passage quadri + P. / feuille","TND"],["pricing.box.insideCal","Impression intérieure, calage","TND"],["pricing.box.insideSheet","Impression intérieure / feuille","TND"],["pricing.box.lam.mat","Pelliculage mat / feuille","TND"],["pricing.box.lam.brillant","Pelliculage brillant / feuille","TND"],["pricing.box.lam.soft","Soft-touch / feuille","TND"],["pricing.box.varnishCal","Vernis UV, calage","TND"],["pricing.box.varnishSheet","Vernis UV / feuille","TND"],["pricing.box.foilCal","Dorure, cliché + calage","TND"],["pricing.box.foilSheet","Dorure / feuille","TND"],["pricing.box.embossCal","Gaufrage, cliché + calage","TND"],["pricing.box.embossSheet","Gaufrage / feuille","TND"]]],
   ["Boîtes — façonnage", [["pricing.box.dieBase","Forme de découpe, base","TND"],["pricing.box.diePerM","Forme, filet au mètre","TND"],["pricing.box.cutCal","Découpe, calage","TND"],["pricing.box.cutSheet","Découpe / feuille","TND"],["pricing.box.windowCal","Fenêtre, calage","TND"],["pricing.box.windowPc","Fenêtre / pièce","TND"],["pricing.box.glueCal","Collage, calage","TND"],["pricing.box.bagPc","Façonnage sac / pièce","TND"],["pricing.box.handlePc","Poignées / paire","TND"],["pricing.box.sheet.kraftp","Papier kraft brun / feuille","TND"],["pricing.box.sheet.whitep","Papier kraft blanc / feuille","TND"],["pricing.box.gluePc","Collage / pièce","TND"]]],
   ["Production et délais", [["production.hours","Heures de production par jour","h"],["production.prepress","Prépresse","jours"],["production.dieDays","Fabrication d'une forme","jours"],["production.drying","Séchage après pelliculage ou vernis","jours"],["production.ship","Conditionnement et livraison","jours"],["production.sheetsH.print","Cadence impression","f/h"],["production.sheetsH.lam","Cadence pelliculage","f/h"],["production.sheetsH.foil","Cadence dorure","f/h"],["production.sheetsH.cut","Cadence découpe","f/h"],["production.glueH","Cadence collage","pièces/h"],["production.labelMH","Cadence étiquettes","m/h"]]],
+  ["Coûts horaires (coût réel)", [["production.rate.print","Impression","TND/h"],["production.rate.finish","Finitions (pelliculage, vernis, dorure)","TND/h"],["production.rate.cut","Découpe","TND/h"],["production.rate.glue","Collage","TND/h"]]],
+  ["Stock de carton (feuilles en magasin)", [["stock.gc1","GC1 300 g","feuilles"],["stock.duplex","Duplex 350 g","feuilles"],["stock.kraft","Kraft 350 g","feuilles"],["stock.micro","Micro-cannelure E","feuilles"],["stock.ondB","Ondulé cannelure B","feuilles"],["stock.kraftp","Papier kraft brun","feuilles"],["stock.whitep","Papier kraft blanc","feuilles"]]],
   ["Facturation", [["billing.timbre","Droit de timbre par facture","TND"],["billing.prefixInv","Préfixe des factures"],["billing.startInv","Premier numéro de facture de l'année",""],["billing.prefixBL","Préfixe des bons de livraison"],["billing.startBL","Premier numéro de BL de l'année",""],["billing.payment","Conditions de paiement"],["billing.rib","RIB"],["billing.accounts.client","Compte clients"],["billing.accounts.sales","Compte de ventes"],["billing.accounts.vat","Compte TVA collectée"],["billing.accounts.stamp","Compte droit de timbre"]]],
   ["Étiquettes", [["pricing.label.web","Laize machine","mm"],["pricing.label.m2.couche","Couché adhésif / m²","TND"],["pricing.label.m2.ppw","PP blanc / m²","TND"],["pricing.label.m2.ppt","PP transparent / m²","TND"],["pricing.label.m2.verge","Vergé / m²","TND"],["pricing.label.printCal","Impression, calage","TND"],["pricing.label.printM2.num","Quadri / m²","TND"],["pricing.label.printM2.numb","Quadri + blanc / m²","TND"],["pricing.label.fin.vernis","Vernis / m²","TND"],["pricing.label.fin.lam","Lamination / m²","TND"],["pricing.label.toolBase","Outil de découpe","TND"],["pricing.label.cutM","Découpe / m","TND"],["pricing.label.rollPer","Étiquettes par bobine","ex."],["pricing.label.rollCost","Rebobinage / bobine","TND"]]],
 ];
@@ -4416,7 +4630,7 @@ const getPath = (o, p) => p.split(".").reduce((a, k) => a && a[k], o);
 const setPath = (o, p, val) => { const ks = p.split("."); let a = o; ks.slice(0, -1).forEach(k => a = a[k] = a[k] || {}); a[ks[ks.length-1]] = val; };
 let draftSettings = null, unsubSettings = null;
 function openSettings(from){
-  renderFsState(); renderSwatches(); renderICC();
+  renderFsState(); renderSwatches(); renderICC(); renderRates();
   draftSettings = structuredClone(from && from.pricing ? from : settings);
   const ro = cloud() && !cap.admin;
   $("#settingsBody").innerHTML = SETTINGS_FIELDS.map(([title, fields]) => `<div class="field"><h3>${title}</h3></div><div class="pgrid">${fields.map(([p, l, u]) => {
@@ -4965,7 +5179,8 @@ async function runExport(kindName){
     else if (kindName === "flat") await saveFile(`${base}_visuel-a-plat.png`, await new Promise(r => proofCanvas(4000).toBlob(r, "image/png")));
     else if (kindName === "tplsvg") await saveFile(`${base}_gabarit.svg`, dielineSVG(true));
     else if (kindName === "diepdf") await saveFile(`${base}_plan-decoupe.pdf`, dielinePDF());
-    else if (kindName === "bat") await saveFile(`${base}_BAT.pdf`, batPDF(captureMockup(1200, 1200, "white", true)));
+    else if (kindName === "bat"){ addVersion("BAT exporté"); await saveFile(`${base}_BAT.pdf`, batPDF(captureMockup(1200, 1200, "white", true))); }
+    else if (kindName === "ar") await exportAR(base);
     else if (kindName === "devis") await saveFile(`${base}_devis.pdf`, devisPDF(captureMockup(1000, 1000, "white", true)));
     else if (kindName === "zip"){
       if (!window.JSZip){ toast("Bibliothèque ZIP indisponible : rechargez la page."); return; }
@@ -5055,6 +5270,7 @@ $("#shareBtn").addEventListener("click", () => {
     try {
       await cap.db.doc("shares/" + id).set(doc);
       const url = `${SHARE_BASE}#s-${id}`;
+      meta.shares = [...(meta.shares || []), id].slice(-10); addVersion("Lien client");
       if (wantAppr && meta.id && ["brouillon","devis"].includes(meta.status)) setProjectStatus(meta.id, "bat");
       $("#shOut").innerHTML = `<div class="linkbox"><input type="text" readonly id="shUrl" value="${esc(url)}" aria-label="Lien client"><button class="btn" type="button" id="shCopy">Copier</button></div>`;
       $("#shCopy").onclick = () => copyText(url, "Lien copié", $("#shUrl"));
@@ -5805,6 +6021,11 @@ const GUIDE = [
     {t:"Réimpression", d:"Cochez « Forme de découpe en stock » et « Plaques déjà gravées » pour une réimpression : le devis et le délai en tiennent compte. Sur la carte d'un projet, « Réimpression » crée le nouveau dossier en un clic.", el:gq("#reuseDie"), prep:G.studio},
     {t:"Devis PDF et mail", d:"Devis PDF à en-tête de l'imprimerie et texte de mail prêt à copier.", el:gq("#devisPdf"), prep:G.studio},
     {t:"Bon à tirer (BAT)", d:"Maquette, visuel avec traits, contrôle prépresse et case « Bon pour accord » à faire signer avant impression.", el:gq('[data-exp="bat"]'), prep:G.pop},
+    {t:"Tarifs par client", d:"Remise et marge propres à un client (Paramètres › Tarifs par client) : appliquées au devis dès que le nom du client correspond, avec une ligne « Conditions client » dans la fiche technique.", el:gq("#tarifBtn"), prep:G.studio},
+    {t:"Formes en stock", d:"Inventaire des formes de découpe déjà fabriquées. Si un projet a le même gabarit et des cotes identiques ou proches, l'application le signale sous le devis et propose « Utiliser cette forme » ou « Adapter les cotes à cette forme ».", el:gq("#diesBtn"), prep:G.studio},
+    {t:"Versions du visuel", d:"Une version est gardée à chaque BAT exporté, signé ou envoyé en lien. « Versions du visuel » compare deux versions et colore en rouge ce qui a changé.", el:gq("#verBtn"), prep:G.studio},
+    {t:"Relecture des textes (IA)", d:"Version en ligne : l'IA relit marque, produit, mentions et textes libres (orthographe, typographie, cohérence) et propose des corrections à appliquer d'un clic.", el:gq("#proofBtn"), prep:G.studio},
+    {t:"Maquette en réalité augmentée", d:"Export « Maquette 3D et réalité augmentée » : un modèle .glb standard et une page à ouvrir sur téléphone, où le client pose l'emballage en taille réelle sur sa table.", el:gq('[data-exp="ar"]'), prep:G.pop},
     {t:"Signature sur tablette", d:"« Faire signer le BAT » : le client vérifie la maquette et le visuel, signe au doigt ou au stylet, et le BAT signé est produit en PDF ; la signature s'inscrit dans l'historique du dossier.", el:gq("#signBtn"), prep:G.studio},
     {t:"Facture, bon de livraison, ordre de fabrication", d:"Facture et bon de livraison numérotés (matricules fiscaux, TVA, droit de timbre, montant en lettres), export comptable pour Excel, et ordre de fabrication pour l'atelier. Documents client en français ou en français + arabe.", el:gq("#invBtn"), prep:G.studio},
     {t:"Validation du BAT en ligne", d:"Le lien client 3D peut demander la validation : le client valide ou demande une correction, son nom, la date et son commentaire s'inscrivent dans le dossier. Réponse reçue par téléphone ou par mail : bouton « Réponse client au BAT… » sur la carte du projet.", el:gq("#shareBtn"), prep:G.studio},
@@ -5812,6 +6033,8 @@ const GUIDE = [
   ]},
   {id:"data", title:"Projets et données", intro:"Retrouvez vos dossiers, suivez leur avancement et protégez vos données.", steps:[
     {t:"Enregistrer", d:"Enregistre le projet (gabarit, cotes, visuel, quantité). Ensuite, chaque modification est enregistrée automatiquement. Raccourci : Ctrl+S. Annuler / rétablir : Ctrl+Z / Ctrl+Y.", el:gq("#saveBtn"), prep:G.studio},
+    {t:"Planning, feuille partagée, relances", d:"Onglet « Planning » : passage des dossiers validés sur chaque machine, date de fin estimée et retards par rapport à la date promise. « Feuille partagée » imprime plusieurs produits sur une même feuille et compare au coût de commandes séparées. Sur les cartes : « Relancer… » (WhatsApp ou e-mail prérempli) et « Coût réel… » (marge réelle).", el:gq("#boardBtn"), prep:G.studio},
+    {t:"Espace client", d:"Version en ligne, vue « Par client » : « Espace client » publie une page qui réunit tous les liens 3D du client et l'état de ses dossiers ; il peut y demander une réimpression, qui s'inscrit dans l'historique du dossier.", el:gq("#boardBtn"), prep:G.studio},
     {t:"Projets", d:"Tableau par statut (brouillon, BAT envoyé, validé, en production, livré) avec historique, réponses client et dossiers à relancer (sans réponse depuis 7 jours). La vue « Par client » totalise dossiers et montants.", el:gq("#boardBtn"), prep:G.studio},
     {t:"Catalogue", d:"Toutes les structures avec visuels et prix indicatifs ; catalogue PDF à envoyer aux prospects.", el:gq("#catBtn"), prep:G.studio},
     {t:"Tableau de bord", d:"Dans Projets › Tableau de bord : montants des devis et des BAT validés, taux de transformation, délai moyen de validation, dossiers à relancer, meilleurs clients.", el:gq("#boardBtn"), prep:G.studio},
@@ -5952,13 +6175,384 @@ function reportError(msg){ console.error(msg); if (performance.now() - lastErr <
 addEventListener("error", e => { if (e && e.message && !/ResizeObserver|Script error/.test(e.message)) reportError(e.message); });
 addEventListener("unhandledrejection", e => { const r = e && e.reason; if (r && r.code && /declined|rate_limited|not_granted|aborted/.test(r.code)) return; reportError(r && (r.message || r.code) || "promesse rejetée"); });
 
+/* ================= Atelier et gestion : formes en stock, versions, feuille partagée, planning, stock, coût réel ================= */
+const normName = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+// Persistance d'une liste partagée : base en ligne, sinon navigateur + dossier partagé.
+function sharedList(coll, lsKey, file, onChange){
+  const o = {items:[], unsub:null};
+  o.load = () => {
+    if (o.unsub) o.unsub();
+    if (cloud()) o.unsub = cap.db.collection(coll).limit(500).onSnapshot(s => { o.items = s.docs.map(d => ({id:d.id, ...d.data()})); onChange(); }, () => {});
+    else { try { o.items = JSON.parse(localStorage.getItem(lsKey) || "[]"); } catch (e) { o.items = []; } onChange(); }
+  };
+  o.save = async (item) => {
+    if (cloud()){ const {id, ...body} = item; await cap.db.doc(`${coll}/${id}`).set(body); return; }
+    o.items = [...o.items.filter(x => x.id !== item.id), item]; try { localStorage.setItem(lsKey, JSON.stringify(o.items)); } catch (e) {}
+    if (FS.ready) try { FS.mt.set("@" + coll, await fsb.write(file, JSON.stringify(o.items))); } catch (e) {}
+    onChange();
+  };
+  o.remove = async (id) => {
+    if (cloud()){ await cap.db.doc(`${coll}/${id}`).delete(); return; }
+    o.items = o.items.filter(x => x.id !== id); try { localStorage.setItem(lsKey, JSON.stringify(o.items)); } catch (e) {}
+    if (FS.ready) try { FS.mt.set("@" + coll, await fsb.write(file, JSON.stringify(o.items))); } catch (e) {}
+    onChange();
+  };
+  o.pull = async (top, first) => {
+    const f = top.find(x => x.name === file);
+    if (f && FS.mt.get("@" + coll) !== f.mtime){ FS.mt.set("@" + coll, f.mtime); try { o.items = JSON.parse(await fsb.read(file)); localStorage.setItem(lsKey, JSON.stringify(o.items)); onChange(); } catch (e) {} }
+    else if (!f && first && o.items.length) try { FS.mt.set("@" + coll, await fsb.write(file, JSON.stringify(o.items))); } catch (e) {}
+  };
+  return o;
+}
+
+/* ---- Formes de découpe en stock ---- */
+const DIES = sharedList("dies", "lp-dies", "formes.json", () => { renderDieMatch(); if (!$("#diesDlg").hidden) renderDies(); });
+function dieMatches(){
+  if (!layout || kind() === "label") return [];
+  const keys = (DIM_FIELDS[state.model] || []).map(f => f[0]), cur = state.dims[state.model] || {}, e = caliper();
+  return DIES.items.filter(d => d.model === state.model).map(d => ({d, diff:Math.max(0, ...keys.map(k => Math.abs((+d.dims[k] || 0) - (+cur[k] || 0)))), de:Math.abs((+d.e || 0) - e), modeOk:(d.dimMode || "int") === (state.dimMode || "int")}))
+    .filter(x => x.diff <= 5).sort((a, b) => a.diff - b.diff || a.de - b.de);
+}
+function renderDieMatch(){
+  const box = $("#dieMatch"); if (!box || clientMode) return;
+  const m = dieMatches()[0], RU = state.reuse || {};
+  if (!m){ box.hidden = true; return; }
+  const exact = m.diff <= .5 && m.de <= .1 && m.modeOk, d = m.d, used = RU.die && RU.dieRef === d.ref;
+  box.hidden = false;
+  box.innerHTML = exact ? `<b>Forme en stock : ${esc(d.ref)}</b> · ${esc(d.place || "emplacement non renseigné")} · ${d.poses || "?"} poses. ${used ? "Utilisée pour ce devis." : `<button type="button" class="btn small" id="dieUse">Utiliser cette forme</button>`}`
+    : `<b>Forme proche en stock : ${esc(d.ref)}</b> (écart ${fmt1.format(m.diff)} mm${m.de > .1 ? `, épaisseur ${fmt2.format(d.e)} mm` : ""}). <button type="button" class="btn small" id="dieAdapt">Adapter les cotes à cette forme</button>`;
+  const use = () => { state.reuse = {...(state.reuse || {}), die:true, dieRef:d.ref}; renderControls(); changed("art"); toast(`Forme ${d.ref} utilisée : pas de frais de forme`); };
+  if ($("#dieUse")) $("#dieUse").onclick = use;
+  if ($("#dieAdapt")) $("#dieAdapt").onclick = () => { state.dims[state.model] = {...state.dims[state.model], ...d.dims}; state.dimMode = d.dimMode || state.dimMode; use(); changed("geo"); };
+}
+function renderDies(){
+  const rows = DIES.items.slice().sort((a, b) => String(a.ref).localeCompare(String(b.ref), "fr", {numeric:true}));
+  $("#diesList").innerHTML = rows.length ? rows.map(d => { const t = TEMPLATES.find(x => x.id === d.model); return `<tr><td><b>${esc(d.ref)}</b></td><td>${esc(t ? t.name : d.model)}</td><td>${esc(Object.entries(d.dims || {}).filter(([k]) => typeof d.dims[k] === "number").map(([, v]) => fmt1.format(v)).join(" × "))} mm ${d.dimMode === "ext" ? "ext." : "int."}</td><td class="num">${fmt2.format(+d.e || 0)}</td><td class="num">${d.poses || "—"}</td><td>${esc(d.place || "")}</td><td>${esc(d.project || "")}</td><td><button type="button" class="btn small ghost" data-diedel="${esc(d.id)}">Retirer</button></td></tr>`; }).join("") : `<tr><td colspan="8" class="hint">Aucune forme enregistrée. Ajoutez la forme du projet en cours une fois fabriquée.</td></tr>`;
+  const next = "F-" + String(Math.max(0, ...DIES.items.map(d => parseInt(String(d.ref).replace(/\D/g, "")) || 0)) + 1).padStart(3, "0");
+  if (!$("#dieRef").value) $("#dieRef").value = next;
+}
+$("#diesBtn").addEventListener("click", () => { $("#dieRef").value = ""; renderDies(); openDlg("#diesDlg"); });
+$("#dieAdd").addEventListener("click", async () => {
+  const ref = $("#dieRef").value.trim(); if (!ref){ $("#dieRef").focus(); return; }
+  const M = montage(), item = {id:slug2(ref).toLowerCase() || newId(), ref, model:state.model, dims:structuredClone(state.dims[state.model]), dimMode:state.dimMode, e:caliper(), mat:state.mat[kind()], poses:M ? M.n : null, sheet:`${P().box.sheetW} × ${P().box.sheetH}`, place:$("#diePlace").value.trim(), project:meta.name || TPL().name, client:meta.client || "", at:new Date().toISOString()};
+  try { await DIES.save(item); $("#dieRef").value = ""; $("#diePlace").value = ""; renderDies(); toast(`Forme ${ref} ajoutée au stock`); } catch (e) { toast("Forme non enregistrée (droits d'écriture requis)."); }
+});
+$("#diesList").addEventListener("click", async e => { const b = e.target.closest("[data-diedel]"); if (!b) return; if (b.dataset.armed !== "1"){ b.dataset.armed = "1"; b.textContent = "Confirmer"; return; } try { await DIES.remove(b.dataset.diedel); renderDies(); } catch (err) { toast("Suppression impossible."); } });
+
+/* ---- Versions du visuel et comparaison ---- */
+function addVersion(label){
+  try { const c = proofCanvas(480), img = c.toDataURL("image/jpeg", .6); meta.versions = [...(meta.versions || []), {at:new Date().toISOString(), label, img, dims:dimsText()}].slice(-4); if (meta.id) saveProject(true); } catch (e) {}
+}
+function loadImg(src){ return new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = src; }); }
+async function renderVerCompare(){
+  const vs = meta.versions || [], cur = {label:"Visuel actuel", at:new Date().toISOString(), img:proofCanvas(480).toDataURL("image/jpeg", .6), dims:dimsText()};
+  const all = [...vs, cur], a = all[+$("#verA").value] || all[0], b = all[+$("#verB").value] || cur;
+  const [ia, ib] = await Promise.all([loadImg(a.img), loadImg(b.img)]);
+  const W = 560, H = Math.round(W*ib.naturalHeight/ib.naturalWidth), mk = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
+  const ca = mk(), cb = mk(), cd = mk(), xa = ca.getContext("2d"), xb = cb.getContext("2d"), xd = cd.getContext("2d");
+  xa.drawImage(ia, 0, 0, W, H); xb.drawImage(ib, 0, 0, W, H);
+  const da = xa.getImageData(0, 0, W, H).data, db = xb.getImageData(0, 0, W, H).data, out = xd.createImageData(W, H), o = out.data; let n = 0;
+  for (let i = 0; i < da.length; i += 4){ const d = Math.abs(da[i] - db[i]) + Math.abs(da[i + 1] - db[i + 1]) + Math.abs(da[i + 2] - db[i + 2]), g = (db[i] + db[i + 1] + db[i + 2])/3;
+    if (d > 70){ o[i] = 230; o[i + 1] = 20; o[i + 2] = 60; o[i + 3] = 255; n++; } else { o[i] = o[i + 1] = o[i + 2] = 200 + g*.2; o[i + 3] = 255; } }
+  xd.putImageData(out, 0, 0);
+  const sameFmt = Math.abs(ia.naturalWidth/ia.naturalHeight - ib.naturalWidth/ib.naturalHeight) < .01;
+  $("#verOut").innerHTML = ""; for (const [c, t] of [[ca, a.label], [cb, b.label], [cd, "Différences en rouge"]]){ const f = document.createElement("figure"); f.append(c); const fc = document.createElement("figcaption"); fc.textContent = t; f.append(fc); $("#verOut").append(f); }
+  $("#verNote").textContent = `${fmt1.format(n*100/(W*H))} % de la surface diffère.${sameFmt ? "" : " Attention : les formats diffèrent (cotes modifiées), la comparaison est approximative."}`;
+}
+function openVer(){
+  const vs = meta.versions || [], opt = (i, v) => `<option value="${i}">${esc(v.label)} — ${new Date(v.at).toLocaleString("fr-FR")}</option>`;
+  const all = [...vs, {label:"Visuel actuel", at:new Date().toISOString()}];
+  $("#verA").innerHTML = all.map((v, i) => opt(i, v)).join(""); $("#verB").innerHTML = $("#verA").innerHTML;
+  $("#verA").value = String(Math.max(0, all.length - 2)); $("#verB").value = String(all.length - 1);
+  $("#verEmpty").hidden = vs.length > 0; openDlg("#verDlg"); renderVerCompare();
+}
+$("#verBtn").addEventListener("click", openVer);
+$("#verSave").addEventListener("click", () => { addVersion($("#verLabel").value.trim() || "Version enregistrée"); $("#verLabel").value = ""; openVer(); toast("Version enregistrée"); });
+$("#verA").addEventListener("change", renderVerCompare); $("#verB").addEventListener("change", renderVerCompare);
+
+/* ---- Feuille partagée : plusieurs produits sur la même feuille ---- */
+function jobOf(p, qty){
+  const keep = state, keepL = layout, keepM = meta;
+  state = merge(DEFAULT, structuredClone(p.config || {})); sanitizeState(); fixMat(); meta = {...meta, client:p.client || ""};
+  try {
+    const L = computeLayout(), k = kind(), g = dieGeometry(L), area = L.panels.reduce((s, q) => s + Math.abs(polyArea(q.gpoly)), 0);
+    layout = L; const solo = quote(qty);
+    return {id:p.id, name:p.name || TPL().name, client:p.client || "", qty, k, L, g, area, mat:state.mat[k], print:state.print[k], lam:state.lam[k], grain:state.grain, foil:state.foil || state.elements.some(x => x.foil), varnish:state.varnish, relief:hasRelief(), glue:L.panels.some(q => q.glue), knife:(L.cutLen + L.knifeLen)/1000, solo};
+  } finally { state = keep; layout = keepL; meta = keepM; }
+}
+// Rangement en étagères : chaque pose est le rectangle de son développé (+ espace), tourné selon le sens des fibres.
+function shelfPack(items, FW, FH, gap){
+  const rects = items.flatMap(it => Array.from({length:it.n}, () => ({it, w:it.w + gap, h:it.h + gap}))).sort((a, b) => b.h - a.h || b.w - a.w);
+  const out = []; let x = 0, y = 0, rowH = 0;
+  for (const r of rects){ if (x + r.w - gap > FW + .01){ x = 0; y += rowH; rowH = 0; } if (y + r.h - gap > FH + .01) return null; out.push({it:r.it, x, y}); x += r.w; rowH = Math.max(rowH, r.h); }
+  return out;
+}
+function gangPlan(jobs){
+  const B = P().box, D = {...DIE_DEFAULT, ...(state.die || {})}, FW = B.sheetW - 2*B.grip, FH = B.sheetH - 2*B.grip, gap = B.gap, lock = D.grainLock !== false;
+  let best = null;
+  for (const sheetGrain of lock ? ["W", "H"] : ["free"]){
+    const items = jobs.map(j => { const cb = j.L.cbb, rot = sheetGrain === "free" ? cb.h > cb.w && cb.h <= FW : ((j.grain !== "v") !== (sheetGrain !== "H")); return {j, rot, w:rot ? cb.h : cb.w, h:rot ? cb.w : cb.h, n:1}; });
+    if (!shelfPack(items, FW, FH, gap)) continue;
+    const sat = new Set();
+    for (let guard = 0; guard < 400 && sat.size < items.length; guard++){
+      const cand = items.filter(i => !sat.has(i)).sort((a, b) => b.j.qty/b.n - a.j.qty/a.n)[0]; cand.n++;
+      if (!shelfPack(items, FW, FH, gap)){ cand.n--; sat.add(cand); }
+    }
+    const net = Math.max(...items.map(i => Math.ceil(i.j.qty/i.n))), place = shelfPack(items, FW, FH, gap);
+    if (!best || net < best.net) best = {items:items.map(i => ({...i})), net, place, sheetGrain, FW, FH, gap};
+  }
+  if (!best) return null;
+  const Pr = P(), sheets = Math.ceil(best.net*(1 + Pr.gache/100)) + B.sheetsCal, j0 = jobs[0], pr = j0.print, lines = [];
+  const add = (l, v) => lines.push([l, v]);
+  add("Support", sheets*B.sheet[j0.mat]); add("Plaques offset", B.plates[pr]*B.platePrice); add("Impression", B.printCal[pr] + sheets*B.printSheet[pr]);
+  add(LAM.box[j0.lam] || "Finition", sheets*(B.lam[j0.lam] || 0));
+  if (jobs.some(j => j.varnish)) add("Vernis sélectif UV", B.varnishCal + sheets*B.varnishSheet);
+  if (jobs.some(j => j.foil)) add("Dorure à chaud", B.foilCal + sheets*B.foilSheet);
+  if (jobs.some(j => j.relief)) add("Gaufrage", B.embossCal + sheets*B.embossSheet);
+  add("Forme de découpe commune", B.dieBase + best.items.reduce((s, i) => s + i.n*i.j.knife, 0)*B.diePerM);
+  add("Découpe & rainage", B.cutCal + sheets*B.cutSheet);
+  for (const i of best.items) if (i.j.glue) add(`Collage — ${i.j.name}`, B.glueCal + i.j.qty*B.gluePc);
+  const cost = lines.reduce((s, [, v]) => s + v, 0), ht = cost*(1 + Pr.marge/100), soloHt = jobs.reduce((s, j) => s + (j.solo.error ? 0 : j.solo.ht), 0);
+  const areaTot = best.items.reduce((s, i) => s + i.n*i.j.area, 0);
+  // Chaque produit paie sa part de surface ; la remise de son client s'applique à sa part.
+  const share = best.items.map(i => { const part = i.n*i.j.area/areaTot, CR = clientRate(i.j.client), rem = CR ? clamp(+CR.remise || 0, 0, 90) : 0; return {i, part, ht:ht*part*(1 - rem/100), made:i.n*best.net}; });
+  return {...best, sheets, lines, cost, ht:share.reduce((s, x) => s + x.ht, 0), soloHt, share};
+}
+let gangRes = null;
+function openGang(){
+  const list = projects.filter(p => p.config && p.config.model && (TEMPLATES.find(t => t.id === p.config.model) || {}).kind === "box");
+  $("#gangList").innerHTML = list.length ? list.map(p => `<li><label class="check"><input type="checkbox" data-gang="${esc(p.id)}"> <span><b>${esc(p.name || "Sans titre")}</b> · ${esc(p.client || "")} · ${esc((p.summary || {}).dims || "")}</span></label><input type="number" min="100" step="100" value="${(p.summary || {}).qty || 1000}" data-gqty="${esc(p.id)}" aria-label="Quantité"></li>`).join("") : `<li class="hint">Enregistrez d'abord des projets d'étuis ou de boîtes.</li>`;
+  $("#gangOut").innerHTML = ""; gangRes = null; $("#gangPdf").disabled = $("#gangDxf").disabled = true; openDlg("#gangDlg");
+}
+$("#gangBtn").addEventListener("click", openGang);
+$("#gangRun").addEventListener("click", () => {
+  const sel = [...document.querySelectorAll("[data-gang]:checked")].map(c => ({p:projects.find(x => x.id === c.dataset.gang), q:Math.max(1, +document.querySelector(`[data-gqty="${c.dataset.gang}"]`).value || 0)}));
+  if (sel.length < 2){ toast("Cochez au moins deux projets."); return; }
+  const jobs = sel.map(({p, q}) => jobOf(p, q)), j0 = jobs[0], bad = jobs.filter(j => j.mat !== j0.mat || j.print !== j0.print || j.lam !== j0.lam);
+  if (bad.length){ $("#gangOut").innerHTML = `<p class="err">Même support, même impression et même finition obligatoires sur une feuille partagée. À retirer : ${bad.map(j => esc(j.name)).join(", ")}.</p>`; return; }
+  gangRes = gangPlan(jobs);
+  if (!gangRes){ $("#gangOut").innerHTML = `<p class="err">Ces produits ne tiennent pas ensemble sur la feuille ${P().box.sheetW} × ${P().box.sheetH} mm.</p>`; return; }
+  const g = gangRes, save = g.soloHt - g.ht;
+  $("#gangOut").innerHTML = `<div class="ctable-wrap"><table class="ctable"><thead><tr><th>Produit</th><th class="num">Poses</th><th class="num">Commandé</th><th class="num">Produit</th><th class="num">Part du coût</th><th class="num">Prix HT</th><th class="num">Seul (HT)</th></tr></thead><tbody>${g.share.map(s => `<tr><td>${esc(s.i.j.name)}<small class="hint"> · ${esc(s.i.j.client)}</small></td><td class="num">${s.i.n}</td><td class="num">${fmt0.format(s.i.j.qty)}</td><td class="num">${fmt0.format(s.made)}</td><td class="num">${fmt0.format(s.part*100)} %</td><td class="num">${fmt0.format(s.ht)}</td><td class="num">${s.i.j.solo.error ? "—" : fmt0.format(s.i.j.solo.ht)}</td></tr>`).join("")}</tbody></table></div>
+    <p><b>${g.sheets} feuilles</b> (${g.net} nettes + gâche et calage)${g.sheetGrain !== "free" ? `, feuille ${grainSheetTxt(g.sheetGrain)}` : ""} · total ${tnd(g.ht)} HT au lieu de ${tnd(g.soloHt)} en commandes séparées : <b class="${save > 0 ? "ok-txt" : "err"}">${save > 0 ? "économie" : "surcoût"} de ${tnd(Math.abs(save))}</b>.</p>
+    <p class="hint">Répartition des coûts au prorata de la surface de carton de chaque produit. Imposition en rectangles (sans emboîtement) : à affiner par le formiste. Produits à quantités très différentes : surplus possible sur les petites séries.</p>`;
+  $("#gangPdf").disabled = $("#gangDxf").disabled = false;
+});
+function gangPoses(){
+  const g = gangRes, B = P().box; return g.place.map(pl => { const it = g.items.find(i => i.j === pl.it.j), L = it.j.L, cb = L.cbb, rot = it.rot;
+    const f = q => { const u = q[0] - cb.minX, v = q[1] - cb.minY; return rot ? [B.grip + pl.x + (cb.h - v), B.grip + pl.y + u] : [B.grip + pl.x + u, B.grip + pl.y + v]; };
+    return {j:it.j, f, rot}; });
+}
+$("#gangPdf").addEventListener("click", () => {
+  const {jsPDF} = window.jspdf, doc = new jsPDF({unit:"mm", format:"a3", orientation:"landscape"}), B = P().box, k = Math.min(380/B.sheetW, 235/B.sheetH), X = x => 20 + x*k, Y = y => 30 + (B.sheetH - y)*k;
+  const cols = [[59,111,182],[184,15,90],[23,120,74],[168,91,0],[90,70,180],[0,140,150]];
+  doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.text(pdfTxt(`${settings.company.name || "Label Pack"} — Feuille partagée (${gangRes.items.length} produits)`), 20, 16);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.text(pdfTxt(`Feuille ${B.sheetW} × ${B.sheetH} mm · ${gangRes.sheets} feuilles · ${gangRes.items.map(i => `${i.j.name} : ${i.n} poses`).join(" · ")}`), 20, 22, {maxWidth:380});
+  doc.setDrawColor(150); doc.rect(X(0), Y(B.sheetH), B.sheetW*k, B.sheetH*k);
+  gangPoses().forEach(ps => { const ci = gangRes.items.findIndex(i => i.j === ps.j), c = cols[ci % cols.length]; doc.setDrawColor(...c); doc.setLineWidth(.15);
+    for (const pn of ps.j.L.panels){ const q = pn.gpoly.map(ps.f); q.forEach((a, i) => { const b = q[(i + 1) % q.length]; doc.line(X(a[0]), Y(a[1]), X(b[0]), Y(b[1])); }); } });
+  let lx = 20; gangRes.items.forEach((i, ci) => { doc.setTextColor(...cols[ci % cols.length]); const t = pdfTxt(`■ ${i.j.name} (${i.n})`); doc.text(t, lx, 290); lx += doc.getTextWidth(t) + 8; });
+  saveFile(`feuille-partagee-${new Date().toISOString().slice(0, 10)}.pdf`, doc.output("blob"));
+});
+$("#gangDxf").addEventListener("click", () => {
+  const B = P().box, groups = new Map([["COUPE", []], ["RAINAGE", []]]);
+  for (const ps of gangPoses()){ const tr = e => entPose(e, ps.f, ps.rot ? 90 : 0); for (const [nm, ents] of dieLayers(ps.j.g, tr)){ if (!groups.has(nm)) groups.set(nm, []); groups.get(nm).push(...ents); } }
+  const info = [{t:"L", a:[0,0], b:[B.sheetW,0]}, {t:"L", a:[B.sheetW,0], b:[B.sheetW,B.sheetH]}, {t:"L", a:[B.sheetW,B.sheetH], b:[0,B.sheetH]}, {t:"L", a:[0,B.sheetH], b:[0,0]}, {t:"T", x:0, y:-10, h:4, s:`Feuille partagee ${B.sheetW} x ${B.sheetH} mm - ${gangRes.items.map(i => `${asciiTxt(i.j.name)} ${i.n} poses`).join(" - ")}`}];
+  saveFile(`feuille-partagee-${new Date().toISOString().slice(0, 10)}.dxf`, dxfWrite([...groups, ["INFOS", info]], [-5, -15, B.sheetW + 5, B.sheetH + 5]));
+});
+
+/* ---- Planning des machines ---- */
+// n-ième jour ouvré (lundi à vendredi) à partir d'aujourd'hui, ou du lundi suivant le week-end.
+const workDay = (start, n) => { const d = new Date(start); d.setHours(12, 0, 0, 0); while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1); let k = 0; while (k < n){ d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) k++; } return d; };
+function planJobs(list){
+  const Pd = settings.production || DEFAULT_SETTINGS.production, hpd = Math.max(1, +Pd.hours || 8), free = {}, jobs = [];
+  const active = list.filter(p => ["valide","production"].includes(p.status) && p.config && p.config.model).sort((a, b) => String(((a.history || []).find(h => h.status === "valide") || {}).at || a.updatedAt).localeCompare(String(((b.history || []).find(h => h.status === "valide") || {}).at || b.updatedAt)));
+  for (const p of active){
+    const keep = state, keepL = layout, keepM = meta; let lt = null;
+    state = merge(DEFAULT, structuredClone(p.config)); sanitizeState(); fixMat(); meta = {...meta, client:p.client || ""};
+    try { layout = computeLayout(); const q = quote(state.qty); lt = leadTime(q); } catch (e) {} finally { state = keep; layout = keepL; meta = keepM; }
+    if (!lt) continue;
+    let t = (+Pd.prepress || 0)*hpd; const bars = [];
+    for (const [name, h] of lt.steps){
+      const mach = /Découpe/.test(name) ? "Découpe" : name;
+      if (/Découpe/.test(name)) t = Math.max(t, lt.dieReady*hpd);
+      const s = Math.max(t, free[mach] || 0), e = s + h; free[mach] = e; bars.push({mach, s, e}); t = e;
+      if (/Pelliculage|Vernis/.test(name)) t += (+Pd.drying || 0)*hpd;
+    }
+    const endH = t + (+Pd.ship || 0)*hpd, end = workDay(new Date(), Math.max(0, Math.ceil(endH/hpd) - 1));
+    jobs.push({p, bars, end, late:p.due ? end > new Date(p.due + "T23:59:00") : false});
+  }
+  return {jobs, hpd};
+}
+function renderPlanning(list){
+  const {jobs, hpd} = planJobs(list);
+  if (!jobs.length) return `<p class="hint">Aucun dossier « BAT validé » ou « En production » à planifier.</p>`;
+  const machs = [...new Set(jobs.flatMap(j => j.bars.map(b => b.mach)))], maxH = Math.max(...jobs.flatMap(j => j.bars.map(b => b.e))), days = Math.max(5, Math.ceil(maxH/hpd) + 1);
+  const W = clamp((($("#board").clientWidth || 900) - 26), 560, 1400), lw = 150, rh = 30, H = 34 + machs.length*rh, X = h => lw + (W - lw - 10)*h/(days*hpd);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="dchart gantt" role="img" aria-label="Planning des machines">`;
+  for (let d = 0; d <= days; d++){ const x = X(d*hpd), dt = workDay(new Date(), d); svg += `<line x1="${x}" x2="${x}" y1="22" y2="${H}" class="grid"/>${d < days ? `<text x="${x + 3}" y="15" class="ax">${dt.toLocaleDateString("fr-FR", {weekday:"short", day:"numeric"})}</text>` : ""}`; }
+  machs.forEach((m, r) => { const y = 26 + r*rh; svg += `<text x="6" y="${y + rh/2 + 1}" class="lab">${esc(m)}</text><line x1="${lw}" x2="${W - 10}" y1="${y + rh}" y2="${y + rh}" class="grid"/>`;
+    jobs.forEach((j, ji) => j.bars.filter(b => b.mach === m).forEach(b => { const x0 = X(b.s), x1 = Math.max(X(b.e), x0 + 3); svg += `<g data-tip="${esc(`${j.p.name || "Projet"} · ${m} · ${fmt1.format(b.e - b.s)} h`)}"><rect x="${x0}" y="${y + 4}" width="${x1 - x0}" height="${rh - 8}" rx="3" class="${j.late ? "bar late" : "bar"}"/>${x1 - x0 > 40 ? `<text x="${x0 + 4}" y="${y + rh/2 + 4}" class="bl">${esc(String(j.p.name || "").slice(0, Math.floor((x1 - x0)/6.5)))}</text>` : ""}</g>`; })); });
+  svg += `</svg>`;
+  return `<div class="dash"><section class="dcard"><div class="row between"><h3>Planning des machines (estimation, jours ouvrés)</h3><div class="dleg"><span><i class="s1"></i>Dans les temps</span><span><i class="s2"></i>En retard sur la date promise</span></div></div>${svg}<div class="dtip" id="dTip" hidden></div></section>
+    <section class="dcard"><table class="ctable"><thead><tr><th>Dossier</th><th>Client</th><th>Fin estimée</th><th>Date promise</th><th>État</th></tr></thead><tbody>${jobs.map(j => `<tr><td>${esc(j.p.name || "")}</td><td>${esc(j.p.client || "")}</td><td>${j.end.toLocaleDateString("fr-FR")}</td><td>${j.p.due ? new Date(j.p.due).toLocaleDateString("fr-FR") : "—"}</td><td>${j.p.due ? (j.late ? `<span class="badge warn">En retard</span>` : `<span class="badge ok">Dans les temps</span>`) : "—"}</td></tr>`).join("")}</tbody></table></section>
+    <p class="hint">Ordre de passage : date de validation du BAT. Durées calculées avec les cadences des Paramètres ; la date promise se saisit dans le projet (section devis).</p></div>`;
+}
+
+/* ---- Stock de carton, coût réel, tarifs clients ---- */
+function stockFor(mat, exceptId){
+  const st = +((settings.stock || {})[mat] || 0), res = projects.filter(p => p.id !== exceptId && ["valide","production"].includes(p.status) && (p.summary || {}).mat === mat).reduce((s, p) => s + (+(p.summary || {}).sheets || 0), 0);
+  return {st, res, free:st - res};
+}
+function clientRate(name){ const n = normName(name); return n ? (settings.clientRates || []).find(c => normName(c.client) === n) : null; }
+function renderRates(){
+  const rs = settings.clientRates || [], ro = cloud() && !cap.admin;
+  $("#rateList").innerHTML = rs.length ? rs.map((r, i) => `<li><span><b>${esc(r.client)}</b> · remise ${fmt1.format(+r.remise || 0)} %${r.marge !== "" && r.marge != null ? ` · marge ${fmt1.format(+r.marge)} %` : ""}${r.note ? " · " + esc(r.note) : ""}</span>${ro ? "" : `<button type="button" class="btn small ghost" data-ratedel="${i}">Retirer</button>`}</li>`).join("") : `<li class="hint">Aucun tarif client particulier.</li>`;
+  $("#rateAddRow").hidden = ro;
+}
+$("#rateAdd").addEventListener("click", async () => { const client = $("#rateClient").value.trim(); if (!client){ $("#rateClient").focus(); return; }
+  settings.clientRates = [...(settings.clientRates || []).filter(r => normName(r.client) !== normName(client)), {client, remise:+$("#rateRem").value || 0, marge:$("#rateMarge").value === "" ? "" : +$("#rateMarge").value, note:$("#rateNote").value.trim()}];
+  if (await saveSettingsNow()){ ["#rateClient","#rateRem","#rateMarge","#rateNote"].forEach(s => $(s).value = ""); renderRates(); renderQuote(); } });
+$("#rateList").addEventListener("click", async e => { const b = e.target.closest("[data-ratedel]"); if (!b) return; settings.clientRates = (settings.clientRates || []).filter((_, i) => i !== +b.dataset.ratedel); if (await saveSettingsNow()){ renderRates(); renderQuote(); } });
+// Coût réel en fin de production.
+let costTarget = null;
+function openCost(id){
+  const p = projects.find(x => x.id === id) || (meta.id === id ? {id, ...meta, summary:summary(quote(state.qty))} : null); if (!p) return; costTarget = id;
+  const a = p.actual || {}, s = p.summary || {};
+  $("#costFor").textContent = `${p.name || "Projet"} · ${p.client || ""} · devis ${s.ht != null ? tnd(s.ht) + " HT" : "—"}${s.cost != null ? `, coût de revient prévu ${tnd(s.cost)}` : ""}${s.sheets ? `, ${fmt0.format(s.sheets)} feuilles prévues` : ""}`;
+  for (const k of ["sheets","hPrint","hFinish","hCut","hGlue","buy","other"]) $("#cost-" + k).value = a[k] ?? "";
+  renderCost(); openDlg("#costDlg");
+}
+function costCalc(){
+  const p = projects.find(x => x.id === costTarget) || {}, s = p.summary || (meta.id === costTarget ? summary(quote(state.qty)) : {}), R = (settings.production || {}).rate || {}, v = k => +$("#cost-" + k).value || 0;
+  const sheetPrice = P().box.sheet[s.mat] || 0, cost = v("sheets")*sheetPrice + v("hPrint")*(+R.print || 0) + v("hFinish")*(+R.finish || 0) + v("hCut")*(+R.cut || 0) + v("hGlue")*(+R.glue || 0) + v("buy") + v("other");
+  return {s, cost, a:{sheets:v("sheets"), hPrint:v("hPrint"), hFinish:v("hFinish"), hCut:v("hCut"), hGlue:v("hGlue"), buy:v("buy"), other:v("other"), cost:r3(cost), at:new Date().toISOString()}};
+}
+function renderCost(){ const {s, cost} = costCalc(), m = s.ht ? (s.ht - cost)/s.ht : null; $("#costRes").innerHTML = `Coût réel : <b>${tnd(cost)}</b>${s.cost != null ? ` (prévu ${tnd(s.cost)}, écart ${cost - s.cost >= 0 ? "+" : ""}${fmt0.format(cost - s.cost)} TND)` : ""}${m != null ? ` · marge réelle <b class="${m >= 0 ? "ok-txt" : "err"}">${fmt1.format(m*100)} %</b>` : ""}`; }
+["sheets","hPrint","hFinish","hCut","hGlue","buy","other"].forEach(k => $("#cost-" + k).addEventListener("input", renderCost));
+$("#costSave").addEventListener("click", async () => {
+  const {a} = costCalc(), id = costTarget, p = projects.find(x => x.id === id);
+  try {
+    if (cloud() && p) await cap.db.collection("projects").doc(id).update({actual:a, updatedAt:new Date().toISOString()});
+    else if (p){ const list = localProjects().map(x => x.id === id ? {...x, actual:a} : x); writeLocalProjects(list); projects = list; renderBoard(); }
+    if (meta.id === id){ meta.actual = a; }
+    closeDlg("#costDlg"); toast("Coût réel enregistré");
+  } catch (e) { toast("Coût réel non enregistré, réessayez."); }
+});
+
+/* ---- Relances ---- */
+let chaseTarget = null;
+function openChase(id){
+  const p = projects.find(x => x.id === id); if (!p) return; chaseTarget = id;
+  const last = (p.history || []).slice(-1)[0] || {}, when = last.at ? new Date(last.at).toLocaleDateString("fr-FR") : "", co = settings.company;
+  const what = p.status === "bat" ? `le bon à tirer « ${p.name} » envoyé le ${when}` : `notre devis pour « ${p.name} »${(p.summary || {}).qty ? ` (${fmt0.format(p.summary.qty)} ex.)` : ""} envoyé le ${when}`;
+  $("#chaseText").value = `Bonjour,\n\nJe me permets de revenir vers vous concernant ${what}. Avez-vous pu en prendre connaissance ? Je reste à votre disposition pour toute question ou ajustement${p.status === "bat" ? " ; dès votre accord, nous lançons la fabrication" : ""}.\n\nCordialement,\n${co.name || "Label Pack"}${co.phone ? "\n" + co.phone : ""}`;
+  $("#chasePhone").value = p.cphone || ""; $("#chaseMail").value = p.cemail || ""; $("#chaseFor").textContent = `${p.name || ""} · ${p.client || ""}`;
+  openDlg("#chaseDlg");
+}
+async function chaseDone(channel){
+  const id = chaseTarget, p = projects.find(x => x.id === id); if (!p) return;
+  const entry = {status:p.status, at:new Date().toISOString(), by:cap.uid || null, note:`Relance envoyée (${channel})`}, upd = {history:[...(p.history || []), entry], cphone:$("#chasePhone").value.trim(), cemail:$("#chaseMail").value.trim(), updatedAt:new Date().toISOString()};
+  try { if (cloud()) await cap.db.collection("projects").doc(id).update(upd); else { const list = localProjects().map(x => x.id === id ? {...x, ...upd} : x); writeLocalProjects(list); projects = list; renderBoard(); } toast("Relance enregistrée dans l'historique"); } catch (e) {}
+}
+$("#chaseWa").addEventListener("click", () => { const n = $("#chasePhone").value.replace(/\D/g, ""); if (!n){ toast("Indiquez le numéro WhatsApp du client."); $("#chasePhone").focus(); return; } window.open(`https://wa.me/${n}?text=${encodeURIComponent($("#chaseText").value)}`, "_blank", "noopener"); chaseDone("WhatsApp"); });
+$("#chaseMailBtn").addEventListener("click", () => { const m = $("#chaseMail").value.trim(); if (!m){ toast("Indiquez l'e-mail du client."); $("#chaseMail").focus(); return; } const p = projects.find(x => x.id === chaseTarget) || {}; location.href = `mailto:${encodeURIComponent(m)}?subject=${encodeURIComponent("Suivi : " + (p.name || ""))}&body=${encodeURIComponent($("#chaseText").value)}`; chaseDone("e-mail"); });
+$("#chaseCopy").addEventListener("click", () => { copyText($("#chaseText").value, "Message copié", $("#chaseText")); chaseDone("message copié"); });
+
+/* ---- Espace client (version en ligne) ---- */
+async function publishPortal(client){
+  if (!cloud()){ toast("L'espace client nécessite la version en ligne partagée."); return; }
+  const n = normName(client), items = projects.filter(p => normName(p.client) === n && (p.shares || []).length).map(p => ({project:p.id, name:p.name || "", ref:(p.summary || {}).ref || "", sid:p.shares[p.shares.length - 1], status:p.status || "", label:(STATUSES.find(s => s[0] === p.status) || [0, ""])[1], date:p.updatedAt || "", qty:(p.summary || {}).qty || null, dims:(p.summary || {}).dims || ""}));
+  if (!items.length){ toast("Aucun lien client 3D créé pour ce client : créez d'abord un lien depuis un de ses projets."); return; }
+  const id = slug2(client).toLowerCase().slice(0, 40) + "-" + (settings.portalSalt || (settings.portalSalt = newId().slice(-5)));
+  try { await cap.db.doc("portals/" + id).set({client, items, company:{name:settings.company.name, phone:settings.company.phone, email:settings.company.email, whatsapp:settings.company.whatsapp}, updatedAt:new Date().toISOString()}); }
+  catch (e) { toast("Espace client non publié (droits d'écriture requis)."); return; }
+  const url = `${SHARE_BASE}#p-${id}`; await copyText(url, "Lien de l'espace client copié"); toast(`Espace client de ${client} publié (${items.length} dossier(s)) : lien copié`);
+}
+async function bootPortal(pid){
+  clientMode = true; document.body.classList.add("client", "portal");
+  $("#clientBanner").hidden = false; $("#clientBanner").textContent = "Chargement de votre espace…";
+  if (!cap.db){ $("#clientBanner").textContent = "Connectez-vous à claude.ai pour afficher votre espace client."; return; }
+  let doc; try { const s = await cap.db.doc("portals/" + pid).get(); if (!s.exists){ $("#clientBanner").textContent = "Cet espace client n'existe plus ou ne vous est pas accessible."; return; } doc = s.data(); } catch (e) { $("#clientBanner").textContent = "Impossible de charger votre espace pour le moment."; return; }
+  $("#clientBanner").textContent = `${doc.company && doc.company.name || "Label Pack"} · espace client de ${doc.client}`;
+  $("#studio").hidden = true; $("#boardView").hidden = true; $("#catalogView").hidden = true; $("#portalView").hidden = false;
+  $("#portalList").innerHTML = doc.items.map((it, i) => `<article class="card"><h3>${esc(it.name)}</h3><div class="meta">${esc(it.dims)}${it.qty ? ` · ${fmt0.format(it.qty)} ex.` : ""}</div><div><span class="badge">${esc(it.label)}</span> <span class="meta">${it.date ? new Date(it.date).toLocaleDateString("fr-FR") : ""}</span></div>
+    <a class="btn" href="${SHARE_BASE}#s-${esc(it.sid)}" target="_top">Voir la maquette 3D</a>
+    <details><summary>Demander une réimpression</summary><div class="field"><label for="rq-q-${i}">Quantité</label><input type="number" id="rq-q-${i}" min="100" step="100" value="${it.qty || 1000}"></div><div class="field"><label for="rq-n-${i}">Remarque (modifications, date souhaitée)</label><textarea id="rq-n-${i}" rows="2"></textarea></div><button class="btn primary small" type="button" data-req="${i}">Envoyer la demande</button><p class="hint" id="rq-o-${i}"></p></details></article>`).join("");
+  $("#portalList").onclick = async e => { const b = e.target.closest("[data-req]"); if (!b) return; const i = +b.dataset.req, it = doc.items[i];
+    try { await cap.db.doc("requests/" + newId()).set({portal:pid, client:doc.client, project:it.project, name:it.name, qty:+$("#rq-q-" + i).value || 0, note:$("#rq-n-" + i).value.trim(), at:new Date().toISOString(), uid:cap.uid || null, handled:false}); $("#rq-o-" + i).textContent = "Demande envoyée : votre interlocuteur vous recontacte avec un devis."; b.disabled = true; }
+    catch (err) { const c = doc.company || {}, wa = String(c.whatsapp || "").replace(/\D/g, ""), msg = `Demande de réimpression : ${it.name}, ${$("#rq-q-" + i).value} ex. ${$("#rq-n-" + i).value}`; $("#rq-o-" + i).innerHTML = `Envoi en ligne impossible avec votre accès. ${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Envoyer par WhatsApp</a>` : esc(c.email || "")}`; } };
+}
+let unsubReq = null, reqBusy = false;
+function subscribeRequests(){
+  if (unsubReq) unsubReq(); if (!cloud()) return;
+  unsubReq = cap.db.collection("requests").limit(200).onSnapshot(async s => {
+    if (reqBusy || clientMode) return; reqBusy = true;
+    try { for (const d of s.docs){ const r = d.data(); if (r.handled) continue; const p = projects.find(x => x.id === r.project); if (!p) continue;
+      const entry = {status:p.status, at:r.at, by:null, client:r.client, note:`Demande de réimpression depuis l'espace client : ${fmt0.format(r.qty || 0)} ex.${r.note ? " — " + r.note : ""}`, source:"espace client", request:d.id};
+      if (!(p.history || []).some(h => h.request === d.id)){ try { await cap.db.collection("projects").doc(p.id).update({history:[...(p.history || []), entry], updatedAt:new Date().toISOString()}); toast(`Demande de réimpression : ${p.name} (${r.client})`); } catch (e) { continue; } }
+      try { await cap.db.doc("requests/" + d.id).update({handled:true}); } catch (e) {} } } finally { reqBusy = false; }
+  }, () => {});
+}
+
+/* ---- Réalité augmentée : modèle 3D (.glb) et page de visualisation pour téléphone ---- */
+function glbBlob(){
+  return new Promise((ok, ko) => {
+    if (!THREE.GLTFExporter){ ko(new Error("exporter")); return; }
+    const f = state.fold; setFold(1);
+    const g = new THREE.Group(), c = holder.clone(); g.add(c); g.scale.setScalar(.001); g.updateMatrixWorld(true);
+    new THREE.GLTFExporter().parse(g, res => { setFold(f); ok(new Blob([res], {type:"model/gltf-binary"})); }, {binary:true, maxTextureSize:2048});
+  });
+}
+async function exportAR(base){
+  toast("Préparation du modèle 3D…");
+  const glb = await glbBlob(), b64 = await blobB64(glb), title = `${meta.name || TPL().name}${meta.client ? " — " + meta.client : ""}`;
+  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
+<script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"><\/script>
+<style>body{margin:0;font-family:system-ui,sans-serif;background:#f3f4f1;color:#15181d}header{padding:14px 16px}h1{font-size:18px;margin:0}p{margin:4px 0 0;font-size:13px;color:#5b626b}model-viewer{width:100vw;height:78vh;--poster-color:transparent}.ar{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);border:0;border-radius:24px;padding:12px 20px;background:#b80f5a;color:#fff;font-size:15px;font-weight:600}</style></head>
+<body><header><h1>${esc(title)}</h1><p>${esc(settings.company.name || "Label Pack")} · faites tourner la maquette ; sur téléphone, « Voir chez moi » la pose sur votre table.</p></header>
+<model-viewer src="data:model/gltf-binary;base64,${b64}" alt="${esc(title)}" ar ar-modes="webxr scene-viewer quick-look" camera-controls auto-rotate shadow-intensity="1" exposure="1.05" touch-action="pan-y"><button slot="ar-button" class="ar">Voir chez moi (réalité augmentée)</button></model-viewer></body></html>`;
+  const zip = new JSZip(); zip.file(`${base}_maquette.glb`, glb); zip.file(`${base}_realite-augmentee.html`, html);
+  zip.file("LISEZ-MOI.txt", "Maquette 3D et réalité augmentée\r\n\r\n- realite-augmentee.html : à ouvrir sur un téléphone (Chrome Android ou Safari iPhone) avec Internet ; le bouton « Voir chez moi » pose l'emballage en taille réelle sur la table. Pour un usage client, publiez ce fichier sur votre site ou envoyez-le par WhatsApp.\r\n- maquette.glb : modèle 3D standard (Windows : Visionneuse 3D ; sites web, réseaux sociaux, logiciels 3D). Unités en mètres, taille réelle.\r\n");
+  await saveFile(`${base}_maquette-3D-AR.zip`, await zip.generateAsync({type:"blob"}));
+}
+
+/* ---- Relecture des textes par l'IA (version en ligne) ---- */
+async function aiProof(){
+  if (!cap.sample) return;
+  const d = state.design, texts = [["Marque", d.brand], ["Produit", d.product], ["Mention", d.mention], ["Texte réglementaire", d.legal], ...state.elements.filter(e => e.type === "text").map((e, i) => [`Texte ${i + 1}`, e.text, e.id])].filter(([, t]) => t && String(t).trim());
+  if (!texts.length){ toast("Aucun texte à relire."); return; }
+  $("#proofOut").innerHTML = `<p class="hint">Relecture en cours…</p>`; openDlg("#proofDlg");
+  try {
+    const res = await cap.sample.json(`Tu es correcteur professionnel pour une imprimerie d'emballages en Tunisie. Relis ces textes d'emballage (français ou arabe) : fautes d'orthographe, de grammaire, de typographie française (espaces avant ; : ! ?, majuscules, unités « 75 ml »), incohérences entre les textes (contenance, nom du produit). Ne change pas le style marketing. Réponds UNIQUEMENT par un tableau JSON d'objets {"champ": "...", "probleme": "...", "proposition": "texte complet corrigé du champ"} ; tableau vide si tout est correct.\n\n${texts.map(([n, t]) => `### ${n}\n${t}`).join("\n\n")}`, {modelTier:"default"});
+    const list = Array.isArray(res) ? res : [];
+    $("#proofOut").innerHTML = list.length ? `<ul class="proof">${list.map((x, i) => `<li><b>${esc(x.champ || "")}</b> — ${esc(x.probleme || "")}<div class="sugg">${esc(x.proposition || "")}</div><button type="button" class="btn small" data-proof="${i}">Appliquer</button></li>`).join("")}</ul><p class="hint">Suggestions de l'IA à vérifier avant d'appliquer.</p>` : `<p class="ok-txt">Aucune faute détectée.</p>`;
+    $("#proofOut").onclick = e => { const b = e.target.closest("[data-proof]"); if (!b) return; const x = list[+b.dataset.proof], t = texts.find(([n]) => n === x.champ); if (!t){ toast("Champ introuvable : corrigez à la main."); return; }
+      const map = {"Marque":"brand", "Produit":"product", "Mention":"mention", "Texte réglementaire":"legal"};
+      if (map[t[0]]) d[map[t[0]]] = x.proposition; else { const el = state.elements.find(e => e.id === t[2]); if (el) el.text = x.proposition; }
+      b.disabled = true; b.textContent = "Appliqué"; renderControls(); changed("art"); pushHistory(); };
+  } catch (e) { $("#proofOut").innerHTML = `<p class="err">${e && e.code === "rate_limited" ? "Trop de demandes : réessayez dans une minute." : "Relecture indisponible pour le moment."}</p>`; }
+}
+$("#proofBtn").addEventListener("click", aiProof);
+
+function renderDashExtra(list){
+  const a = list.filter(p => p.actual && p.summary && p.summary.ht), h = a.reduce((s, p) => s + p.summary.ht, 0), c = a.reduce((s, p) => s + p.actual.cost, 0), plan = a.reduce((s, p) => s + (p.summary.cost || 0), 0);
+  const mats = Object.keys(MAT.box).filter(m => (settings.stock || {})[m] > 0 || projects.some(p => ["valide","production"].includes(p.status) && (p.summary || {}).mat === m));
+  return `<div class="dash" style="margin-top:12px"><section class="dcard"><h3>Marge réelle des dossiers terminés</h3>${a.length ? `<p>${a.length} dossier(s) avec coût réel : vendu ${tnd(h)} HT, coût réel ${tnd(c)} (prévu ${tnd(plan)}) · <b class="${h - c >= 0 ? "ok-txt" : "err"}">marge réelle ${fmt1.format((h - c)*100/h)} %</b></p><table class="ctable"><thead><tr><th>Dossier</th><th>Client</th><th class="num">Vendu HT</th><th class="num">Coût prévu</th><th class="num">Coût réel</th><th class="num">Marge réelle</th></tr></thead><tbody>${a.slice(0, 12).map(p => `<tr><td>${esc(p.name || "")}</td><td>${esc(p.client || "")}</td><td class="num">${fmt0.format(p.summary.ht)}</td><td class="num">${p.summary.cost != null ? fmt0.format(p.summary.cost) : "—"}</td><td class="num">${fmt0.format(p.actual.cost)}</td><td class="num">${fmt1.format((p.summary.ht - p.actual.cost)*100/p.summary.ht)} %</td></tr>`).join("")}</tbody></table>` : `<p class="hint">Saisissez le coût réel d'un dossier validé ou livré (bouton « Coût réel… » sur sa carte) pour suivre la marge réellement dégagée.</p>`}</section>
+    <section class="dcard"><h3>Stock de carton</h3>${mats.length ? `<table class="ctable"><thead><tr><th>Support</th><th class="num">En stock</th><th class="num">Réservé</th><th class="num">Disponible</th></tr></thead><tbody>${mats.map(m => { const S = stockFor(m); return `<tr><td>${esc(MAT.box[m].name)}</td><td class="num">${fmt0.format(S.st)}</td><td class="num">${fmt0.format(S.res)}</td><td class="num">${S.free < 0 ? `<span class="badge warn">${fmt0.format(S.free)}</span>` : fmt0.format(S.free)}</td></tr>`; }).join("")}</tbody></table>` : `<p class="hint">Renseignez les feuilles en magasin dans Paramètres › Stock de carton : les dossiers validés ou en production réservent leurs feuilles.</p>`}</section></div>`;
+}
+[["pDue","due"],["pPhone","cphone"],["pMail","cemail"]].forEach(([id, k]) => $("#" + id).addEventListener("change", e => { meta[k] = e.target.value.trim(); dirty = true; renderSaveState(); if (meta.id) saveProject(true); }));
+$("#costBtn").addEventListener("click", async () => { if (!meta.id) await saveProject(true); if (meta.id) openCost(meta.id); });
+
 /* ================= Démarrage ================= */
 function onCapsReady(){
   $("#modeTag").textContent = cloud() ? "Équipe · partagé" : "Ce navigateur";
   $("#modeTag").classList.toggle("cloud", cloud());
-  $("#aiRow").hidden = !cap.sample; $("#aiStructBtn").hidden = !cap.sample;
+  $("#aiRow").hidden = !cap.sample; $("#aiStructBtn").hidden = !cap.sample; $("#proofBtn").hidden = !cap.sample;
   $("#expNote").textContent = cap.downloads ? "Chaque fichier vous est proposé à l'enregistrement." : "";
-  addEventListener("hashchange", () => { if (/^#s-/.test(location.hash) || catalogMode() || clientMode) location.reload(); });
+  addEventListener("hashchange", () => { if (/^#[sp]-/.test(location.hash) || catalogMode() || clientMode) location.reload(); });
+  const pm = /^#p-([A-Za-z0-9-]+)$/.exec(location.hash);
+  if (pm){ bootPortal(pm[1]); return; }
   const m = /^#s-([A-Za-z0-9]+)$/.exec(location.hash);
   if (m){ bootClient(m[1]); return; }
   if (catalogMode()){ bootCatalog(); return; }
@@ -5967,14 +6561,14 @@ function onCapsReady(){
     if (unsubSettings) unsubSettings();
     unsubSettings = cap.db.doc("settings/main").onSnapshot(s => { if (s.exists){ settings = merge(DEFAULT_SETTINGS, s.data()); if (layout){ renderControls(); refresh("geo"); } } }, () => {});
   }
-  subscribeProjects(); subscribeApprovals(); loadKits(); loadMyTpls(); fsAutoConnect(); renderFsState(); renderICC();
+  subscribeProjects(); subscribeApprovals(); subscribeRequests(); DIES.load(); loadKits(); loadMyTpls(); fsAutoConnect(); renderFsState(); renderICC();
 }
 renderControls();
 showView("3d");
 resize();
 layout = computeLayout(); artCanvas = drawArt(layout); pbrCanvas = drawArt(layout, null, "pbr"); build3D(); setFold(reduce ? 1 : 0); frame(true);
 render2D(); renderQuote(); pushHistory();
-if (!reduce && !/^#s-/.test(location.hash)) anim = {from:0, to:1, t0:performance.now() + 400, dur:2600};
+if (!reduce && !/^#[sp]-/.test(location.hash)) anim = {from:0, to:1, t0:performance.now() + 400, dur:2600};
 requestAnimationFrame(loop);
 if (document.fonts && document.fonts.load) Promise.all(["800 20px Archivo", "500 20px 'IBM Plex Sans'", "700 20px 'IBM Plex Sans'", "500 20px 'IBM Plex Mono'", "700 20px 'Playfair Display'", "700 20px 'Noto Kufi Arabic'", "400 20px 'Noto Naskh Arabic'"].map(f => document.fonts.load(f))).then(() => refresh("art")).catch(() => {});
 initCaps();

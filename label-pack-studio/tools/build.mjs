@@ -15,6 +15,7 @@ const VERSION = JSON.parse(fs.readFileSync(path.join(TOOLS, "package.json"), "ut
 const LIBS = [
   ["https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js", "three/build/three.min.js", "three.min.js"],
   ["https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js", "three/examples/js/controls/OrbitControls.js", "OrbitControls.js"],
+  ["https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js", "three/examples/js/exporters/GLTFExporter.js", "GLTFExporter.js"],
   ["https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js", "jspdf/dist/jspdf.umd.min.js", "jspdf.umd.min.js"],
   ["https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js", "jszip/dist/jszip.min.js", "jszip.min.js"],
 ];
