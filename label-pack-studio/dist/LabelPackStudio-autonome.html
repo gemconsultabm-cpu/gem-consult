@@ -425,6 +425,22 @@ input[type=range]{accent-color:var(--accent);width:100%}
 .ai-sw{width:38px;height:38px;border-radius:4px;position:relative;overflow:hidden}
 .ai-sw i{position:absolute;right:0;bottom:0;width:45%;height:45%}
 .ai-card small{display:block;color:var(--muted)}
+.lead-time{margin:6px 0 0;font-size:12.5px;color:var(--muted)} .lead-time b{color:var(--ink)}
+.reuse{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.row.wrap{flex-wrap:wrap}
+.pf .pf-fix{margin-left:6px;padding:1px 8px;font-size:11.5px}
+.pf .pf-all{list-style:none;margin-top:4px}
+.pin-notes{margin-top:8px;font-size:12.5px;border:1px solid #ff7a00;border-radius:6px;padding:6px 10px}
+.pin-notes summary{cursor:pointer;font-weight:600;color:#c25e00}
+.pins{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.pins li{display:grid;grid-template-columns:22px 1fr auto;gap:6px;align-items:center}
+.pins b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#ff7a00;color:#fff;font-size:11px}
+body.pinning #v2d svg[role=img]{cursor:crosshair}
+.wide-dlg{width:min(980px,96vw)}
+.ctable.cmp th:first-child{width:140px}
+.ctable.cmp select,.ctable.cmp input[type=number]{width:100%;font-size:12.5px;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+.ctable.cmp .best{color:var(--ok)}
+.mytpl{display:flex;align-items:center;gap:4px} .mytpl .mt-open{all:unset;display:flex;gap:8px;align-items:center;flex:1;cursor:pointer;min-width:0}
 .setboxes{display:flex;flex-direction:column;gap:12px;padding:0 20px 16px}
 .setbox{border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface-2)}
 .setbox .row{flex-wrap:wrap}
@@ -722,6 +738,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <div class="seg" role="tablist" aria-label="Bibliothèque">
         <button role="tab" id="lib-tpl" aria-selected="true">Gabarits</button>
         <button role="tab" id="lib-pre" aria-selected="false">Modèles types</button>
+        <button role="tab" id="lib-my" aria-selected="false">Mes modèles</button>
       </div>
       <div class="ed" id="libTpl">
         <div class="cats" id="cats"></div>
@@ -738,6 +755,11 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
           <div id="aiStructOut" class="ai-list"></div>
         </div>
         <div class="tpls" id="tpls"></div>
+      </div>
+      <div class="ed" id="libMy" hidden>
+        <button class="btn small" type="button" id="myTplSave">Enregistrer le projet comme modèle</button>
+        <div class="presets-grid" id="myTplGrid"></div>
+        <p class="hint">Vos propres modèles (structure, cotes, matière, visuel) : un clic crée un nouveau projet à partir du modèle. Partagés avec l'équipe en ligne ou par le dossier partagé.</p>
       </div>
       <div class="ed" id="libPre" hidden>
         <div class="presets-grid" id="presetGrid"></div>
@@ -889,6 +911,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
             <button type="button" class="btn small" id="elDel">Supprimer</button>
           </div>
         </div>
+        <label class="check"><input type="checkbox" id="anchorEls"> Les éléments suivent leur face quand les cotes changent</label>
         <p class="hint">Glissez les éléments sur le plan (vue « Plan » ou « Côte à côte »). Poignée d'angle pour redimensionner, flèches du clavier pour décaler au millimètre.</p>
       </div>
 
@@ -1010,7 +1033,7 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
     <section class="sec">
       <table class="tiers"><thead><tr><th>Quantité</th><th>Total HT</th><th>Unitaire HT</th></tr></thead><tbody id="tiers"></tbody></table>
     </section>
-    <section class="sec internal" id="pfSec"><details open><summary>Contrôle prépresse</summary><ul class="pf" id="pfList"></ul></details></section>
+    <section class="sec internal" id="pfSec"><details open><summary>Contrôle prépresse</summary><ul class="pf" id="pfList"></ul></details><details class="pin-notes" id="pinNotes" hidden></details></section>
     <section class="sec internal"><details><summary>Détail des coûts (interne)</summary><ul class="lines" id="qLines"></ul></details></section>
     <section class="sec"><details open><summary>Fiche technique</summary><dl class="tech" id="tech"></dl></details></section>
     <section class="sec internal">
@@ -1019,10 +1042,12 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
         <button class="btn" id="mailBtn" type="button">Mail au client</button>
         <button class="btn" id="shareBtn" type="button">Lien client 3D</button>
         <button class="btn" id="tarifBtn" type="button">Tarifs</button>
+        <button class="btn" id="cmpBtn" type="button">Comparer des options</button>
         <button class="btn" id="signBtn" type="button">Faire signer le BAT</button>
         <button class="btn" id="invBtn" type="button">Facture / BL</button>
         <button class="btn" id="ofBtn" type="button">Ordre de fabrication</button>
       </div>
+      <div class="reuse"><label class="check"><input type="checkbox" id="reuseDie"> Forme de découpe en stock (réimpression)</label><label class="check"><input type="checkbox" id="reusePlates"> Plaques déjà gravées (même visuel)</label></div>
       <div class="field" style="margin-top:10px"><label for="docLang">Langue du devis, du BAT et de la facture</label><select id="docLang"><option value="fr">Français</option><option value="ar">Français + arabe</option></select></div>
     </section>
     <section class="sec" id="clientCard" hidden></section>
@@ -1121,6 +1146,16 @@ body.client .app{grid-template-columns:minmax(0,1fr) 340px}
       <div class="field"><label for="signNote">Commentaire ou corrections</label><textarea id="signNote" rows="2"></textarea></div>
       <span class="lbl">Signature (doigt, stylet ou souris)</span><canvas id="signPad" class="sign-pad" width="900" height="260" aria-label="Zone de signature"></canvas>
       <div class="row"><button class="btn" type="button" id="signClear">Effacer</button><button class="btn primary" type="button" id="signSave">Enregistrer et produire le BAT signé</button></div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="cmpDlg" hidden role="dialog" aria-modal="true" aria-labelledby="cmpTitle">
+  <div class="dialog wide-dlg">
+    <header><h2 id="cmpTitle">Comparer des options</h2><button class="btn small ghost" type="button" data-close>Fermer</button></header>
+    <div class="body">
+      <p class="hint">Changez le support, l'impression, la finition, la dorure ou la quantité : chaque option est chiffrée avec le même gabarit (poses, chute et délai compris). Le prix unitaire le plus bas est mis en évidence.</p>
+      <div class="ctable-wrap"><table class="ctable cmp" id="cmpTable"></table></div>
+      <div class="row"><button class="btn small" type="button" id="cmpAdd">Ajouter une option</button></div>
     </div>
   </div>
 </div>
@@ -2822,6 +2857,7 @@ const TIERS = [500, 1000, 2500, 5000, 10000];
 const DEFAULT_SETTINGS = {
   billing:{timbre:1, prefixInv:"FA", prefixBL:"BL", startInv:1, startBL:1, payment:"Paiement à 30 jours fin de mois", rib:"", accounts:{client:"411", sales:"701", vat:"4366", stamp:"4371"}},
   swatches:[],
+  production:{hours:8, prepress:1, dieDays:4, drying:1, ship:1, sheetsH:{print:4000, lam:3000, varnish:3000, foil:2500, emboss:2500, cut:3500}, setupH:{print:1.5, lam:.5, varnish:1, foil:1.5, emboss:1.5, cut:1.5, glue:1}, glueH:12000, labelMH:2400, labelSetupH:1},
   company:{name:"Label Pack", address:"", mf:"", phone:"", email:"", whatsapp:"", conditions:"Prix établis sur la base des informations transmises, à confirmer après validation du BAT. Validité de l'offre : 30 jours. Délai de fabrication communiqué à la validation du BAT. Rendu écran des couleurs non contractuel."},
   pricing:{
     marge:25, gache:6, tva:19, example:true,
@@ -2848,7 +2884,7 @@ const DEFAULT = {
   window:{on:false, w:30, h:60, y:5, r:4},
   mat:{box:"gc1", label:"couche", cup:"pe"}, print:{box:"cmjn", label:"num", cup:"cmjn"}, lam:{box:"mat", label:"vernis", cup:"none"},
   varnish:false, foil:true, foilColor:"or", relief:"none", raw:false, inside:{on:false, color:"#e2b25a"},
-  importData:null, docLang:"fr", grain:"h", lineTypes:{}, tear:{on:false, y:25, w:4}, die:{nicks:4, nickW:.5, eject:false, sheetGrain:"auto", grainLock:true}, softProof:false, focal:42, bgBlur:0, shelf:{cols:4, rows:2}, variants:[], scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
+  importData:null, docLang:"fr", reuse:{die:false, plates:false}, anchorEls:true, grain:"h", lineTypes:{}, tear:{on:false, y:25, w:4}, die:{nicks:4, nickW:.5, eject:false, sheetGrain:"auto", grainLock:true}, softProof:false, focal:42, bgBlur:0, shelf:{cols:4, rows:2}, variants:[], scene:"studio", lightAz:35, lightPow:100, showDims:false, compo:{on:false, layout:"row", items:[]},
   design:{bg:"#123c3a", accent:"#e2b25a", brand:"Néroli", product:"Crème mains à la fleur d'oranger", mention:"75 ml · Fabriqué en Tunisie", pattern:"zellige", legal:"", ean:""},
   images:{logo:null, full:null, inside:null, bg:null}, faces:{}, fullHide:false, elements:[],
   qty:2500, fold:1, showArt:true, showSafe:true
@@ -3896,7 +3932,7 @@ function drawElements(ctx, mode){
         const ax = el.align === "left" ? -w/2 : el.align === "right" ? w/2 : 0;
         lines.forEach((l, i) => ctx.fillText(l, ax, -h/2 + lh*(i + .5)));
       }
-      if (!pbr) metrics.texts.push({label:`Texte « ${String(el.text || "").slice(0, 24)} »`, pt:el.size, foil:el.foil});
+      if (!pbr) metrics.texts.push({label:`Texte « ${String(el.text || "").slice(0, 24)} »`, pt:el.size, foil:el.foil, el});
     } else if (el.type === "image"){
       const im = getImg(el.img), w = el.w, h = im ? w*im.naturalHeight/im.naturalWidth : (el.h || w);
       el._w = w; el._h = h;
@@ -4684,14 +4720,14 @@ function dielineSVG(forExport){
     }
     s += `</g>`;
   }
-  return s + "</svg>";
+  return s + (forExport ? "" : pinsSVG(fs)) + "</svg>";
 }
 function render2D(){ if (!layout || $("#v2d").hidden) return; const box = $("#v2d"), lg = box.querySelector(".legend");
   if (lg) lg.innerHTML = `<span class="lg-cut"><i></i>Coupe</span><span class="lg-crease"><i></i>Rainage</span><span class="lg-bleed"><i></i>Fond perdu</span>` + [...new Set(layout.specials.map(l => l.type))].map(t => `<span><i style="border-top-style:dashed;border-color:${LINE_TYPES[t].hex}"></i>${LINE_TYPES[t].name}</span>`).join("") + (state.elements.some(e => e.type === "braille") ? `<span><i style="border-top-style:dotted;border-color:var(--muted)"></i>Braille</span>` : ""); box.querySelectorAll("svg[role=img]").forEach(n => n.remove()); box.insertAdjacentHTML("beforeend", dielineSVG(false)); }
 let drag = null;
 function svgPoint(e){ const svg = $("#v2d svg[role=img]"); if (!svg) return null; const m = svg.getScreenCTM(); if (!m) return null; const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()); return {x:p.x, y:-p.y}; }
 $("#v2d").addEventListener("pointerdown", e => {
-  if (clientMode) return;
+  if (clientMode){ if (pinMode && e.target.closest("svg")){ const pt = svgPoint(e); if (pt){ clientPins.push({x:+pt.x.toFixed(1), y:+pt.y.toFixed(1), t:""}); renderPinList(); render2D(); setTimeout(() => { const i = document.querySelector("#clPins li:last-child input"); if (i) i.focus(); }, 30); } } return; }
   const h = e.target.closest("[data-handle]"), t = e.target.closest("[data-el]");
   if (edTab === "els"){
     if (!h && !t){ if (e.target.closest("svg")){ selEl = null; renderElEditor(); render2D(); } return; }
@@ -4789,8 +4825,12 @@ function quote(qty){
     add("Rebobinage", `${rolls} bobine(s) de ${fmt0.format(Lb.rollPer)} ex.`, rolls*Lb.rollCost);
     tech.push(["Poses en laize", across], ["Bande imprimée", `${fmt0.format(bandW*1000)} mm`], ["Métrage (gâche incluse)", `${fmt0.format(m)} m`], ["Surface", `${fmt1.format(m2)} m²`], ["Longueur de coupe", `${fmt0.format(layout.cutLen)} mm / étiq.`], ["Fond perdu", `${layout.bleed} mm`]);
   }
+  const RU = state.reuse || {};
+  for (let i = lines.length - 1; i >= 0; i--) if ((RU.die && /^(Forme de découpe|Outil de découpe)/.test(lines[i].label)) || (RU.plates && lines[i].label === "Plaques offset")) lines.splice(i, 1);
+  if (RU.die) tech.push(["Forme de découpe", "en stock, réutilisée (non facturée)"]);
+  if (RU.plates && k !== "label") tech.push(["Plaques", "réutilisées (réimpression à l'identique)"]);
   const cost = lines.reduce((s,l) => s + l.amount, 0), ht = cost*(1 + Pr.marge/100), tva = ht*Pr.tva/100;
-  return {lines, tech, cost, ht, tva, ttc:ht + tva, unit:ht/qty};
+  return {lines, tech, cost, ht, tva, ttc:ht + tva, unit:ht/qty, qty};
 }
 function renderQuote(){
   const q = quote(state.qty);
@@ -4798,7 +4838,8 @@ function renderQuote(){
   $("#presets").innerHTML = TIERS.map(n => `<button type="button" data-q="${n}" aria-pressed="${n === state.qty}">${fmt0.format(n)}</button>`).join("");
   if (q.error){ $("#qMain").innerHTML = `<p class="err">${esc(q.error)}</p>`; $("#tiers").innerHTML = ""; $("#qLines").innerHTML = ""; }
   else {
-    $("#qMain").innerHTML = `<div class="unit-price"><b>${fmt3.format(q.unit)}</b><span>TND HT / unité</span></div>
+    const lt = leadTime(q);
+    $("#qMain").innerHTML = `<div class="unit-price"><b>${fmt3.format(q.unit)}</b><span>TND HT / unité</span></div>${lt ? `<p class="lead-time">Délai estimé : <b>${lt.days} jours ouvrés</b> après validation du BAT${(state.reuse || {}).die ? " (forme en stock)" : ""}</p>` : ""}
       <dl class="totals"><dt>Total HT</dt><dd>${tnd(q.ht)}</dd><dt>TVA ${P().tva} %</dt><dd>${tnd(q.tva)}</dd><dt class="ttc">Total TTC</dt><dd class="ttc">${tnd(q.ttc)}</dd></dl>`;
     $("#tiers").innerHTML = TIERS.map(n => { const t = quote(n); return `<tr data-q="${n}" class="${n === state.qty ? "on" : ""}"><td>${fmt0.format(n)}</td><td>${fmt0.format(t.ht)}</td><td>${fmt3.format(t.unit)}</td></tr>`; }).join("");
     $("#qLines").innerHTML = q.lines.map(l => `<li><span>${esc(l.label)}</span><b>${fmt3.format(l.amount)}</b><small>${esc(l.detail)}</small></li>`).join("")
@@ -4818,10 +4859,10 @@ function segRectDist(a, b, q){ for (let i = 0; i < 4; i++) if (segX(a, b, q[i], 
 let pfItems = [];
 const hasRelief = () => state.relief !== "none" || state.elements.some(x => (x.relief && x.relief !== "none") || x.type === "braille");
 function preflight(q){
-  const out = [], add = (level, msg) => out.push({level, msg}), t = TPL(), d = state.design, L = layout;
+  const out = [], add = (level, msg, fix) => out.push({level, msg, fix}), t = TPL(), d = state.design, L = layout;
   if (q && q.error) add("error", q.error);
   if (L && kind() !== "label"){ try { const dc = dieCheck(L); add(dc.ok ? "info" : "warn", dieCheckText(dc)); } catch (e) {} }
-  for (const g of gamutIssues()) add("warn", `Couleur ${g.hex} (${g.where}) hors gamut CMJN : elle sortira plus terne à l'impression. Teinte imprimable proche : ${g.fix}.`);
+  for (const g of gamutIssues()) add("warn", `Couleur ${g.hex} (${g.where}) hors gamut CMJN : elle sortira plus terne à l'impression. Teinte imprimable proche : ${g.fix}.`, () => g.set(g.fix));
   if (artCanvas){ const r = gamutArea(artCanvas); if (r > .03) add("warn", `${fmt0.format(r*100)} % de la surface du visuel (images comprises) est hors gamut CMJN : vérifiez le rendu avec « Aperçu des couleurs imprimées ».`); }
   if (hasRelief()){
     if (["micro","ondB"].includes(state.mat.box) && t.kind === "box") add("warn", "Gaufrage déconseillé sur carton ondulé : le relief écrase les cannelures. Préférez un carton compact.");
@@ -4841,7 +4882,7 @@ function preflight(q){
     if (im.ratio && Math.abs(im.ratio - 1) > .02) add("warn", "Les proportions de la création ne correspondent pas au gabarit : vérifiez le format d'export.");
   }
   for (const tx of metrics.texts){
-    if (tx.pt < 5.95) add("warn", `${tx.label} : corps ${fmt1.format(tx.pt)} pt, sous le minimum lisible de 6 pt.`);
+    if (tx.pt < 5.95) add("warn", `${tx.label} : corps ${fmt1.format(tx.pt)} pt, sous le minimum lisible de 6 pt.`, tx.el ? () => { tx.el.size = 6; } : undefined);
     if (tx.foil && tx.pt < 8) add("warn", `${tx.label} : dorure sur un corps de ${fmt1.format(tx.pt)} pt (8 pt minimum conseillés).`);
   }
   if (metrics.legalCut) add("warn", "Texte réglementaire tronqué : la face arrière est trop petite pour tout le texte.");
@@ -4851,10 +4892,10 @@ function preflight(q){
     const q4 = elCorners(el), name = elName(el);
     const anyIn = q4.some(c => L.panels.some(p => inPoly(c, p.gpoly)));
     const nearCut = Math.min(...L.cuts.map(([a, b]) => segRectDist(a, b, q4)));
-    if (!anyIn && nearCut > 0) add("error", `${name} : hors du gabarit, il ne sera pas imprimé.`);
-    else if (nearCut < 3 && !["shape","braille","zone"].includes(el.type)) add("warn", `${name} : à ${fmt1.format(nearCut)} mm d'un trait de coupe (zone de sécurité 3 mm).`);
+    if (!anyIn && nearCut > 0) add("error", `${name} : hors du gabarit, il ne sera pas imprimé.`, () => { const b = polyBox(mainPanel().gpoly); el.x = +(b.minX + b.w/2).toFixed(1); el.y = +(b.minY + b.h/2).toFixed(1); moveInside(el); });
+    else if (nearCut < 3 && !["shape","braille","zone"].includes(el.type)) add("warn", `${name} : à ${fmt1.format(nearCut)} mm d'un trait de coupe (zone de sécurité 3 mm).`, () => moveInside(el));
     { const hit = ["text","barcode","braille","picto","zone"].includes(el.type) ? L.lines.find(({seg:[a, b]}) => segRectDist(a, b, q4) === 0) : null;
-      if (hit) add(el.type === "barcode" || el.type === "braille" ? "error" : "warn", `${name} : chevauche ${hit.type === "zip" ? "la bande d'ouverture" : hit.type === "perfo" ? "une perforation" : "un pli"}${el.type === "text" && hit.type !== "zip" ? ", le texte sera coupé en deux faces" : el.type === "barcode" ? ", il ne sera pas lisible" : ""}.`); }
+      if (hit) add(el.type === "barcode" || el.type === "braille" ? "error" : "warn", `${name} : chevauche ${hit.type === "zip" ? "la bande d'ouverture" : hit.type === "perfo" ? "une perforation" : "un pli"}${el.type === "text" && hit.type !== "zip" ? ", le texte sera coupé en deux faces" : el.type === "barcode" ? ", il ne sera pas lisible" : ""}.`, () => moveInside(el)); }
     if (L.panels.some(p => p.glue && q4.some(c => inPoly(c, p.gpoly)))) add("warn", `${name} : sur une zone de collage (pas d'encre ni de vernis).`);
   }
   for (const c of metrics.codes || []){
@@ -4862,12 +4903,12 @@ function preflight(q){
     if (c.sym === "ean13"){
       const v = c.el.value || "";
       if (!c.ok) add("error", `${nm} « ${v} » invalide : ${/^\d{13}$/.test(v) ? `clé de contrôle attendue ${eanCheck(v.slice(0, 12))}` : /^\d{12}$/.test(v) ? `ajoutez la clé de contrôle ${eanCheck(v)}` : "13 chiffres requis"}.`);
-      else if (c.mag < .8 || c.mag > 2) add("error", `${nm} : grossissement ${fmt0.format(c.mag*100)} %, hors de la plage autorisée 80–200 %.`);
+      else if (c.mag < .8 || c.mag > 2) add("error", `${nm} : grossissement ${fmt0.format(c.mag*100)} %, hors de la plage autorisée 80–200 %.`, () => { c.el.mag = 100; });
       else add("ok", `${nm} valide, ${fmt0.format(c.mag*100)} % de la taille nominale.`);
     } else {
       const m = c.m;
       if (m.error){ add("error", `${nm} : ${m.error}`); continue; }
-      if (m.X < .25) add("error", `${nm} : module de ${fmt2.format(m.X)} mm, sous le minimum lisible de 0,25 mm : élargissez le code ou réduisez les données.`);
+      if (m.X < .25) add("error", `${nm} : module de ${fmt2.format(m.X)} mm, sous le minimum lisible de 0,25 mm : élargissez le code ou réduisez les données.`, () => { c.el.w = +Math.min(165, (m.mods + 20)*.3).toFixed(1); });
       else if (m.X < .495) add("info", `${nm} : module de ${fmt2.format(m.X)} mm, lisible en usage courant ; pour les cartons et palettes (logistique), GS1 demande au moins 0,495 mm et 32 mm de hauteur.`);
       else add("ok", `${nm} : module de ${fmt2.format(m.X)} mm, conforme pour la logistique.`);
       if ((c.el.w || 0) > 165) add("error", `${nm} : longueur ${fmt0.format(c.el.w)} mm, 165 mm maximum.`);
@@ -4878,7 +4919,7 @@ function preflight(q){
   }
   { const spots = [...new Set(state.elements.filter(o => o.spot).map(o => o.spot))];
     if (spots.length){
-      if (kind() !== "label" && state.print[kind()] !== "cmjnp") add("warn", `Ton direct utilisé (${spots.join(", ")}) : choisissez l'impression « Quadri + 1 Pantone » pour que le devis compte le groupe supplémentaire.`);
+      if (kind() !== "label" && state.print[kind()] !== "cmjnp") add("warn", `Ton direct utilisé (${spots.join(", ")}) : choisissez l'impression « Quadri + 1 Pantone » pour que le devis compte le groupe supplémentaire.`, () => { state.print[kind()] = "cmjnp"; });
       if (spots.length > 1) add("warn", `${spots.length} tons directs : le devis ne compte qu'un Pantone ; prévoir ${spots.length - 1} groupe(s) supplémentaire(s).`);
       for (const n of spots){ const el = state.elements.find(o => o.spot === n); add("info", `Ton direct ${n} : ${gamutCheck(el.color) ? "hors gamut quadri, le ton direct est justifié" : "reproductible en quadri, un ton direct n'est pas indispensable"} ; plaque séparée dans le PDF d'impression.`); }
     } }
@@ -4892,14 +4933,14 @@ function preflight(q){
       if (!host) add("error", `${nm} : doit tenir entièrement sur une seule face, sans pli ni bord.`);
       else {
         const dist = Math.min(...L.cuts.concat(L.lines.map(l => l.seg)).map(([a, b]) => segRectDist(a, b, q4)));
-        if (dist < 5) add("warn", `${nm} : à ${fmt1.format(dist)} mm d'un pli ou d'un bord (5 mm minimum conseillés pour un relief net).`);
+        if (dist < 5) add("warn", `${nm} : à ${fmt1.format(dist)} mm d'un pli ou d'un bord (5 mm minimum conseillés pour un relief net).`, () => moveInside(el));
         if (host.glue) add("error", `${nm} : sur la patte de collage, il serait caché.`);
       }
       if (finEls.some(o => o !== el && overlaps(o, el))) add("warn", `${nm} : dorure ou vernis sous le braille, le relief risque d'être écrasé.`);
       add("info", kind() === "box" ? `${nm} : ${B.cells} cellule(s) sur ${B.lines} ligne(s), braille Marburg Medium (points Ø 1,5 mm, hauteur 0,2 mm) gaufré avec la forme. Faites relire la transcription par un lecteur braille.` : `${nm} : hors carton, le braille se réalise en sérigraphie (vernis épais) ; à valider avec l'atelier.`);
     } else if (el.type === "picto"){
       const min = el.pic === "emark" ? 3 : 6;
-      if ((el.w || 0) < min) add("warn", `${elName(el)} : ${fmt1.format(el.w)} mm, ${min} mm minimum conseillés${el.pic === "emark" ? " (hauteur réglementaire du ℮)" : ""}.`);
+      if ((el.w || 0) < min) add("warn", `${elName(el)} : ${fmt1.format(el.w)} mm, ${min} mm minimum conseillés${el.pic === "emark" ? " (hauteur réglementaire du ℮)" : ""}.`, () => { el.w = min; });
     } else if (el.type === "zone"){
       if (finEls.some(o => overlaps(o, el))) add("warn", "Zone de marquage lot / date sous une dorure ou un vernis : l'encre de marquage n'y adhérera pas.");
       if (kind() === "box" && state.lam.box !== "none") add("info", `Zone de marquage lot / date sur ${LAM.box[state.lam.box].toLowerCase()} : prévoir une réserve de pelliculage ou un marquage laser, l'encre jet d'encre adhère mal au film.`);
@@ -4958,7 +4999,9 @@ function preflight(q){
 function renderPreflight(q){
   pfItems = preflight(q);
   const nE = pfItems.filter(x => x.level === "error").length, nW = pfItems.filter(x => x.level === "warn").length;
-  $("#pfList").innerHTML = pfItems.map(x => `<li class="${x.level}">${esc(x.msg)}</li>`).join("");
+  const nFix = pfItems.filter(x => x.fix).length;
+  $("#pfList").innerHTML = pfItems.map((x, i) => `<li class="${x.level}">${esc(x.msg)}${x.fix && !clientMode ? ` <button type="button" class="btn small pf-fix" data-pffix="${i}">Corriger</button>` : ""}</li>`).join("") + (nFix > 1 && !clientMode ? `<li class="pf-all"><button type="button" class="btn small primary" data-pffix="all">Tout corriger (${nFix})</button></li>` : "");
+  renderStudioPins();
   const cb = layout.cbb, c = [`<span>à plat ${fmt0.format(cb.w)} × ${fmt0.format(cb.h)} mm</span>`];
   if (kind() === "box") c.push(`<span>e = ${fmt2.format(layout.e)} mm</span>`); else if (kind() === "cup") c.push(`<span>Ø ${state.dims.cup.D1} mm</span>`); else if (TPL().special === "pouch") c.push(`<span>fond ${state.dims.pouch.G} mm</span>`); else c.push(`<span>Ø ${state.dims[state.model].d} mm</span>`);
   c.push(`<button type="button" id="pfChip" class="${nE ? "pf-err" : nW ? "pf-warn" : "pf-ok"}">${nE ? nE + " erreur" + (nE > 1 ? "s" : "") : nW ? nW + " alerte" + (nW > 1 ? "s" : "") : "Prépresse OK"}</button>`);
@@ -5027,8 +5070,8 @@ function applyPreset(p){
   if (!reduce){ anim = {from:0, to:1, t0:performance.now() + 150, dur:2600}; setFold(0); }
   toast(`Modèle « ${p.name} » chargé`);
 }
-function setLibTab(tab){ libTab = tab; $("#lib-tpl").setAttribute("aria-selected", tab === "tpl"); $("#lib-pre").setAttribute("aria-selected", tab === "pre"); $("#libTpl").hidden = tab !== "tpl"; $("#libPre").hidden = tab !== "pre"; $("#tplCount").textContent = tab === "pre" ? `${PRESETS.length} modèles` : $("#tplCount").dataset.n || ""; }
-$("#lib-tpl").addEventListener("click", () => setLibTab("tpl")); $("#lib-pre").addEventListener("click", () => setLibTab("pre"));
+function setLibTab(tab){ libTab = tab; $("#lib-tpl").setAttribute("aria-selected", tab === "tpl"); $("#lib-pre").setAttribute("aria-selected", tab === "pre"); $("#lib-my").setAttribute("aria-selected", tab === "my"); $("#libTpl").hidden = tab !== "tpl"; $("#libPre").hidden = tab !== "pre"; $("#libMy").hidden = tab !== "my"; $("#tplCount").textContent = tab === "pre" ? `${PRESETS.length} modèles` : tab === "my" ? `${myTpls.length} modèle(s)` : $("#tplCount").dataset.n || ""; }
+$("#lib-tpl").addEventListener("click", () => setLibTab("tpl")); $("#lib-pre").addEventListener("click", () => setLibTab("pre")); $("#lib-my").addEventListener("click", () => setLibTab("my"));
 $("#presetGrid").addEventListener("click", e => { const b = e.target.closest("[data-preset]"); if (b) applyPreset(PRESETS.find(p => p.id === b.dataset.preset)); });
 renderPresets();
 
@@ -5071,6 +5114,7 @@ function renderControls(){
   $("#focalSel").value = state.focal || 42; $("#bgBlur").value = state.bgBlur || 0; $("#shelfCols").value = state.shelf.cols; $("#shelfRows").value = state.shelf.rows;
   const bgi = state.images.bg; $("#bgThumb").hidden = !bgi; if (bgi) $("#bgThumb").src = bgi.src; $("#bgClear").hidden = !bgi; renderVariants();
   $("#sceneSel").value = state.scene in SCENES ? state.scene : "studio"; $("#lightAz").value = state.lightAz ?? 35; $("#lightPow").value = state.lightPow ?? 100; applyScene();
+  $("#reuseDie").checked = !!(state.reuse && state.reuse.die); $("#reusePlates").checked = !!(state.reuse && state.reuse.plates); $("#anchorEls").checked = state.anchorEls !== false;
   $("#softProof").checked = !!state.softProof; renderGamut(); $("#docLang").value = state.docLang === "ar" ? "ar" : "fr";
   $("#grainRow").hidden = kind() !== "box"; $("#grainSel").value = state.grain === "v" ? "v" : "h"; setTimeout(renderFlow, 50);
   $("#foilColor").value = state.foilColor in FOILS ? state.foilColor : "or"; $("#relief").value = state.relief in RELIEFS ? state.relief : "none";
@@ -5136,10 +5180,10 @@ function refresh(level = "geo", full){
   pending = requestAnimationFrame(() => {
     pending = 0; const lvl = pendLevel, fl = pendFull; pendLevel = "art"; pendFull = false;
     if (lvl === "geo" || !layout || !texture){
-      layout = computeLayout(); artCanvas = softView(drawArt(layout)); pbrCanvas = drawArt(layout, null, "pbr");
+      layout = computeLayout(); reanchorEls(layout); anchorEls(layout); artCanvas = softView(drawArt(layout)); pbrCanvas = drawArt(layout, null, "pbr");
       build3D(); applyFold(state.fold); syncShelf();
     } else {
-      artCanvas = softView(drawArt(layout)); pbrCanvas = drawArt(layout, null, "pbr");
+      anchorEls(layout); artCanvas = softView(drawArt(layout)); pbrCanvas = drawArt(layout, null, "pbr");
       texture.image = artCanvas; texture.needsUpdate = true; pbrTex.image = pbrCanvas; pbrTex.needsUpdate = true;
     }
     if (fl){ autoFrame = true; frame(true); }
@@ -5394,6 +5438,9 @@ async function fsPull(first){
     const kt = get("chartes.json");
     if (kt && FS.mt.get("@kits") !== kt.mtime){ FS.mt.set("@kits", kt.mtime); try { brandKits = JSON.parse(await fsb.read("chartes.json")); try { localStorage.setItem("lp-brands", JSON.stringify(brandKits)); } catch (e) {} renderKits(); } catch (e) {} }
     else if (!kt && first && brandKits.length) await fsWriteKits();
+    const mtp = get("modeles.json");
+    if (mtp && FS.mt.get("@mytpl") !== mtp.mtime){ FS.mt.set("@mytpl", mtp.mtime); try { myTpls = JSON.parse(await fsb.read("modeles.json")); try { localStorage.setItem("lp-mytpl", JSON.stringify(myTpls)); } catch (e) {} renderMyTpls(); } catch (e) {} }
+    else if (!mtp && first && myTpls.length) await writeMyTpls();
     const ic = get("profil-sortie.icc");
     if (ic && FS.mt.get("@icc") !== ic.mtime){ FS.mt.set("@icc", ic.mtime); try { await setOutputProfile(await fsb.read("profil-sortie.icc", true), true); } catch (e) {} }
   } finally { FS.busy = false; }
@@ -5572,7 +5619,7 @@ function ofPDF(){
   doc.setFont("helvetica", "bold"); doc.setFontSize(15); doc.setTextColor(20); doc.text("ORDRE DE FABRICATION", M, 16);
   doc.setFontSize(10); doc.setTextColor(184,15,90); doc.text(pdfTxt(`OF ${quoteNo()}`), 198, 16, {align:"right"});
   doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(60);
-  pdfText(doc, `${meta.client || "Client non renseigné"} · ${meta.name || t.name} · émis le ${new Date().toLocaleDateString("fr-FR")} · délai : ______________`, M, 22, {maxWidth:186});
+  pdfText(doc, `${meta.client || "Client non renseigné"} · ${meta.name || t.name} · émis le ${new Date().toLocaleDateString("fr-FR")} · délai estimé : ${(leadTime(q) || {}).days ?? "—"} jours ouvrés · date promise : __________`, M, 22, {maxWidth:186});
   doc.setTextColor(...(appr && appr.decision === "ok" ? [23,120,74] : [200,30,30]));
   doc.text(pdfTxt(appr && appr.decision === "ok" ? `BAT validé par ${appr.client} le ${new Date(appr.at).toLocaleDateString("fr-FR")}${appr.signature ? " (signé)" : ""}` : "ATTENTION : BAT non validé — ne pas lancer sans accord du client"), M, 27);
   try { const mk = captureMockup(600, 600, "white", true); doc.addImage(mk, "JPEG", 158, 30, 40, 40); } catch (e) {}
@@ -5754,6 +5801,172 @@ function renderDashboard(list){
 }
 $("#board").addEventListener("mousemove", e => { const t = $("#dTip"); if (!t) return; const m = e.target.closest("[data-tip]"); if (!m || !e.target.closest(".dchart")){ t.hidden = true; return; } const r = $("#board").getBoundingClientRect(); t.textContent = m.dataset.tip; t.hidden = false; t.style.left = Math.min(e.clientX - r.left + 12, r.width - 260) + "px"; t.style.top = (e.clientY - r.top + 12 + $("#board").scrollTop) + "px"; });
 $("#board").addEventListener("mouseleave", () => { const t = $("#dTip"); if (t) t.hidden = true; });
+/* ================= Productivité : délais, comparateur, réimpression, mes modèles, ancrage, corrections, annotations ================= */
+// Délai de fabrication estimé (jours ouvrés après validation du BAT), d'après les cadences de l'atelier.
+function leadTime(q){
+  if (!q || q.error || !layout) return null;
+  const Pd = settings.production || DEFAULT_SETTINGS.production, k = kind(), RU = state.reuse || {}, hpd = Math.max(1, +Pd.hours || 8), tech = Object.fromEntries((q.tech || []).map(([a, b]) => [a, String(b)]));
+  const steps = [], h = (name, units, rate, setup) => { if (units > 0 && rate > 0) steps.push([name, (setup || 0) + units/rate]); };
+  let after = 0, dieReady = RU.die ? 0 : +Pd.dieDays || 0, dry = 0;
+  if (k === "label"){
+    const m = parseFloat(String(tech["Métrage (gâche incluse)"] || "0").replace(/[\s\u202f\u00a0]/g, "").replace(",", ".")) || 0;
+    h("Impression et découpe", m, +Pd.labelMH, +Pd.labelSetupH);
+  } else {
+    const sheets = parseFloat(String(tech["Feuilles (gâche incluse)"] || "0").replace(/[\s\u202f\u00a0]/g, "")) || 0, S = Pd.sheetsH || {}, U = Pd.setupH || {};
+    h("Impression", sheets*(state.inside.on && k === "box" ? 2 : 1), S.print, U.print);
+    if (state.lam[k] && state.lam[k] !== "none"){ h("Pelliculage / vernis", sheets, S.lam, U.lam); dry = +Pd.drying || 0; }
+    if (state.varnish){ h("Vernis sélectif", sheets, S.varnish, U.varnish); dry = +Pd.drying || 0; }
+    if (state.foil || state.elements.some(x => x.foil)) h("Dorure", sheets, S.foil, U.foil);
+    if (hasRelief()) h("Gaufrage", sheets, S.emboss, U.emboss);
+    const cut = (U.cut || 0) + sheets/(S.cut || 1), glue = layout.panels.some(p => p.glue) && k === "box" ? (U.glue || 0) + (q.qty || state.qty)/(+Pd.glueH || 1) : 0;
+    steps.push(["Découpe", cut]); if (glue) steps.push(["Collage", glue]);
+    after = (cut + glue)/hpd;
+  }
+  const printH = steps.filter(([n]) => !/Découpe|Collage/.test(n) || k === "label").reduce((s, [, v]) => s + v, 0);
+  const pre = +Pd.prepress || 0, days = Math.ceil(Math.max(pre + printH/hpd + dry, dieReady) + after + (+Pd.ship || 0));
+  return {days, steps, dieReady, hours:steps.reduce((s, [, v]) => s + v, 0)};
+}
+const leadText = L => L ? `${L.days} jour${L.days > 1 ? "s" : ""} ouvré${L.days > 1 ? "s" : ""} après validation du BAT${L.dieReady ? ` (dont forme de découpe : ${L.dieReady} j en parallèle)` : ""}` : "";
+
+// Comparateur : jusqu'à 4 options (matière, impression, finition, quantité) chiffrées côte à côte.
+let cmpCols = [];
+function cmpDefault(){
+  const k = kind(), mats = TPL().mats.filter(m => MAT[k][m]);
+  const base = {mat:state.mat[k], print:state.print[k], lam:state.lam[k], foil:!!state.foil, qty:state.qty};
+  const alt = mats.filter(m => m !== base.mat).slice(0, 2).map(m => ({...base, mat:m}));
+  return [base, ...alt, {...base, qty:state.qty*2}].slice(0, 4);
+}
+function quoteVariant(v){
+  const keep = state, keepL = layout, k = kind();
+  state = structuredClone(state); state.mat[k] = v.mat; state.print[k] = v.print; state.lam[k] = v.lam; state.foil = v.foil;
+  try { layout = computeLayout(); const q = quote(v.qty), M = k === "label" ? null : montage(); return {q, M, lead:leadTime(q)}; }
+  finally { state = keep; layout = keepL; }
+}
+function renderCmp(){
+  const k = kind(), sel = (map, val, key, i, only) => `<select data-cmp="${i}" data-key="${key}" aria-label="${key}">${Object.entries(map).filter(([x]) => !only || only.includes(x)).map(([x, o]) => `<option value="${x}"${x === val ? " selected" : ""}>${esc(typeof o === "string" ? o : o.name)}</option>`).join("")}</select>`;
+  const res = cmpCols.map(quoteVariant), units = res.map(r => r.q.error ? Infinity : r.q.unit), best = Math.min(...units);
+  const row = (lbl, f) => `<tr><th>${lbl}</th>${res.map((r, i) => `<td>${f(r, cmpCols[i], i)}</td>`).join("")}</tr>`;
+  $("#cmpTable").innerHTML = `<thead><tr><th></th>${cmpCols.map((_, i) => `<th>Option ${i + 1}${i ? ` <button type="button" class="btn small ghost" data-cmpdel="${i}" aria-label="Retirer l'option ${i + 1}">×</button>` : " (projet)"}</th>`).join("")}</tr></thead><tbody>
+    ${row("Support", (r, v, i) => sel(MAT[k], v.mat, "mat", i, TPL().mats))}
+    ${row("Impression", (r, v, i) => sel(PRINT[k], v.print, "print", i))}
+    ${row("Finition", (r, v, i) => sel(LAM[k], v.lam, "lam", i))}
+    ${row("Dorure", (r, v, i) => `<label class="check"><input type="checkbox" data-cmp="${i}" data-key="foil"${v.foil ? " checked" : ""}> oui</label>`)}
+    ${row("Quantité", (r, v, i) => `<input type="number" min="50" step="50" value="${v.qty}" data-cmp="${i}" data-key="qty" aria-label="Quantité de l'option ${i + 1}">`)}
+    ${row("Prix unitaire HT", r => r.q.error ? `<span class="err">${esc(r.q.error.slice(0, 60))}…</span>` : `<b class="${r.q.unit === best ? "best" : ""}">${fmt3.format(r.q.unit)}</b>`)}
+    ${row("Total HT", r => r.q.error ? "—" : esc(tnd(r.q.ht)))}
+    ${row("Poses / chute", r => r.M && r.M.n ? `${r.M.n} · ${fmt0.format(r.M.waste*100)} %` : "—")}
+    ${row("Délai estimé", r => r.lead ? `${r.lead.days} j` : "—")}
+    ${row("", (r, v, i) => i ? `<button type="button" class="btn small" data-cmpapply="${i}">Appliquer au projet</button>` : "")}</tbody>`;
+  $("#cmpAdd").disabled = cmpCols.length >= 4;
+}
+$("#cmpBtn").addEventListener("click", () => { cmpCols = cmpDefault(); renderCmp(); openDlg("#cmpDlg"); });
+$("#cmpAdd").addEventListener("click", () => { if (cmpCols.length < 4){ cmpCols.push({...cmpCols[0]}); renderCmp(); } });
+$("#cmpTable").addEventListener("change", e => { const t = e.target.closest("[data-cmp]"); if (!t) return; const v = cmpCols[+t.dataset.cmp], key = t.dataset.key; v[key] = key === "foil" ? t.checked : key === "qty" ? Math.max(50, Math.round(+t.value || 50)) : t.value; renderCmp(); });
+$("#cmpTable").addEventListener("click", e => {
+  const d = e.target.closest("[data-cmpdel]"); if (d){ cmpCols.splice(+d.dataset.cmpdel, 1); renderCmp(); return; }
+  const a = e.target.closest("[data-cmpapply]"); if (!a) return; const v = cmpCols[+a.dataset.cmpapply], k = kind();
+  state.mat[k] = v.mat; state.print[k] = v.print; state.lam[k] = v.lam; state.foil = v.foil; state.qty = v.qty; closeDlg("#cmpDlg"); renderControls(); changed("geo"); pushHistory(); toast(`Option ${+a.dataset.cmpapply + 1} appliquée au projet`);
+});
+
+// Duplication et réimpression (forme et plaques déjà en stock).
+async function duplicateProject(id, repeat){
+  const p = projects.find(x => x.id === id); if (!p) return;
+  const now = new Date().toISOString(), nid = newId(), cfg = structuredClone(p.config || {});
+  if (repeat) cfg.reuse = {die:true, plates:true};
+  const body = {...structuredClone(p), name:`${p.name || "Projet"} — ${repeat ? "réimpression" : "copie"}`, status:"brouillon", createdAt:now, updatedAt:now, createdBy:cap.uid || null, updatedBy:cap.uid || null, history:[{status:"brouillon", at:now, by:cap.uid || null, note:repeat ? `Réimpression de « ${p.name || ""} »` : `Copie de « ${p.name || ""} »`}], docs:[], config:cfg};
+  delete body.id;
+  try {
+    if (cloud()) await cap.db.collection("projects").doc(nid).set(body);
+    else { const list = [{id:nid, ...body}, ...localProjects()]; writeLocalProjects(list); projects = list; renderBoard(); }
+    toast(repeat ? "Réimpression créée : forme et plaques comptées en stock" : "Projet dupliqué");
+    openProject({id:nid, ...body});
+  } catch (e) { toast("Duplication impossible, réessayez."); }
+}
+$("#board").addEventListener("click", e => {
+  const d = e.target.closest("[data-dup]"); if (d){ duplicateProject(d.dataset.dup, false); return; }
+  const r = e.target.closest("[data-repeat]"); if (r) duplicateProject(r.dataset.repeat, true);
+});
+for (const [id, key] of [["reuseDie", "die"], ["reusePlates", "plates"]]) $("#" + id).addEventListener("change", e => { state.reuse = {...(state.reuse || {}), [key]:e.target.checked}; changed("art"); });
+
+// Mes modèles : projets enregistrés comme modèles réutilisables (bibliothèque de l'imprimerie).
+let myTpls = [], unsubMyTpl = null;
+function loadMyTpls(){
+  if (unsubMyTpl) unsubMyTpl();
+  if (cloud()) unsubMyTpl = cap.db.collection("templates").orderBy("name").limit(200).onSnapshot(s => { myTpls = s.docs.map(d => ({id:d.id, ...d.data()})); renderMyTpls(); }, () => {});
+  else { try { myTpls = JSON.parse(localStorage.getItem("lp-mytpl") || "[]"); } catch (e) { myTpls = []; } renderMyTpls(); }
+}
+async function writeMyTpls(){ try { localStorage.setItem("lp-mytpl", JSON.stringify(myTpls)); } catch (e) { toast("Stockage du navigateur plein."); } if (FS.ready) try { FS.mt.set("@mytpl", await fsb.write("modeles.json", JSON.stringify(myTpls))); } catch (e) {} }
+function renderMyTpls(){
+  const g = $("#myTplGrid"); if (!g) return;
+  g.innerHTML = myTpls.length ? myTpls.map(m => { const t = TEMPLATES.find(x => x.id === (m.config && m.config.model)) || TEMPLATES[0], d = (m.config && m.config.design) || {};
+    return `<div class="preset mytpl"><button type="button" class="mt-open" data-mytpl="${esc(m.id)}"><span class="pv" style="background:${esc(d.bg || "#ddd")};color:${esc(d.accent || "#333")}"><svg viewBox="0 0 42 34" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">${ICONS[t.icon]}</svg></span><span><b>${esc(m.name)}</b><small>${esc(t.name)}${m.client ? " · " + esc(m.client) : ""}</small></span></button><button type="button" class="btn small ghost" data-mytpldel="${esc(m.id)}" aria-label="Supprimer le modèle ${esc(m.name)}">×</button></div>`; }).join("") : `<p class="hint">Aucun modèle enregistré. Préparez un projet puis cliquez sur « Enregistrer le projet comme modèle ».</p>`;
+}
+$("#myTplSave").addEventListener("click", async () => {
+  const name = (meta.name || `${TPL().name} ${meta.client || ""}`).trim(), body = {name, client:meta.client || "", createdAt:new Date().toISOString(), config:configForSave()};
+  const tmp = {config:body.config}; if (cloud()) stripHeavy(tmp);
+  const id = slug2(name).toLowerCase().slice(0, 50) + "-" + newId().slice(-4);
+  try {
+    if (cloud()) await cap.db.doc("templates/" + id).set({...body, config:tmp.config});
+    else { myTpls = [...myTpls.filter(m => m.name !== name), {id, ...body}].sort((a, b) => a.name.localeCompare(b.name)); await writeMyTpls(); renderMyTpls(); }
+    toast(`Modèle « ${name} » enregistré dans « Mes modèles »`);
+  } catch (e) { toast("Modèle non enregistré (droits d'écriture requis)."); }
+});
+$("#myTplGrid").addEventListener("click", async e => {
+  const o = e.target.closest("[data-mytpl]");
+  if (o){ const m = myTpls.find(x => x.id === o.dataset.mytpl); if (m) guardDirty("tpl" + m.id, () => { state = merge(DEFAULT, structuredClone(m.config)); sanitizeState(); meta = NEW_META(); selEl = null; dirty = false; hist = []; hIndex = -1; pushHistory(); renderControls(); refresh("geo", true); toast(`Modèle « ${m.name} » chargé : nouveau projet`); }); return; }
+  const d = e.target.closest("[data-mytpldel]"); if (!d) return;
+  if (d.dataset.armed !== "1"){ d.dataset.armed = "1"; d.textContent = "Confirmer"; return; }
+  try { if (cloud()) await cap.db.doc("templates/" + d.dataset.mytpldel).delete(); else { myTpls = myTpls.filter(m => m.id !== d.dataset.mytpldel); await writeMyTpls(); renderMyTpls(); } } catch (err) { toast("Suppression impossible."); }
+});
+
+// Ancrage des éléments à leur face : quand les cotes changent, chaque élément garde sa place relative sur la face.
+function anchorEls(L = layout){
+  if (!L) return;
+  for (const el of state.elements){
+    const p = L.panels.find(q => inPoly([el.x, el.y], q.gpoly)); if (!p){ delete el.anchor; continue; }
+    const b = polyBox(p.gpoly); el.anchor = {face:p.id, u:+((el.x - b.minX)/b.w).toFixed(4), v:+((el.y - b.minY)/b.h).toFixed(4)};
+  }
+}
+function reanchorEls(L){
+  if (state.anchorEls === false) return;
+  for (const el of state.elements){ const a = el.anchor, p = a && L.byId[a.face]; if (!p) continue; const b = polyBox(p.gpoly); el.x = +(b.minX + a.u*b.w).toFixed(1); el.y = +(b.minY + a.v*b.h).toFixed(1); }
+}
+
+// Annotations du client sur le plan (lien client 3D) et affichage des remarques reçues dans le studio.
+let clientPins = [], pinMode = false;
+function shownPins(){ if (clientMode) return clientPins; const h = [...(meta.history || [])].reverse().find(x => x.pins && x.pins.length); return h ? h.pins : []; }
+function pinsSVG(fs){
+  const pins = shownPins(); if (!pins.length) return "";
+  return `<g id="ANNOTATIONS">${pins.map((p, i) => `<g transform="translate(${p.x} ${-p.y})"><circle r="${fs*.95}" style="fill:#ff7a00;stroke:#fff;stroke-width:1.5" vector-effect="non-scaling-stroke"/><text y="${fs*.35}" text-anchor="middle" style="font:700 ${fs}px var(--f-body);fill:#fff">${i + 1}</text><title>${esc(p.t || "")}</title></g>`).join("")}</g>`;
+}
+function renderPinList(){
+  const ul = $("#clPins"); if (!ul) return;
+  ul.innerHTML = clientPins.map((p, i) => `<li><b>${i + 1}</b><input type="text" value="${esc(p.t)}" data-pin="${i}" placeholder="Votre remarque sur ce point" aria-label="Remarque ${i + 1}"><button type="button" class="btn small ghost" data-pindel="${i}" aria-label="Retirer la remarque ${i + 1}">×</button></li>`).join("");
+}
+function renderStudioPins(){
+  const box = $("#pinNotes"); if (!box || clientMode) return;
+  const h = [...(meta.history || [])].reverse().find(x => x.pins && x.pins.length);
+  box.hidden = !h; if (!h) return;
+  box.innerHTML = `<summary>Remarques du client sur le plan (${h.pins.length}) · ${esc(h.client || "")}, ${new Date(h.at).toLocaleDateString("fr-FR")}</summary><ol>${h.pins.map(p => `<li>${esc(p.t || "")}</li>`).join("")}</ol>`;
+}
+
+// Corrections automatiques proposées par le contrôle prépresse.
+function moveInside(el){
+  const p = L0 => L0.panels.find(q => inPoly([el.x, el.y], q.gpoly)) || mainPanel();
+  const panel = p(layout), b = polyBox(panel.gpoly), cx = b.minX + b.w/2, cy = b.minY + b.h/2;
+  for (let i = 0; i < 80; i++){
+    const q4 = elCorners(el), near = Math.min(...layout.cuts.map(([a, c]) => segRectDist(a, c, q4)), ...layout.lines.map(({seg:[a, c]}) => segRectDist(a, c, q4)));
+    if (near >= 3.2 && q4.every(c => inPoly(c, panel.gpoly))) return true;
+    el.x = +(el.x + (cx - el.x)*.08).toFixed(2); el.y = +(el.y + (cy - el.y)*.08).toFixed(2);
+  }
+  return false;
+}
+function applyFixes(items){
+  let n = 0; for (const x of items) if (x.fix){ try { x.fix(); n++; } catch (e) {} }
+  if (n){ anchorEls(); renderControls(); changed("art"); pushHistory(); toast(`${n} correction(s) appliquée(s) : vérifiez le résultat`); }
+}
+$("#pfList").addEventListener("click", e => { const b = e.target.closest("[data-pffix]"); if (!b) return; applyFixes(b.dataset.pffix === "all" ? pfItems : [pfItems[+b.dataset.pffix]]); });
+$("#anchorEls").addEventListener("change", e => { state.anchorEls = e.target.checked; changed("art"); });
 function moveEl(dir){ const i = state.elements.findIndex(x => x.id === selEl), j = i + dir; if (i < 0 || j < 0 || j >= state.elements.length) return; const a = state.elements; [a[i], a[j]] = [a[j], a[i]]; renderElEditor(); changed("art"); }
 $("#elUp").addEventListener("click", () => moveEl(1)); $("#elDown").addEventListener("click", () => moveEl(-1));
 $("#elDup").addEventListener("click", () => { const el = curEl(); if (!el) return; const c = structuredClone(el); c.id = newId(); c.x += 4; c.y -= 4; state.elements.push(c); selEl = c.id; renderElEditor(); changed("art"); });
@@ -5896,7 +6109,7 @@ $("#saveBtn").addEventListener("click", () => saveProject());
 function needsChase(p){ return ["devis","bat"].includes(p.status) && (Date.now() - new Date(((p.history || []).slice(-1)[0] || {}).at || p.updatedAt || Date.now()))/864e5 > 7; }
 async function recordClientDecision(id, d){
   const p = projects.find(x => x.id === id);
-  const status = d.decision === "ok" ? "valide" : "bat", entry = {status, at:d.at || new Date().toISOString(), by:cap.uid || null, client:d.name || "Client", decision:d.decision, note:d.note || "", source:d.source || "manuel", ...(d.approval ? {approval:d.approval} : {}), ...(d.signature ? {signature:d.signature} : {})};
+  const status = d.decision === "ok" ? "valide" : "bat", entry = {status, at:d.at || new Date().toISOString(), by:cap.uid || null, client:d.name || "Client", decision:d.decision, note:d.note || "", source:d.source || "manuel", ...(d.approval ? {approval:d.approval} : {}), ...(d.signature ? {signature:d.signature} : {}), ...(d.pins && d.pins.length ? {pins:d.pins} : {})};
   if (!p){ if (meta.id !== id) return false; meta.status = status; meta.history = [...(meta.history || []), entry]; renderMeta(); await saveProject(true); toast(`${d.decision === "ok" ? "BAT validé" : "Correction demandée"} par ${entry.client}`); return true; }
   const upd = {status, history:[...(p.history || []), entry], updatedAt:new Date().toISOString()};
   try {
@@ -5917,7 +6130,7 @@ async function applyApprovals(){
   try {
     for (const a of approvals.filter(x => !x.applied && x.project)){
       const p = projects.find(x => x.id === a.project); if (!p) continue;
-      if (!(p.history || []).some(h => h.approval === a.id) && !(await recordClientDecision(p.id, {decision:a.decision, name:a.name, note:a.comment, at:a.at, approval:a.id, source:"en ligne"}))) continue;
+      if (!(p.history || []).some(h => h.approval === a.id) && !(await recordClientDecision(p.id, {decision:a.decision, name:a.name, note:a.comment, at:a.at, approval:a.id, source:"en ligne", pins:a.pins}))) continue;
       try { await cap.db.doc("approvals/" + a.id).update({applied:true}); } catch (e) {}
     }
   } finally { applying = false; }
@@ -5926,8 +6139,8 @@ function cardExtras(p){
   const h = p.history || [], appr = [...h].reverse().find(x => x.client), d = x => new Date(x).toLocaleDateString("fr-FR");
   return `${appr ? `<div><span class="badge ${appr.decision === "ok" ? "ok" : "warn"}">${appr.decision === "ok" ? "✓ BAT validé" : "✎ Correction demandée"} · ${esc(appr.client)} · ${d(appr.at)}</span>${appr.note ? `<div class="meta">« ${esc(appr.note)} »</div>` : ""}</div>` : ""}
     ${needsChase(p) ? `<div><span class="badge warn">À relancer · sans réponse depuis ${fmt0.format((Date.now() - new Date((h.slice(-1)[0] || {}).at || p.updatedAt))/864e5)} j</span></div>` : ""}
-    ${h.length ? `<details><summary>Historique (${h.length})</summary><ol class="hist">${h.slice().reverse().map(x => `<li>${d(x.at)} · ${esc((STATUSES.find(s => s[0] === x.status) || [0, x.status])[1])}${x.client ? ` · ${esc(x.client)}${x.source ? ` (${esc(x.source)})` : ""}${x.signature ? " · signé" : ""}` : ""}${x.note ? ` — ${esc(x.note)}` : ""}</li>`).join("")}</ol></details>` : ""}
-    <button type="button" class="btn small" data-appr="${esc(p.id)}">Réponse client au BAT…</button>`;
+    ${h.length ? `<details><summary>Historique (${h.length})</summary><ol class="hist">${h.slice().reverse().map(x => `<li>${d(x.at)} · ${esc((STATUSES.find(s => s[0] === x.status) || [0, x.status])[1])}${x.client ? ` · ${esc(x.client)}${x.source ? ` (${esc(x.source)})` : ""}${x.signature ? " · signé" : ""}${x.pins && x.pins.length ? ` · ${x.pins.length} remarque(s) sur le plan` : ""}` : ""}${x.note ? ` — ${esc(x.note)}` : ""}</li>`).join("")}</ol></details>` : ""}
+    <div class="row wrap"><button type="button" class="btn small" data-appr="${esc(p.id)}">Réponse client au BAT…</button><button type="button" class="btn small ghost" data-dup="${esc(p.id)}">Dupliquer</button><button type="button" class="btn small ghost" data-repeat="${esc(p.id)}" title="Nouveau dossier avec forme et plaques en stock">Réimpression</button></div>`;
 }
 function renderClients(list){
   const by = new Map();
@@ -5962,6 +6175,7 @@ const SETTINGS_FIELDS = [
   ["Boîtes — feuille & support", [["pricing.box.sheetW","Feuille, grand côté","mm"],["pricing.box.sheetH","Feuille, petit côté","mm"],["pricing.box.grip","Prise de pince","mm"],["pricing.box.gap","Écart entre poses","mm"],["pricing.box.sheet.gc1","GC1 300 g / feuille","TND"],["pricing.box.sheet.duplex","Duplex 350 g / feuille","TND"],["pricing.box.sheet.kraft","Kraft 350 g / feuille","TND"],["pricing.box.sheet.micro","Micro-cannelure / feuille","TND"],["pricing.box.sheet.ondB","Cannelure B / feuille","TND"],["pricing.cup.sheet","Carton gobelet PE / feuille","TND"],["pricing.box.sheetsCal","Feuilles de calage","f."]]],
   ["Boîtes — impression & finitions", [["pricing.box.platePrice","Plaque offset","TND"],["pricing.box.printCal.cmjn","Calage quadri","TND"],["pricing.box.printSheet.cmjn","Passage quadri / feuille","TND"],["pricing.box.printCal.cmjnp","Calage quadri + Pantone","TND"],["pricing.box.printSheet.cmjnp","Passage quadri + P. / feuille","TND"],["pricing.box.insideCal","Impression intérieure, calage","TND"],["pricing.box.insideSheet","Impression intérieure / feuille","TND"],["pricing.box.lam.mat","Pelliculage mat / feuille","TND"],["pricing.box.lam.brillant","Pelliculage brillant / feuille","TND"],["pricing.box.lam.soft","Soft-touch / feuille","TND"],["pricing.box.varnishCal","Vernis UV, calage","TND"],["pricing.box.varnishSheet","Vernis UV / feuille","TND"],["pricing.box.foilCal","Dorure, cliché + calage","TND"],["pricing.box.foilSheet","Dorure / feuille","TND"],["pricing.box.embossCal","Gaufrage, cliché + calage","TND"],["pricing.box.embossSheet","Gaufrage / feuille","TND"]]],
   ["Boîtes — façonnage", [["pricing.box.dieBase","Forme de découpe, base","TND"],["pricing.box.diePerM","Forme, filet au mètre","TND"],["pricing.box.cutCal","Découpe, calage","TND"],["pricing.box.cutSheet","Découpe / feuille","TND"],["pricing.box.windowCal","Fenêtre, calage","TND"],["pricing.box.windowPc","Fenêtre / pièce","TND"],["pricing.box.glueCal","Collage, calage","TND"],["pricing.box.bagPc","Façonnage sac / pièce","TND"],["pricing.box.handlePc","Poignées / paire","TND"],["pricing.box.sheet.kraftp","Papier kraft brun / feuille","TND"],["pricing.box.sheet.whitep","Papier kraft blanc / feuille","TND"],["pricing.box.gluePc","Collage / pièce","TND"]]],
+  ["Production et délais", [["production.hours","Heures de production par jour","h"],["production.prepress","Prépresse","jours"],["production.dieDays","Fabrication d'une forme","jours"],["production.drying","Séchage après pelliculage ou vernis","jours"],["production.ship","Conditionnement et livraison","jours"],["production.sheetsH.print","Cadence impression","f/h"],["production.sheetsH.lam","Cadence pelliculage","f/h"],["production.sheetsH.foil","Cadence dorure","f/h"],["production.sheetsH.cut","Cadence découpe","f/h"],["production.glueH","Cadence collage","pièces/h"],["production.labelMH","Cadence étiquettes","m/h"]]],
   ["Facturation", [["billing.timbre","Droit de timbre par facture","TND"],["billing.prefixInv","Préfixe des factures"],["billing.startInv","Premier numéro de facture de l'année",""],["billing.prefixBL","Préfixe des bons de livraison"],["billing.startBL","Premier numéro de BL de l'année",""],["billing.payment","Conditions de paiement"],["billing.rib","RIB"],["billing.accounts.client","Compte clients"],["billing.accounts.sales","Compte de ventes"],["billing.accounts.vat","Compte TVA collectée"],["billing.accounts.stamp","Compte droit de timbre"]]],
   ["Étiquettes", [["pricing.label.web","Laize machine","mm"],["pricing.label.m2.couche","Couché adhésif / m²","TND"],["pricing.label.m2.ppw","PP blanc / m²","TND"],["pricing.label.m2.ppt","PP transparent / m²","TND"],["pricing.label.m2.verge","Vergé / m²","TND"],["pricing.label.printCal","Impression, calage","TND"],["pricing.label.printM2.num","Quadri / m²","TND"],["pricing.label.printM2.numb","Quadri + blanc / m²","TND"],["pricing.label.fin.vernis","Vernis / m²","TND"],["pricing.label.fin.lam","Lamination / m²","TND"],["pricing.label.toolBase","Outil de découpe","TND"],["pricing.label.cutM","Découpe / m","TND"],["pricing.label.rollPer","Étiquettes par bobine","ex."],["pricing.label.rollCost","Rebobinage / bobine","TND"]]],
 ];
@@ -6459,6 +6673,7 @@ function devisPDF(mockup){
   y += 6; doc.setFont("helvetica", "normal");
   if (q.error){ doc.setTextColor(200,30,30); doc.text(pdfTxt(q.error), M, y, {maxWidth:180}); y += 10; }
   else [[`Total HT (${pdfTxt(fmt0.format(state.qty))} ex.)${state.docLang === "ar" ? " / " + AR["Total HT"] : ""}`, money(q.ht)], [`${bi("TVA")} ${P().tva} %`, money(q.tva)], [bi("Total TTC"), money(q.ttc)]].forEach(([a, b], i) => { doc.setFont("helvetica", i === 2 ? "bold" : "normal"); doc.setFontSize(i === 2 ? 11 : 9.5); doc.setTextColor(20); pdfText(doc, a, 155, y, {align:"right", bold:i === 2}); doc.text(b, 192, y, {align:"right"}); y += 6; });
+  if (!q.error){ const lt = leadTime(q); if (lt){ doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(60); doc.text(pdfTxt(`Délai de fabrication indicatif : ${lt.days} jours ouvrés après validation du BAT.`), M, y + 2); y += 5; } }
   y += 6; doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(110); pdfText(doc, bi("CONDITIONS"), M, y); y += 4.5;
   doc.setTextColor(60); doc.setFontSize(8.5); doc.text(doc.splitTextToSize(pdfTxt(co.conditions), 180), M, y);
   if (P().example){ doc.setTextColor(168,91,0); doc.text("Document établi avec la grille tarifaire d'exemple : à remplacer par les tarifs réels avant envoi.", M, 280); }
@@ -6629,6 +6844,7 @@ async function bootClient(sid){
   } catch (e) { $("#clientBanner").textContent = "Impossible de charger la maquette pour le moment."; }
 }
 function apprBlock(){ return `<div class="appr"><h3 class="eyebrow">Validation du BAT</h3>
+    <div class="field"><button class="btn" type="button" id="clPinBtn" aria-pressed="false">Annoter le plan</button><p class="hint">Activez, puis touchez le plan à l'endroit à corriger et écrivez votre remarque.</p><ul class="pins" id="clPins"></ul></div>
     <div class="field"><label for="clName">Votre nom et fonction</label><input id="clName" type="text" autocomplete="name"></div>
     <div class="field"><label for="clNote">Commentaire ou corrections demandées</label><textarea id="clNote" rows="3"></textarea></div>
     <label class="check"><input type="checkbox" id="clConfirm"> J'ai vérifié les textes, les cotes, les couleurs et les codes ; le rendu écran n'est pas contractuel.</label>
@@ -6639,18 +6855,22 @@ function wireClientAppr(s, wa){
     const name = $("#clName").value.trim(), note = $("#clNote").value.trim(), out = $("#clApprOut");
     if (!name){ out.textContent = "Indiquez votre nom."; $("#clName").focus(); return; }
     if (dec === "ok" && !$("#clConfirm").checked){ out.textContent = "Cochez la case de vérification pour valider."; return; }
-    if (dec === "modif" && !note){ out.textContent = "Décrivez les corrections souhaitées."; $("#clNote").focus(); return; }
+    const pins = clientPins.filter(x => x.t.trim()).map(x => ({x:x.x, y:x.y, t:x.t.trim().slice(0, 300)}));
+    if (dec === "modif" && !note && !pins.length){ out.textContent = "Décrivez les corrections souhaitées ou annotez le plan."; $("#clNote").focus(); return; }
     const at = new Date().toISOString();
     try {
-      await cap.db.doc("approvals/" + newId()).set({share:shareId, project:s.project || null, ref:s.ref || "", projectName:s.name || "", client:s.client || "", name, comment:note, decision:dec, at, uid:cap.uid || null, applied:false});
+      await cap.db.doc("approvals/" + newId()).set({share:shareId, project:s.project || null, ref:s.ref || "", projectName:s.name || "", client:s.client || "", name, comment:note, decision:dec, at, uid:cap.uid || null, applied:false, pins});
       out.textContent = `Merci : ${dec === "ok" ? "votre validation" : "votre demande de correction"} est enregistrée (${new Date(at).toLocaleString("fr-FR")}). Elle apparaît dans le dossier de votre interlocuteur.`;
       $("#clOk").disabled = $("#clModif").disabled = true;
     } catch (e) {
-      const c = s.company || {}, msg = `${dec === "ok" ? "Je valide le BAT" : "Je demande une correction sur le BAT"} « ${s.name} » (réf. ${s.ref}). Nom : ${name}.${note ? " " + note : ""}`;
+      const c = s.company || {}, msg = `${dec === "ok" ? "Je valide le BAT" : "Je demande une correction sur le BAT"} « ${s.name} » (réf. ${s.ref}). Nom : ${name}.${note ? " " + note : ""}${pins.length ? " Remarques : " + pins.map((x, i) => `${i + 1}) ${x.t}`).join(" ; ") : ""}`;
       out.innerHTML = `Votre accès à cette page ne permet pas d'enregistrer la réponse en ligne. Envoyez-la directement${wa ? ` par <a href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${wa && c.email ? " ou" : ""}${c.email ? ` par <a href="mailto:${esc(c.email)}?subject=${encodeURIComponent("BAT " + (s.ref || ""))}&body=${encodeURIComponent(msg)}">e-mail</a>` : ""}.`;
     }
   };
   $("#clOk").onclick = () => send("ok"); $("#clModif").onclick = () => send("modif");
+  $("#clPinBtn").onclick = () => { pinMode = !pinMode; $("#clPinBtn").setAttribute("aria-pressed", pinMode); $("#clPinBtn").textContent = pinMode ? "Terminer les annotations" : "Annoter le plan"; if (pinMode && view === "3d") showView(innerWidth > 980 ? "split" : "2d"); document.body.classList.toggle("pinning", pinMode); };
+  $("#clPins").oninput = e => { const i = e.target.dataset.pin; if (i != null){ clientPins[+i].t = e.target.value; } };
+  $("#clPins").onclick = e => { const b = e.target.closest("[data-pindel]"); if (b){ clientPins.splice(+b.dataset.pindel, 1); renderPinList(); render2D(); } };
 }
 function renderClientCard(){
   const s = shareDoc, c = s.company || {}, card = $("#clientCard"), pr = s.price;
@@ -7291,6 +7511,7 @@ const GUIDE = [
     {t:"Bibliothèque de gabarits", d:"22 structures paramétriques (étuis, boîtes, coffrets, sacs, présentoirs, étiquettes, contenants). Un clic charge le gabarit ; les cotes se règlent ensuite.", el:gq("#tpls"), prep:G.lib("tpl")},
     {t:"Filtrer et rechercher", d:"Filtrez par famille ou tapez un mot (« pyramide », « suspente »…).", el:gq("#cats"), prep:G.lib("tpl")},
     {t:"Modèles types", d:"Projets prêts à l'emploi par secteur (huile, pâtisserie, cosmétique…) : gabarit, cotes, matière et décor d'exemple. Idéal pour démarrer vite puis personnaliser.", el:gq("#presetGrid"), prep:G.lib("pre")},
+    {t:"Mes modèles", d:"Enregistrez un projet réussi comme modèle de l'imprimerie (structure, cotes, matière, visuel) : un clic crée un nouveau projet à partir du modèle.", el:gq("#lib-my"), prep:G.lib("my")},
     {t:"Importer le plan du client", d:"Un plan SVG ou DXF (Illustrator, ArtiosCAD, table de découpe) est reconstruit en faces et plié en 3D. Coupes : traits pleins ou calque COUPE/CUT ; rainages : pointillés, bleu ou calque RAINAGE/CREASE.", el:gup("#dieImport", "label"), prep:G.lib("tpl")},
     {t:"Nommer le projet", d:"Nom du projet et client apparaissent sur le BAT, le devis, le PDF d'impression et les noms de fichiers. Choisissez aussi le statut (brouillon → livré).", el:gup("#pName", ".proj, .top > div"), prep:G.studio},
   ]},
@@ -7324,7 +7545,7 @@ const GUIDE = [
   {id:"check", title:"Vérifier plan et prépresse", intro:"Avant tout envoi : contrôlez le plan à plat, les zones de sécurité et les couleurs.", steps:[
     {t:"Plan de découpe", d:"Trait rouge : coupe. Pointillé bleu : rainage. Bande claire : fond perdu (3 mm, 2 mm pour les étiquettes). Hachures : zones de collage.", el:gq("#v2d"), prep:G.view("2d")},
     {t:"Visuel et zone de sécurité", d:"Masquez le visuel pour lire le plan seul ; la zone de sécurité (3 mm à l'intérieur des plis) doit contenir tous les textes.", el:gup("#showSafe", "label"), prep:G.view("2d")},
-    {t:"Contrôle prépresse", d:"Résolution des images, corps minimum, textes trop près d'un pli, code-barres EAN-13, fenêtre, format feuille. Un point rouge bloque le BAT : corrigez-le avant envoi.", el:gq("#pfSec"), prep:G.studio},
+    {t:"Contrôle prépresse", d:"Les boutons « Corriger » règlent les problèmes courants en un clic (élément trop près d'une coupe ou à cheval sur un pli, corps trop petit, couleur hors gamut, code-barres, ton direct). Résolution des images, corps minimum, textes trop près d'un pli, code-barres EAN-13, fenêtre, format feuille. Un point rouge bloque le BAT : corrigez-le avant envoi.", el:gq("#pfSec"), prep:G.studio},
     {t:"Couleurs imprimables (CMJN)", d:"Les couleurs hors gamut quadri sont signalées avec une teinte imprimable proche. Cochez l'aperçu pour voir le rendu imprimé à l'écran.", el:gup("#softProof", "label"), prep:G.studio},
     {t:"Informations du plan", d:"Format à plat, épaisseur du support et état prépresse en un coup d'œil.", el:gq("#chips"), prep:G.studio},
   ]},
@@ -7347,6 +7568,8 @@ const GUIDE = [
   {id:"client", title:"Valider avec le client", intro:"Devis, BAT signé et lien de maquette : le circuit de validation complet.", steps:[
     {t:"Devis instantané", d:"Prix unitaire et total selon la quantité, paliers dégressifs, TVA. Le détail des coûts reste interne.", el:gq("#qMain"), prep:G.studio},
     {t:"Quantité", d:"Saisissez la quantité ou choisissez un palier : le devis et le BAT se mettent à jour.", el:gq("#qty"), prep:G.studio},
+    {t:"Délai et comparateur", d:"Le délai de fabrication estimé s'affiche sous le prix (cadences dans Paramètres). « Comparer des options » chiffre côte à côte jusqu'à 4 variantes : support, impression, finition, dorure, quantité.", el:gq("#cmpBtn"), prep:G.studio},
+    {t:"Réimpression", d:"Cochez « Forme de découpe en stock » et « Plaques déjà gravées » pour une réimpression : le devis et le délai en tiennent compte. Sur la carte d'un projet, « Réimpression » crée le nouveau dossier en un clic.", el:gq("#reuseDie"), prep:G.studio},
     {t:"Devis PDF et mail", d:"Devis PDF à en-tête de l'imprimerie et texte de mail prêt à copier.", el:gq("#devisPdf"), prep:G.studio},
     {t:"Bon à tirer (BAT)", d:"Maquette, visuel avec traits, contrôle prépresse et case « Bon pour accord » à faire signer avant impression.", el:gq('[data-exp="bat"]'), prep:G.pop},
     {t:"Signature sur tablette", d:"« Faire signer le BAT » : le client vérifie la maquette et le visuel, signe au doigt ou au stylet, et le BAT signé est produit en PDF ; la signature s'inscrit dans l'historique du dossier.", el:gq("#signBtn"), prep:G.studio},
@@ -7511,7 +7734,7 @@ function onCapsReady(){
     if (unsubSettings) unsubSettings();
     unsubSettings = cap.db.doc("settings/main").onSnapshot(s => { if (s.exists){ settings = merge(DEFAULT_SETTINGS, s.data()); if (layout){ renderControls(); refresh("geo"); } } }, () => {});
   }
-  subscribeProjects(); subscribeApprovals(); loadKits(); fsAutoConnect(); renderFsState(); renderICC();
+  subscribeProjects(); subscribeApprovals(); loadKits(); loadMyTpls(); fsAutoConnect(); renderFsState(); renderICC();
 }
 renderControls();
 showView("3d");
