@@ -1,0 +1,20 @@
+{
+  "name": "label-pack-studio-build",
+  "private": true,
+  "description": "Construit la version installable (hors ligne) et le panneau Illustrator de Label Pack Studio",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "three": "0.128.0",
+    "jspdf": "2.5.1",
+    "jszip": "3.10.1",
+    "@fontsource/archivo": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/ibm-plex-sans": "5.3.0",
+    "@fontsource/playfair-display": "5.3.0",
+    "@fontsource/noto-kufi-arabic": "5.3.0",
+    "@fontsource/noto-naskh-arabic": "5.3.0"
+  },
+  "version": "1.0.0"
+}
