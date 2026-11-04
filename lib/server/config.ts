@@ -5,6 +5,7 @@ import { dataPath, readJSON, writeJSON } from './data';
 export type Smtp = { host: string; port: number; secure: boolean; user: string; pass: string };
 export type Config = {
   apiKey?: string; workspaceId?: string; adminHash?: string; sessionSecret?: string;
+  sessionVersion?: number; totpSecret?: string; totpPending?: string; totpLast?: number;
   mailTo: string; mailFrom: string; smtp?: Smtp;
 };
 const DEFAULTS: Config = { mailTo: 'contact@gemabm.com', mailFrom: 'site@gemabm.com' };

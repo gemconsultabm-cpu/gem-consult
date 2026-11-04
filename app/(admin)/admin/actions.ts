@@ -1,8 +1,13 @@
 'use server';
 /** Actions de l'administration (exécutées côté serveur). Chaque action vérifie la session, puis revient sur /admin avec un message. */
 import fs from 'node:fs';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { closeSession, dropSetupCode, hashPassword, isAdmin, openSession, setupCode, verifyPassword } from '@/lib/server/auth';
+import { after } from 'next/server';
+import { closeSession, dropSetupCode, hashPassword, isAdmin, openSession, revokeAllSessions, setupCode, verifyPassword } from '@/lib/server/auth';
+import { clientIp } from '@/lib/server/ratelimit';
+import { bloque, echec, journal, succes } from '@/lib/server/securite';
+import { checkCode, newSecret } from '@/lib/server/totp';
 import { claude, MODEL_FAST } from '@/lib/server/claude';
 import { getConfig, isAccountKey, keyLooksValid, saveConfig, workspaceLooksValid } from '@/lib/server/config';
 import { dataPath, readJSON, tailLog, writeJSON, nowTunis } from '@/lib/server/data';
@@ -15,12 +20,15 @@ const s = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 const pause = () => new Promise((r) => setTimeout(r, 700));
 async function guard() { if (!(await isAdmin())) redirect('/admin'); }
 
+const ipNow = async () => clientIp(await headers());
+const alerte = (sujet: string, texte: string) => after(async () => { await sendMail(sujet, texte); });
+
 export async function setup(f: FormData) {
   if (getConfig().adminHash) back('Installation déjà effectuée.', true);
-  await pause();
+  await pause(); const ip = await ipNow(); const b = bloque(ip); if (b) back(b, true);
   const p1 = s(f, 'p1'), p2 = s(f, 'p2'), key = s(f, 'key');
-  if (s(f, 'code').toUpperCase() !== setupCode()) back("Code d'installation incorrect.", true);
-  if (p1.length < 10 || p1 !== p2) back('Mot de passe : 10 caractères minimum, identique dans les deux champs.', true);
+  if (s(f, 'code').toUpperCase() !== setupCode()) { echec(ip, "code d'installation"); back("Code d'installation incorrect.", true); }
+  if (p1.length < 12 || p1 !== p2) back('Mot de passe : 12 caractères minimum, identique dans les deux champs.', true);
   if (key && !keyLooksValid(key)) back('La clé API doit commencer par « sk-ant-api » ou « sk-ant-usr ».', true);
   const ws = s(f, 'workspace'); if (ws && !workspaceLooksValid(ws)) back("ID d'espace de travail non valide : il commence par « wrkspc_ ».", true);
   saveConfig({ adminHash: hashPassword(p1), apiKey: key || undefined, workspaceId: ws || undefined, mailTo: s(f, 'mail_to') || 'contact@gemabm.com', mailFrom: s(f, 'mail_from') || 'site@gemabm.com' });
@@ -28,11 +36,37 @@ export async function setup(f: FormData) {
   back('Installation terminée. Bienvenue !');
 }
 export async function login(f: FormData) {
-  await pause();
-  if (!verifyPassword(s(f, 'pwd'), getConfig().adminHash)) back('Mot de passe incorrect.', true);
-  await openSession(); redirect('/admin');
+  await pause(); const ip = await ipNow(); const b = bloque(ip); if (b) back(b, true);
+  const cfg = getConfig();
+  const fail = (quoi: string) => {
+    if (echec(ip, quoi)) alerte('ALERTE sécurité — gemabm.com', `De nombreux essais de connexion infructueux ont visé l'administration du site. La connexion est fermée pendant 1 heure.\nDernière adresse : ${ip}\n\nSi ce n'est pas vous, aucune action n'est nécessaire : le site s'est protégé.`);
+    back(quoi === 'code' ? 'Code de double authentification incorrect ou expiré.' : 'Mot de passe incorrect.', true);
+  };
+  if (!verifyPassword(s(f, 'pwd'), cfg.adminHash)) fail('mot de passe');
+  if (cfg.totpSecret) { const k = checkCode(cfg.totpSecret, s(f, 'code'), cfg.totpLast ?? -1); if (k < 0) fail('code'); saveConfig({ totpLast: k }); }
+  succes(ip); await openSession();
+  alerte('Connexion à l’administration — gemabm.com', `Une connexion à l'administration du site a eu lieu le ${nowTunis()} depuis l'adresse ${ip}.\n\nSi ce n'est pas vous : connectez-vous, changez le mot de passe et cliquez sur « Déconnecter toutes les sessions ».`);
+  redirect('/admin');
 }
 export async function logout() { await closeSession(); redirect('/admin'); }
+export async function logoutAll() { await guard(); revokeAllSessions(); journal('Toutes les sessions déconnectées'); await closeSession(); redirect('/admin?msg=' + encodeURIComponent('Toutes les sessions ont été déconnectées. Reconnectez-vous.')); }
+
+/** Double authentification : préparation (secret en attente), confirmation par un premier code, désactivation. */
+export async function totpStart() { await guard(); saveConfig({ totpPending: newSecret() }); back('Scannez le code QR avec votre application, puis saisissez le code affiché.'); }
+export async function totpCancel() { await guard(); saveConfig({ totpPending: null }); back('Activation annulée.'); }
+export async function totpConfirm(f: FormData) {
+  await guard(); const p = getConfig().totpPending; if (!p) back('Recommencez l’activation.', true);
+  const k = checkCode(p!, s(f, 'code')); if (k < 0) back('Code incorrect : vérifiez l’heure du téléphone et saisissez le code affiché à l’instant.', true);
+  saveConfig({ totpSecret: p, totpPending: null, totpLast: k }); revokeAllSessions(); await openSession(); journal('Double authentification ACTIVÉE');
+  back('Double authentification activée : chaque connexion demandera désormais le code de votre téléphone.');
+}
+export async function totpDisable(f: FormData) {
+  await guard(); const cfg = getConfig(); const ip = await ipNow();
+  if (!verifyPassword(s(f, 'pwd'), cfg.adminHash) || !cfg.totpSecret || checkCode(cfg.totpSecret, s(f, 'code'), cfg.totpLast ?? -1) < 0) { echec(ip, 'désactivation double authentification'); back('Mot de passe ou code incorrect.', true); }
+  saveConfig({ totpSecret: null, totpLast: null }); journal('Double authentification DÉSACTIVÉE');
+  alerte('Double authentification désactivée — gemabm.com', `La double authentification de l'administration a été désactivée le ${nowTunis()} depuis ${ip}.`);
+  back('Double authentification désactivée.');
+}
 
 export async function saveKey(f: FormData) {
   await guard(); const k = s(f, 'key'); const w = s(f, 'workspace');
@@ -75,9 +109,11 @@ export async function saveMail(f: FormData) {
 }
 export async function changePassword(f: FormData) {
   await guard();
-  if (!verifyPassword(s(f, 'old'), getConfig().adminHash)) back('Mot de passe actuel incorrect.', true);
-  const p1 = s(f, 'p1'); if (p1.length < 10 || p1 !== s(f, 'p2')) back('Nouveau mot de passe : 10 caractères minimum, identique dans les deux champs.', true);
-  saveConfig({ adminHash: hashPassword(p1) }); back('Mot de passe modifié.');
+  if (!verifyPassword(s(f, 'old'), getConfig().adminHash)) { echec(await ipNow(), 'changement de mot de passe'); back('Mot de passe actuel incorrect.', true); }
+  const p1 = s(f, 'p1'); if (p1.length < 12 || p1 !== s(f, 'p2')) back('Nouveau mot de passe : 12 caractères minimum, identique dans les deux champs.', true);
+  saveConfig({ adminHash: hashPassword(p1) }); revokeAllSessions(); await openSession(); journal('Mot de passe administrateur modifié');
+  alerte('Mot de passe modifié — gemabm.com', `Le mot de passe de l'administration a été modifié le ${nowTunis()}. Les autres sessions ont été déconnectées.`);
+  back('Mot de passe modifié. Les autres sessions ouvertes ont été déconnectées.');
 }
 export async function toggleVeille(f: FormData) {
   await guard(); const v = readJSON<Veille>('veille.json', { days: [] }); let m = '';

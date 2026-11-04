@@ -1,4 +1,5 @@
-/** Authentification de l'administration : mot de passe (scrypt) + cookie de session signé (HMAC, 8 h). */
+/** Authentification de l'administration : mot de passe (scrypt), double authentification facultative, cookie de session signé (HMAC, 8 h).
+ *  Le numéro de version de session permet de déconnecter toutes les sessions (changement de mot de passe, bouton dédié). */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import { cookies } from 'next/headers';
@@ -24,15 +25,18 @@ function secret(): string {
 }
 const sign = (v: string) => crypto.createHmac('sha256', secret()).update(v).digest('hex');
 
+const ver = () => String(getConfig().sessionVersion || 1);
 export async function openSession(): Promise<void> {
-  const exp = String(Math.floor(Date.now() / 1000) + TTL);
-  (await cookies()).set(COOKIE, `${exp}.${sign(exp)}`, { httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production' && !process.env.GEM_INSECURE_COOKIE, path: '/', maxAge: TTL });
+  const exp = String(Math.floor(Date.now() / 1000) + TTL); const v = `${exp}.${ver()}`;
+  (await cookies()).set(COOKIE, `${v}.${sign(v)}`, { httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production' && !process.env.GEM_INSECURE_COOKIE, path: '/', maxAge: TTL });
 }
 export async function closeSession(): Promise<void> { (await cookies()).delete(COOKIE); }
+/** Invalide toutes les sessions ouvertes (sur tous les appareils). */
+export function revokeAllSessions(): void { saveConfig({ sessionVersion: (getConfig().sessionVersion || 1) + 1 }); }
 export async function isAdmin(): Promise<boolean> {
-  const v = (await cookies()).get(COOKIE)?.value || ''; const [exp, sig] = v.split('.');
-  if (!exp || !sig || +exp < Date.now() / 1000) return false;
-  const good = sign(exp);
+  const c = (await cookies()).get(COOKIE)?.value || ''; const [exp, v, sig] = c.split('.');
+  if (!exp || !v || !sig || +exp < Date.now() / 1000 || v !== ver()) return false;
+  const good = sign(`${exp}.${v}`);
   return sig.length === good.length && crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(good));
 }
 /** Code d'installation : protège /admin tant qu'aucun mot de passe n'est défini (lisible dans gem-data/ et dans les journaux Docker). */

@@ -6,6 +6,9 @@ import { getConfig, maskKey } from '@/lib/server/config';
 import { DATA_DIR, dataPath, fileAgeSec, readJSON, tailLog } from '@/lib/server/data';
 import { getParams, paramsText } from '@/lib/server/params';
 import type { Echeances, Veille } from '@/lib/server/tasks';
+import QRCode from 'qrcode';
+import { tailSecurite } from '@/lib/server/securite';
+import { otpauthUrl } from '@/lib/server/totp';
 import * as A from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -37,7 +40,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
       <p className="hint">Le <b>code d&apos;installation</b> figure dans les journaux du conteneur (<code>docker compose logs web</code>) et dans <code>gem-data/code-installation.txt</code>. Il protège cette page tant qu&apos;aucun mot de passe n&apos;est défini.</p>{notice}
       <form action={A.setup} autoComplete="off">
         <label>Code d&apos;installation<input type="text" name="code" required /></label>
-        <label>Mot de passe administrateur (10 caractères min.)<input type="password" name="p1" required /></label>
+        <label>Mot de passe administrateur (12 caractères min.)<input type="password" name="p1" required /></label>
         <label>Confirmer le mot de passe<input type="password" name="p2" required /></label>
         <label>Clé API Claude (facultatif à cette étape)<input type="password" name="key" placeholder="sk-ant-…" /></label>
         <label>ID de l&apos;espace de travail (si la clé commence par sk-ant-usr)<input type="text" name="workspace" placeholder="wrkspc_…" /></label>
@@ -45,12 +48,13 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
         <label>E-mail expéditeur du site<input type="email" name="mail_from" defaultValue="site@gemabm.com" /></label>
         <p><button>Terminer l&apos;installation</button></p></form></div>);
   }
-  if (!(await isAdmin())) return shell(<div className="box"><form action={A.login}><label>Mot de passe administrateur<input type="password" name="pwd" autoFocus /></label><p><button>Se connecter</button></p>{notice}</form></div>);
+  if (!(await isAdmin())) return shell(<div className="box"><form action={A.login} autoComplete="off"><label>Mot de passe administrateur<input type="password" name="pwd" autoFocus required /></label>{cfg.totpSecret && <label>Code à 6 chiffres de votre application<input type="text" name="code" inputMode="numeric" pattern="[0-9 ]{6,7}" autoComplete="one-time-code" required /></label>}<p><button>Se connecter</button></p>{notice}</form></div>);
 
   const p = getParams(); const ks = readJSON<{ ok: boolean; at: string } | null>('key-status.json', null); const hasKey = !!cfg.apiKey;
   const veille = readJSON<Veille>('veille.json', { days: [] }); const ech = readJSON<Echeances>('echeances.json', { mois: {} });
   const hist = (fs.existsSync(/*turbopackIgnore: true*/ DATA_DIR) ? fs.readdirSync(/*turbopackIgnore: true*/ DATA_DIR) : []).filter((f) => /^params-\d{8}-\d{6}\.json$/.test(f)).sort().reverse().slice(0, 8);
   const envKey = !!process.env.ANTHROPIC_API_KEY; void dataPath;
+  const qr = cfg.totpPending ? await QRCode.toString(otpauthUrl(cfg.totpPending), { type: 'svg', margin: 1, width: 200 }) : '';
   return shell(<main>{notice}
     <h2>État du site</h2>
     <div className="grid">
@@ -110,10 +114,27 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
       <p className="hint">Boîte OVH du domaine : ssl0.ovh.net, port 465. Gmail : smtp.gmail.com, port 587 (case décochée) avec un « mot de passe d&apos;application » Google.</p>
       <p><button>Enregistrer et envoyer un e-mail de test</button></p></form>
 
+    <h2>Sécurité de l&apos;administration</h2>
+    <div className="panel">
+      {cfg.totpSecret ? <><p><span className="ok">● Double authentification active</span> — chaque connexion demande le mot de passe et le code du téléphone.</p>
+        <details><summary>Désactiver la double authentification</summary><form action={A.totpDisable} autoComplete="off">
+          <label>Mot de passe<input type="password" name="pwd" required /></label><label>Code actuel<input type="text" name="code" inputMode="numeric" required /></label><p><button className="del">Désactiver</button></p></form></details></>
+      : cfg.totpPending ? <><p><b>1.</b> Installez sur votre téléphone <b>Google Authenticator</b> ou <b>Microsoft Authenticator</b>. <b>2.</b> Appuyez sur « + », puis « Scanner un code QR ». <b>3.</b> Saisissez ci-dessous le code à 6 chiffres affiché.</p>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}><div style={{ width: 200, background: '#fff' }} dangerouslySetInnerHTML={{ __html: qr }} />
+          <p className="hint">Sans appareil photo, saisissez cette clé dans l&apos;application :<br /><code style={{ fontSize: 15, letterSpacing: 1 }}>{cfg.totpPending.replace(/(.{4})/g, '$1 ').trim()}</code></p></div>
+          <form className="i" action={A.totpConfirm} autoComplete="off"><label>Code affiché par l&apos;application<input type="text" name="code" inputMode="numeric" autoComplete="one-time-code" required /></label><button>Activer</button></form>
+          <form className="i" action={A.totpCancel}><button className="alt">Annuler</button></form></>
+      : <><p><span className="wa">● Double authentification non activée</span> — recommandée : même si le mot de passe était découvert, personne ne pourrait se connecter sans votre téléphone.</p>
+          <form className="i" action={A.totpStart}><button>Activer la double authentification</button></form></>}
+      <p className="hint">Protections automatiques : 5 essais manqués depuis une même connexion bloquent celle-ci 15 minutes ; 30 échecs en une heure ferment la connexion pendant 1 heure et vous alertent par e-mail. Chaque connexion réussie vous est signalée par e-mail (si l&apos;envoi d&apos;e-mails est configuré).</p>
+      <form className="i" action={A.logoutAll}><button className="alt">Déconnecter toutes les sessions</button></form>
+      <p style={{ marginBottom: 4 }}><b>Journal de sécurité</b></p><pre>{tailSecurite(15) || '(aucun événement)'}</pre>
+    </div>
+
     <h2>Mot de passe administrateur</h2>
     <form className="panel" action={A.changePassword} autoComplete="off">
       <label>Mot de passe actuel<input type="password" name="old" required /></label>
-      <label>Nouveau mot de passe (10 caractères min.)<input type="password" name="p1" required /></label>
+      <label>Nouveau mot de passe (12 caractères min.)<input type="password" name="p1" required /></label>
       <label>Confirmer<input type="password" name="p2" required /></label><p><button>Modifier</button></p></form>
 
     <h2>Journal</h2>

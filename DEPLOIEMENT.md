@@ -101,3 +101,21 @@ Ensuite, toute nouvelle version publiée sur la branche `main` du dépôt `gemco
 - Journal : `/var/log/gemabm-maj.log`
 - Forcer une mise à jour : `sudo gemabm-maj --force`
 - Suspendre les mises à jour : `sudo rm /etc/cron.d/gemabm-maj`
+
+## Sécurité (novembre 2026)
+
+Intégré au site, appliqué automatiquement par la mise à jour :
+- en-têtes de sécurité stricts (CSP sans aucune ressource externe, HSTS, anti-clickjacking, isolation des origines) ;
+- plus aucun relais tiers pour l'actualité (tout passe par le serveur du cabinet, flux en liste blanche) ;
+- administration : 5 échecs depuis une même adresse = blocage 15 min ; 30 échecs en 1 h = connexion fermée 1 h et alerte e-mail ; e-mail à chaque connexion réussie ; double authentification (application Authenticator) ; bouton « Déconnecter toutes les sessions » ; mot de passe de 12 caractères minimum ; journal `gem-data/securite.log` ;
+- dépendances sans vulnérabilité connue (`npm audit` : 0), `/.well-known/security.txt`.
+
+Perte du téléphone de double authentification : sur le serveur, supprimer les lignes `totpSecret` et `totpLast` de `gem-data/config.json`, puis se reconnecter avec le seul mot de passe.
+
+Renforcement du serveur (une fois, après l'installation de la mise à jour automatique) :
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/gemconsultabm-cpu/gem-consult/main/deploy/securiser-serveur.sh | sudo bash
+```
+
+Ce script installe les mises à jour de sécurité automatiques, fail2ban (SSH), un pare-feu qui conserve les ports déjà ouverts, masque la version de nginx, réduit les privilèges du conteneur (`docker-compose.override.yml`) et programme une sauvegarde nocturne de `gem-data` et `.env` (14 jours). Chaque mesure est annulée si elle échoue ; la connexion SSH n'est pas modifiée.

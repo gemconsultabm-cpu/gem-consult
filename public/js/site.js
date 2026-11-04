@@ -615,8 +615,8 @@
     en:{res:'Result',rate:'Applied rate',date:'Rate as of',src:'Amount',loading:'Loading rates…',off:'Live rates unavailable. Check your connection or use the “BCT monthly average rate” module with a manual rate.',same:'Choose two different currencies.'},
     ar:{res:'النتيجة',rate:'السعر المطبّق',date:'سعر يوم',src:'المبلغ',loading:'جارٍ تحميل الأسعار…',off:'الأسعار المباشرة غير متوفّرة. تحقّق من الاتصال أو استعمل وحدة «السعر المتوسط الشهري» بسعر مُدرَج يدويًا.',same:'اختر عملتين مختلفتين.'}};
   function loadRates(){ try{ var ctrl=new AbortController(); var to=setTimeout(function(){ctrl.abort();},9000);
-      var rurl=(location.protocol==='file:')?'https://open.er-api.com/v6/latest/TND':'/api/rates';
-      fetch(rurl,{signal:ctrl.signal}).then(function(r){ if(!r.ok) throw 0; return r; }).catch(function(){ return fetch('https://open.er-api.com/v6/latest/TND',{signal:ctrl.signal}); }).then(function(r){return r.json();}).then(function(d){ clearTimeout(to);
+      var rurl='/api/rates';
+      fetch(rurl,{signal:ctrl.signal}).then(function(r){ if(!r.ok) throw 0; return r; }).then(function(r){return r.json();}).then(function(d){ clearTimeout(to);
         if(d&&d.result==='success'&&d.rates){ RATES=d.rates; RDATE=d.time_last_update_utc||null; RERR=false; }
         else { RERR=true; } }).catch(function(){ clearTimeout(to); RERR=true; });
     }catch(e){ RERR=true; } }
@@ -744,17 +744,8 @@
   function fetchFeed(f){ var own=(location.protocol==='file:')?null:'/api/rss?u='+encodeURIComponent(f.u);
     if(own) return withTimeout(fetch(own).then(function(r){ if(!r.ok) throw 0; return r.text(); }).then(function(x){ return parseRss(x,f.s); }),8000).then(function(a){ return (a&&a.length)?a:fetchFeedExt(f); }).catch(function(){ return fetchFeedExt(f); });
     return fetchFeedExt(f); }
-  function fetchFeedExt(f){ var e=encodeURIComponent(f.u);
-    var tries=[
-      function(){ return fetch('https://api.allorigins.win/raw?url='+e).then(function(r){ if(!r.ok) throw 0; return r.text(); }).then(function(x){ return parseRss(x,f.s); }); },
-      function(){ return fetch('https://api.rss2json.com/v1/api.json?count=15&rss_url='+e).then(function(r){ return r.json(); }).then(function(d){ return (d&&d.items)?d.items.map(function(it){return {t:(it.title||'').trim(),l:it.link,d:it.pubDate,s:f.s,desc:clip(stripHtml(it.description||it.content),700)};}):[]; }); },
-      function(){ return fetch('https://corsproxy.io/?url='+e).then(function(r){ if(!r.ok) throw 0; return r.text(); }).then(function(x){ return parseRss(x,f.s); }); },
-      function(){ return fetch('https://api.codetabs.com/v1/proxy/?quest='+e).then(function(r){ if(!r.ok) throw 0; return r.text(); }).then(function(x){ return parseRss(x,f.s); }); },
-      function(){ return fetch('https://api.allorigins.win/get?url='+e).then(function(r){ return r.json(); }).then(function(d){ return parseRss((d&&d.contents)||'',f.s); }); }
-    ];
-    function next(k){ if(k>=tries.length) return Promise.resolve([]);
-      return withTimeout(tries[k]().catch(function(){ return null; }),7000).then(function(a){ return (a&&a.length)?a:next(k+1); }); }
-    return next(0); }
+  // Sécurité : plus aucun relais tiers (allorigins, corsproxy…) ; les flux passent uniquement par le serveur du cabinet.
+  function fetchFeedExt(f){ return Promise.resolve([]); }
   function loadNews(force){ var box=document.querySelector('#veille .hl'); if(!box) return; if(NEWS_BUSY) return; if(NEWS_DONE && !force) return; NEWS_BUSY=true;
     newsStamp(CL()==='ar'?'جارٍ التحديث…':CL()==='en'?'Updating…':'Mise à jour…',false);
     var feeds=[ {u:'https://www.webmanagercenter.com/feed/', s:'Webmanager Center'},{u:'https://www.leconomistemaghrebin.com/feed/', s:"L'Économiste Maghrébin"},{u:'https://www.tunisienumerique.com/feed/', s:'Tunisie Numérique'},{u:'https://www.lapresse.tn/feed/', s:'La Presse'},{u:'https://managers.tn/feed/', s:'Managers'} ];

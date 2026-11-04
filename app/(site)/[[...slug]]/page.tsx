@@ -58,7 +58,7 @@ export default async function Page({ params }: Props) {
       {/* Langue et sens d'écriture appliqués avant l'affichage */}
       {ld.map((j, i) => <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(j) }} />)}
       <div id="gem-root" data-initial-page={page} dangerouslySetInnerHTML={{ __html: html }} />
-      <Script src="/js/site.js?v=3" strategy="afterInteractive" />
+      <Script src="/js/site.js?v=4" strategy="afterInteractive" />
     </>
   );
 }
