@@ -1,0 +1,27 @@
+# GEM Consult — site gemabm.com : application Next.js + planificateur, derrière le reverse proxy nginx existant
+services:
+  web:
+    build: .
+    image: gemabm-site:latest
+    container_name: gemabm-web
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      GEM_DATA_DIR: /data
+      TZ: Africa/Tunis
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3010}:3000"   # écoute en local uniquement : seul nginx est exposé sur Internet
+    volumes:
+      - ./gem-data:/data                       # données privées : config (clé API), veille, repères, journaux
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+
+  cron:
+    build: ./docker/cron
+    image: gemabm-cron:latest
+    container_name: gemabm-cron
+    restart: unless-stopped
+    environment:
+      TZ: Africa/Tunis
+      CRON_SECRET: ${CRON_SECRET}
+    depends_on: [web]
+    logging: { driver: json-file, options: { max-size: "5m", max-file: "2" } }

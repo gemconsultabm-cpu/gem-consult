@@ -1,0 +1,127 @@
+[
+ {
+  "@context": "https://schema.org",
+  "@type": [
+   "AccountingService",
+   "ProfessionalService"
+  ],
+  "name": "Cabinet GEM Consult",
+  "legalName": "Global Expertise & Management Consulting",
+  "url": "https://gemabm.com/",
+  "image": "https://gemabm.com/og-image.png",
+  "telephone": "+21671904572",
+  "email": "contact@gemabm.com",
+  "address": {
+   "@type": "PostalAddress",
+   "streetAddress": "11 rue Abderrahmen Azzem, Montplaisir",
+   "addressLocality": "Tunis",
+   "postalCode": "1073",
+   "addressCountry": "TN"
+  },
+  "areaServed": {
+   "@type": "Country",
+   "name": "Tunisie"
+  },
+  "founder": {
+   "@type": "Person",
+   "name": "Ali Ben Mohamed",
+   "jobTitle": "Expert-comptable, Commissaire aux comptes"
+  },
+  "knowsAbout": [
+   "Audit légal",
+   "Commissariat aux comptes",
+   "Expertise judiciaire",
+   "Conciliation pénale",
+   "Conseil fiscal",
+   "Comptabilité et paie",
+   "Évaluation d'entreprise",
+   "Audit des associations",
+   "Audit des organismes publics"
+  ],
+  "openingHours": "Mo-Fr 08:30-17:30",
+  "geo": {
+   "@type": "GeoCoordinates",
+   "latitude": 36.8165,
+   "longitude": 10.195
+  },
+  "description": "Cabinet d'expertise comptable et de commissariat aux comptes à Tunis, dirigé par Ali Ben Mohamed, membre de l'OECT depuis 1987. Audit légal, expertise judiciaire, conseil fiscal et accompagnement des entreprises."
+ },
+ {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+   {
+    "@type": "Question",
+    "name": "Quelle différence entre expert-comptable et commissaire aux comptes ?",
+    "acceptedAnswer": {
+     "@type": "Answer",
+     "text": "L'expert-comptable établit et révise les comptes et conseille l'entreprise. Le commissaire aux comptes exerce une mission légale et indépendante de certification des comptes : il contrôle sans participer à leur tenue. Les deux missions sont, par principe d'indépendance, incompatibles sur un même client."
+    }
+   },
+   {
+    "@type": "Question",
+    "name": "Dans quels cas la désignation d'un commissaire aux comptes est-elle obligatoire ?",
+    "acceptedAnswer": {
+     "@type": "Answer",
+     "text": "Elle est obligatoire pour les sociétés anonymes, et pour les autres formes sociales dès lors que certains seuils (total du bilan, chiffre d'affaires, effectif) sont franchis. Nous analysons votre situation précise pour déterminer si l'obligation s'applique."
+    }
+   },
+   {
+    "@type": "Question",
+    "name": "Intervenez-vous pour des sociétés étrangères ou des non-résidents ?",
+    "acceptedAnswer": {
+     "@type": "Answer",
+     "text": "Oui. Nous accompagnons les investisseurs et groupes étrangers : création d'établissement stable, application des conventions fiscales de non double imposition, retenues à la source, TVA sur prestations transfrontalières et rapatriement des fonds."
+    }
+   },
+   {
+    "@type": "Question",
+    "name": "Comment se déroule une mission d'expertise judiciaire ?",
+    "acceptedAnswer": {
+     "@type": "Answer",
+     "text": "Sur désignation par le tribunal, l'expert convoque les parties, examine les pièces comptables et financières, procède aux vérifications contradictoires puis dépose un rapport motivé répondant aux questions posées par le juge."
+    }
+   },
+   {
+    "@type": "Question",
+    "name": "Les données de la plateforme AFGC sont-elles protégées ?",
+    "acceptedAnswer": {
+     "@type": "Answer",
+     "text": "Oui. Les données sont chiffrées, hébergées en Union européenne et traitées conformément au RGPD et à la réglementation tunisienne de protection des données personnelles (INPDP). L'accès est strictement contrôlé et journalisé."
+    }
+   },
+   {
+    "@type": "Question",
+    "name": "Comment sont fixés vos honoraires ?",
+    "acceptedAnswer": {
+     "@type": "Answer",
+     "text": "Les honoraires sont déterminés selon la nature, l'étendue et la complexité de la mission, dans le respect des règles et usages de la profession. Ils sont formalisés par écrit dans la lettre de mission avant tout démarrage."
+    }
+   },
+   {
+    "@type": "Question",
+    "name": "Quelle est la durée du mandat de commissaire aux comptes ?",
+    "acceptedAnswer": {
+     "@type": "Answer",
+     "text": "Le mandat légal du commissaire aux comptes couvre trois exercices. Chaque exercice donne lieu à des travaux intérimaires et finaux, puis au dépôt des rapports présentés à l'assemblée des associés ou actionnaires."
+    }
+   },
+   {
+    "@type": "Question",
+    "name": "Quelle différence entre audit légal et audit contractuel ?",
+    "acceptedAnswer": {
+     "@type": "Answer",
+     "text": "L'audit légal est imposé par la loi et aboutit à la certification des comptes par le commissaire aux comptes. L'audit contractuel est demandé librement par le client pour un objectif déterminé (acquisition, financement, revue ponctuelle)."
+    }
+   },
+   {
+    "@type": "Question",
+    "name": "Comment démarrer une collaboration avec le cabinet ?",
+    "acceptedAnswer": {
+     "@type": "Answer",
+     "text": "Par une prise de contact et un premier échange sur votre besoin. Nous établissons ensuite une proposition de services et une lettre de mission, qui encadrent les travaux avant leur démarrage."
+    }
+   }
+  ]
+ }
+]

@@ -1,0 +1,7 @@
+node_modules/
+.next/
+gem-data/
+shots/
+.env
+*.tsbuildinfo
+next-env.d.ts

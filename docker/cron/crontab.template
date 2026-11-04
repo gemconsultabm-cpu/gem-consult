@@ -1,0 +1,5 @@
+# Fuseau : Africa/Tunis (variable TZ du conteneur)
+0 6,13 * * *       curl -fsS -m 120 -X POST -H "x-cron-key: __SECRET__" http://web:3000/api/cron/news
+15 7 * * *         curl -fsS -m 420 -X POST -H "x-cron-key: __SECRET__" http://web:3000/api/cron/veille
+30 7 * * *         curl -fsS -m 420 -X POST -H "x-cron-key: __SECRET__" http://web:3000/api/cron/reperes
+45 7 1-5,20-28 * * curl -fsS -m 420 -X POST -H "x-cron-key: __SECRET__" http://web:3000/api/cron/echeances
