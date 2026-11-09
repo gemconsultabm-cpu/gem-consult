@@ -3,7 +3,7 @@ import './styles';
 export const metadata: Metadata = { title: 'Page introuvable — GEM Consult', robots: { index: false, follow: true } };
 export default function GlobalNotFound() {
   return (
-    <html lang="fr" dir="ltr" data-lang="fr">
+    <html lang="fr" dir="ltr" data-lang="fr" translate="no" className="notranslate">
       <body>
         <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', textAlign: 'center', padding: 24, color: '#E9EEF8', background: '#0f0a38' }}>
           <div>

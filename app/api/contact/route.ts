@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import { after } from 'next/server';
 import { claude, extractJSON, MODEL_FAST } from '@/lib/server/claude';
-import { dataPath, log } from '@/lib/server/data';
+import { dataPath, log, readJSON, todayTunis, writeJSON } from '@/lib/server/data';
 import { sendMail } from '@/lib/server/mail';
 import { allow, clientIp } from '@/lib/server/ratelimit';
 
@@ -32,6 +32,9 @@ export async function POST(req: Request) {
   }
   const ok = await sendMail(subject, body, email);
   log(`formulaire ${type} : ${ok ? 'OK' : 'ÉCHEC'}`);
+  // Compteur anonyme pour le rapport quotidien (aucune donnée personnelle conservée).
+  try { const st = readJSON<Record<string, Record<string, number>>>('stats-formulaires.json', {}); const d0 = todayTunis(); (st[d0] ||= {})[type] = (st[d0][type] || 0) + 1;
+    writeJSON('stats-formulaires.json', Object.fromEntries(Object.entries(st).sort().slice(-90))); } catch { /* non bloquant */ }
   if (!ok) return json({ ok: false, error: 'mail' }, 500);
 
   if (type !== 'newsletter') after(async () => {           // après la réponse au visiteur

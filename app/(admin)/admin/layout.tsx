@@ -3,7 +3,7 @@ import '../../styles';
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#0f0a38' };
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" dir="ltr" data-lang="fr">
+    <html lang="fr" dir="ltr" data-lang="fr" translate="no" className="notranslate">
       <body>{children}</body>
     </html>
   );

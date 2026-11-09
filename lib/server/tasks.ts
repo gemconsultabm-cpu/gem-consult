@@ -5,6 +5,7 @@ import { sendMail } from './mail';
 import { revalidatePath } from 'next/cache';
 import { getParams, paramsText, validParams, type Change, type Params } from './params';
 import { readNews, updateNews } from './news';
+import { seoFocus, taskSeo } from './seo';
 
 const TRI_RULE = 'Chaque texte est fourni en trois langues dans un objet {"fr":…,"en":…,"ar":…} : français professionnel, anglais, arabe juridique standard (usage tunisien : « الأداء على القيمة المضافة », « مجلة الحقوق والإجراءات الجبائية », « الرائد الرسمي »).';
 const SYS = "Tu travailles pour le Cabinet GEM Consult, cabinet d'expertise comptable et de commissariat aux comptes à Tunis. Ton travail est publié automatiquement sur le site du cabinet : n'écris QUE des faits que tu as lus dans une source datée et vérifiable, n'invente jamais de chiffre, d'article ou de lien, et signale ce qui n'est qu'un projet (projet de loi, annonce) plutôt qu'un texte en vigueur. Réponds uniquement par un objet JSON placé entre <json> et </json>.";
@@ -19,7 +20,9 @@ export async function taskVeille(): Promise<Result> {
   const news = readNews(); const prev = readJSON<Veille>('veille.json', { days: [] }); const today = todayTunis();
   const seen = prev.days.slice(0, 10).flatMap((d) => d.items.map((i) => i.titre.fr));
   const heads = news.items.slice(0, 15).map((i) => `- ${i.t} (${i.s}, ${i.d}) ${i.l}\n   ${i.desc.slice(0, 300)}`).join('\n');
+  const focus = seoFocus().map((f) => `- ${f.sujet} (requête Google visée : « ${f.requete} »)`).join('\n');
   const prompt = `Date du jour : ${today} (Tunis).\n\nTitres du jour sélectionnés par le site :\n${heads || '(aucun)'}\n\nSujets déjà traités ces derniers jours (ne pas les répéter sauf fait nouveau) :\n- ${seen.join('\n- ')}\n\n`
+    + (focus ? `Sujets validés par le cabinet pour le référencement (en traiter un s'il existe une source officielle récente et fiable ; sinon l'ignorer) :\n${focus}\n\n` : '')
     + "Mission : rédige la veille quotidienne du cabinet. Utilise la recherche web pour vérifier les faits et pour repérer les annonces officielles des dernières 48 heures (Direction générale des impôts, JORT, ministère des Finances, CNSS, OECT, BCT, CMF, RNE, Assemblée des représentants du peuple). "
     + "Retiens de 3 à 6 sujets réellement utiles aux entreprises, associations et organismes publics clients d'un cabinet comptable tunisien (fiscalité, comptabilité et audit, social, réglementation, financement). "
     + "Pour chacun : un titre (12 mots max), un résumé factuel (60 mots max), « ce que cela change pour vos clients » (50 mots max, concret, prudent), le thème (fiscalité, social, comptabilité-audit, réglementation, banque-marchés, sociétés), la source (nom + URL exacte de l'article lu) et sa date. "
@@ -92,13 +95,13 @@ export async function taskEcheances(): Promise<Result> {
 
 export const TASKS: Record<string, () => Promise<Result>> = {
   news: async () => { const r = await updateNews(); return { ok: r.ok, msg: `${r.n} article(s) de ${r.feeds} source(s)` }; },
-  veille: taskVeille, reperes: taskReperes, echeances: taskEcheances,
+  veille: taskVeille, reperes: taskReperes, echeances: taskEcheances, seo: taskSeo,
 };
 export async function runTask(t: string): Promise<Result> {
   const fn = TASKS[t]; if (!fn) return { ok: false, msg: 'tâche inconnue' };
   let r: Result; try { r = await fn(); } catch (e) { r = { ok: false, msg: (e as Error).message }; }
   log(`tâche ${t} : ${JSON.stringify(r)}`);
-  if (r.ok && t === 'veille') refreshPages();
+  if (r.ok && (t === 'veille' || t === 'seo')) refreshPages();
   return r;
 }
 

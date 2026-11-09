@@ -6,6 +6,7 @@ import { analyseHtml, analysePath, veilleListHtml } from '@/lib/analyse';
 import { LANGS, META, OG_LOCALE, PAGES, SITE_URL, pagePath, parseSlug, type Lang } from '@/lib/pages';
 import { renderBody } from '@/lib/render';
 import { getAnalyse, listVeille } from '@/lib/server/veille-pages';
+import { metaFor } from '@/lib/server/seo';
 
 /* 24 pages (8 rubriques × 3 langues), régénérées toutes les heures ; + une page par analyse de la veille, créée à la demande. */
 export const revalidate = 3600;
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title, description, alternates: { canonical: analysePath(r.lang, a.id), languages: langAlternates((l) => analysePath(l, a.id)) },
       openGraph: { title, description, url: analysePath(r.lang, a.id), type: 'article', publishedTime: a.date, locale: OG_LOCALE[r.lang], siteName: 'Cabinet GEM Consult', images: ['/og-image.png'] } };
   }
-  const m = META[r.lang][r.page]; const path = pagePath(r.lang, r.page);
+  const m = metaFor(r.lang, r.page); const path = pagePath(r.lang, r.page);   // titres validés depuis /admin (suivi SEO) prioritaires
   return {
     title: m.title, description: m.description,
     alternates: { canonical: path, languages: langAlternates((l) => pagePath(l, r.page)) },

@@ -1,0 +1,93 @@
+name: Mise en ligne gemabm.com (VPS OVH)
+
+# Déploie le site sur le serveur à chaque mise à jour de la branche main.
+# Secrets à créer par le cabinet (Settings → Secrets and variables → Actions) : VPS_HOST, VPS_USER, VPS_SSH_KEY.
+# Sécurités : sauvegarde complète avant toute copie ; gem-data/, .env et docker-compose.yml du serveur jamais touchés ;
+# aucun fichier du serveur supprimé ; vérification de santé ; retour automatique à l'état précédent en cas d'échec.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-gemabm
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SITE: /opt/gemabm-platform/apps/gemabm-com
+      HAS_KEY: ${{ secrets.VPS_SSH_KEY != '' }}
+    steps:
+      - name: Secrets présents ?
+        if: env.HAS_KEY != 'true'
+        run: |
+          echo "::notice::Secrets VPS non configurés - déploiement ignoré, rien n'est modifié."
+
+      - uses: actions/checkout@v4
+        if: env.HAS_KEY == 'true'
+
+      - name: Préparer le paquet
+        if: env.HAS_KEY == 'true'
+        run: |
+          tar --exclude=.git --exclude=.github --exclude=gem-data --exclude='.env' --exclude='.env.*' \
+              --exclude=docker-compose.yml --exclude=docker-compose.override.yml --exclude=deploy \
+              --exclude=node_modules --exclude=.next -czf /tmp/site.tgz .
+          ls -la /tmp/site.tgz
+
+      - name: Connexion SSH
+        if: env.HAS_KEY == 'true'
+        env:
+          KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh && printf '%s\n' "$KEY" > ~/.ssh/id_vps && chmod 600 ~/.ssh/id_vps
+          echo "SSH=ssh -i $HOME/.ssh/id_vps -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" >> $GITHUB_ENV
+          echo "SCP=scp -i $HOME/.ssh/id_vps -o StrictHostKeyChecking=accept-new" >> $GITHUB_ENV
+
+      - name: Envoyer et installer
+        if: env.HAS_KEY == 'true'
+        run: |
+          $SCP /tmp/site.tgz ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/gemabm-site.tgz
+          $SSH "SITE=$SITE SHA=${GITHUB_SHA::7} bash -s" <<'REMOTE'
+          set -euo pipefail
+          [ -f "$SITE/docker-compose.yml" ] || { echo "❌ $SITE introuvable : arrêt sans modification"; exit 1; }
+          B=$HOME/sauvegardes-gemabm; mkdir -p "$B"; chmod 700 "$B"
+          F="$B/site-$(date +%Y%m%d-%H%M%S)-avant-$SHA.tgz"
+          sudo tar -C "$(dirname "$SITE")" --exclude=node_modules --exclude=.next -czf "$F" "$(basename "$SITE")"
+          sudo chown "$(id -u)" "$F"; echo "✓ Sauvegarde : $F"
+          ls -1t "$B"/site-*.tgz | tail -n +11 | xargs -r rm -f          # 10 sauvegardes conservées
+          IMG_NAME=$(sudo docker inspect -f '{{.Config.Image}}' gemabm-web 2>/dev/null || true)
+          IMG_ID=$(sudo docker inspect -f '{{.Image}}' gemabm-web 2>/dev/null || true)
+          T=$(mktemp -d); tar -xzf /tmp/gemabm-site.tgz -C "$T"
+          sudo rsync -a --checksum --exclude=gem-data/ --exclude=.env --exclude='.env.*' --exclude=docker-compose.yml --exclude=docker-compose.override.yml "$T/" "$SITE/"
+          rm -rf "$T" /tmp/gemabm-site.tgz
+          cd "$SITE" && sudo docker compose up -d --build
+          ok=0
+          for i in $(seq 1 40); do
+            if sudo docker exec gemabm-web wget -qO- http://127.0.0.1:3000/robots.txt >/dev/null 2>&1 \
+               && sudo docker exec gemabm-web wget -qO- http://127.0.0.1:3000/ | grep -q 'GEM Consult'; then ok=1; break; fi
+            sleep 3
+          done
+          if [ "$ok" = 1 ]; then echo "✓ Nouvelle version $SHA en service"; sudo docker image prune -f >/dev/null 2>&1 || true; exit 0; fi
+          echo "❌ La nouvelle version ne répond pas : retour à l'état précédent"
+          sudo docker compose logs web --tail 40 || true
+          RB=$(mktemp -d); sudo tar -C "$RB" -xzf "$F"
+          sudo rsync -a --checksum --delete --exclude=gem-data/ --exclude=.env --exclude=node_modules/ --exclude=.next/ "$RB/$(basename "$SITE")/" "$SITE/"; sudo rm -rf "$RB"
+          if [ -n "$IMG_ID" ] && [ -n "$IMG_NAME" ]; then sudo docker tag "$IMG_ID" "$IMG_NAME"; sudo docker compose up -d --no-build; else sudo docker compose up -d --build; fi
+          echo "↩ Version précédente rétablie (sauvegarde $F)"; exit 1
+          REMOTE
+
+      - name: Vérification publique
+        if: env.HAS_KEY == 'true'
+        run: |
+          for i in 1 2 3 4 5 6; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' https://gemabm.com/en/services || true)
+            [ "$c" = 200 ] && { echo "✓ https://gemabm.com/en/services répond 200"; exit 0; }; sleep 10
+          done
+          echo "❌ https://gemabm.com/en/services : code $c"; exit 1
+
+      - name: Nettoyage
+        if: always()
+        run: rm -f ~/.ssh/id_vps /tmp/site.tgz

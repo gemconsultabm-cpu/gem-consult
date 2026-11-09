@@ -3,3 +3,4 @@
 15 7 * * *         curl -fsS -m 420 -X POST -H "x-cron-key: __SECRET__" http://web:3000/api/cron/veille
 30 7 * * *         curl -fsS -m 420 -X POST -H "x-cron-key: __SECRET__" http://web:3000/api/cron/reperes
 45 7 1-5,20-28 * * curl -fsS -m 420 -X POST -H "x-cron-key: __SECRET__" http://web:3000/api/cron/echeances
+0 8 * * *          curl -fsS -m 600 -X POST -H "x-cron-key: __SECRET__" http://web:3000/api/cron/seo

@@ -8,9 +8,11 @@ import { closeSession, dropSetupCode, hashPassword, isAdmin, openSession, revoke
 import { clientIp } from '@/lib/server/ratelimit';
 import { bloque, echec, journal, succes } from '@/lib/server/securite';
 import { checkCode, newSecret } from '@/lib/server/totp';
+import { parseServiceAccount, testGsc } from '@/lib/server/gsc';
+import { DEFAULT_KEYWORDS, type Override, type Proposal } from '@/lib/server/seo';
 import { claude, MODEL_FAST } from '@/lib/server/claude';
-import { getConfig, isAccountKey, keyLooksValid, saveConfig, workspaceLooksValid } from '@/lib/server/config';
-import { dataPath, readJSON, tailLog, writeJSON, nowTunis } from '@/lib/server/data';
+import { cleanKey, getConfig, isAccountKey, keyLooksValid, maskKey, saveConfig, workspaceLooksValid } from '@/lib/server/config';
+import { dataPath, readJSON, tailLog, writeJSON, nowTunis, todayTunis } from '@/lib/server/data';
 import { sendMail } from '@/lib/server/mail';
 import { getParams } from '@/lib/server/params';
 import { runTask, type Echeances, type Veille, refreshPages } from '@/lib/server/tasks';
@@ -69,13 +71,14 @@ export async function totpDisable(f: FormData) {
 }
 
 export async function saveKey(f: FormData) {
-  await guard(); const k = s(f, 'key'); const w = s(f, 'workspace');
+  await guard(); const k = cleanKey(s(f, 'key')); const w = s(f, 'workspace');
   if (k && !keyLooksValid(k)) back('Clé non enregistrée : elle doit commencer par « sk-ant-api » ou « sk-ant-usr » (copiez-la depuis console.anthropic.com).', true);
   if (w && !workspaceLooksValid(w)) back("ID d'espace de travail non valide : il commence par « wrkspc_ ».", true);
   const finalKey = k || getConfig().apiKey;
   if (!finalKey) back('Collez d’abord la clé API.', true);
   if (isAccountKey(finalKey) && !w && !getConfig().workspaceId) back("Cette clé (sk-ant-usr…) exige l'ID de l'espace de travail (wrkspc_…) : il est indiqué dans la Console, lien « Trouver l'ID de votre espace de travail ».", true);
-  saveConfig({ apiKey: k || undefined, workspaceId: w || undefined }); try { fs.unlinkSync(/*turbopackIgnore: true*/ dataPath('key-status.json')); } catch { /* */ }
+  // Une clé standard (sk-ant-api) n'a pas d'espace de travail : on efface un éventuel ID resté d'une ancienne clé.
+  saveConfig({ apiKey: k || undefined, workspaceId: isAccountKey(finalKey) ? (w || undefined) : null }); try { fs.unlinkSync(/*turbopackIgnore: true*/ dataPath('key-status.json')); } catch { /* */ }
   back('Clé API enregistrée. Cliquez sur « Tester la clé ».');
 }
 export async function deleteKey() {
@@ -86,7 +89,7 @@ export async function testKey() {
   await guard(); const t0 = Date.now();
   const r = await claude('Réponds uniquement par : OK', [{ role: 'user', content: 'Test de connexion du site gemabm.com' }], { model: MODEL_FAST, maxTokens: 10, tag: 'test-cle', timeoutMs: 30000 });
   writeJSON('key-status.json', { ok: r !== '', at: new Date().toISOString() });
-  if (r) back(`Connexion à Claude réussie (${((Date.now() - t0) / 1000).toFixed(1)} s). Le site est en mode intelligent.`);
+  if (r) back(`Connexion à Claude réussie avec ${maskKey(getConfig().apiKey)} (${((Date.now() - t0) / 1000).toFixed(1)} s). Le site est en mode intelligent.`);
   const last = tailLog('ia.log', 1);
   const why = /not scoped to a workspace|anthropic-workspace-id/i.test(last) ? "cette clé exige l'ID de l'espace de travail (wrkspc_…) : renseignez-le dans le champ prévu."
     : /workspace/i.test(last) && /HTTP 40[034]/.test(last) ? "ID d'espace de travail refusé : vérifiez qu'il correspond bien à la clé (Console → espaces de travail)."
@@ -95,7 +98,8 @@ export async function testKey() {
     : last.includes('HTTP 429') ? 'limite de débit atteinte, réessayez dans quelques minutes.'
     : last.includes('HTTP 0') ? "le serveur n'arrive pas à joindre api.anthropic.com (pare-feu sortant du VPS ou du conteneur)."
     : /HTTP 404|model/i.test(last) ? 'modèle indisponible : vérifier les variables GEM_MODEL / GEM_MODEL_FAST.' : 'voir le détail technique.';
-  back(`Échec de la connexion : ${why} — Détail : ${last.slice(0, 220)}`, true);
+  const c = getConfig(); const src = c.keySource === 'env' ? 'clé du fichier .env du serveur' : 'clé saisie dans cette page';
+  back(`Échec de la connexion avec ${maskKey(c.apiKey)} (${src}) : ${why} — Détail : ${last.slice(0, 220)}`, true);
 }
 export async function saveMail(f: FormData) {
   await guard(); const cur = getConfig();
@@ -133,6 +137,46 @@ export async function restoreParams(f: FormData) {
 }
 export async function runNow(f: FormData) {
   await guard(); const t = s(f, 't');
-  if (t !== 'news' && !getConfig().apiKey && !process.env.GEM_AI_MOCK) back("Enregistrez d'abord la clé API.", true);
+  if (t !== 'news' && t !== 'seo' && !getConfig().apiKey && !process.env.GEM_AI_MOCK) back("Enregistrez d'abord la clé API.", true);
   const r = await runTask(t); back(`Tâche « ${t} » : ${r.msg}`, !r.ok);
 }
+
+/* ---------- Référencement (Search Console + propositions) ---------- */
+export async function saveGsc(f: FormData) {
+  await guard(); const raw = String(f.get('gsckey') ?? '').trim(); const site = s(f, 'gscsite') || 'sc-domain:gemabm.com';
+  if (raw && !parseServiceAccount(raw)) back('Clé non reconnue : collez le contenu complet du fichier JSON du compte de service (il contient « client_email » et « private_key »).', true);
+  if (!/^(sc-domain:[a-z0-9.-]+|https:\/\/[^\s]+\/)$/.test(site)) back('Propriété Search Console non valide : « sc-domain:gemabm.com » ou « https://gemabm.com/ ».', true);
+  const kw = String(f.get('keywords') ?? '').split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 40);
+  saveConfig({ gscKey: raw || undefined, gscSite: site, seoKeywords: kw.length ? kw : null, seoDaily: f.get('daily') === 'on' });
+  back('Réglages du référencement enregistrés. Cliquez sur « Tester la connexion ».');
+}
+export async function deleteGsc() { await guard(); saveConfig({ gscKey: null }); back('Connexion à Search Console supprimée.'); }
+export async function testGscAction() {
+  await guard(); try { back(`Connexion à Search Console réussie : ${await testGsc()}.`); } catch (e) { if ((e as { digest?: string }).digest?.startsWith('NEXT_REDIRECT')) throw e; back(`Échec : ${(e as Error).message}`, true); }
+}
+export async function seoDecide(f: FormData) {
+  await guard(); const id = s(f, 'id'); const ok = s(f, 'd') === 'ok';
+  const list = readJSON<Proposal[]>('seo-propositions.json', []); const p = list.find((x) => x.id === id);
+  if (!p || p.statut !== 'en attente') back('Proposition introuvable ou déjà traitée.', true);
+  p!.statut = ok ? 'validée' : 'rejetée'; writeJSON('seo-propositions.json', list);
+  if (!ok) back('Proposition rejetée.');
+  if (p!.type === 'meta' && p!.lang && p!.page) {
+    const o = readJSON<Record<string, Override>>('seo-overrides.json', {});
+    o[`${p!.lang}:${p!.page}`] = { title: p!.title!, description: p!.description!, date: todayTunis(), proposition: p!.id };
+    writeJSON('seo-overrides.json', o); refreshPages(); journal(`SEO : titre/description ${p!.lang}:${p!.page} modifiés`);
+    back('Titre et description mis en ligne. Google en tiendra compte à son prochain passage.');
+  }
+  if (p!.type === 'article') {
+    const fo = readJSON<{ sujet: string; requete: string; jusqu: string }[]>('seo-focus.json', []);
+    const d = new Date(); d.setDate(d.getDate() + 14);
+    fo.unshift({ sujet: p!.sujet!, requete: p!.requete || '', jusqu: d.toISOString().slice(0, 10) }); writeJSON('seo-focus.json', fo.slice(0, 10));
+    back('Sujet transmis à la veille : il sera traité dès qu’une source officielle fiable le permet (dans les 14 jours).');
+  }
+  back('Action notée comme validée : à réaliser par le cabinet.');
+}
+export async function seoRevert(f: FormData) {
+  await guard(); const k = s(f, 'k'); const o = readJSON<Record<string, Override>>('seo-overrides.json', {});
+  delete o[k]; writeJSON('seo-overrides.json', o); refreshPages(); journal(`SEO : titre/description ${k} rétablis`);
+  back('Titre et description d’origine rétablis.');
+}
+void DEFAULT_KEYWORDS;

@@ -9,6 +9,9 @@ import type { Echeances, Veille } from '@/lib/server/tasks';
 import QRCode from 'qrcode';
 import { tailSecurite } from '@/lib/server/securite';
 import { otpauthUrl } from '@/lib/server/totp';
+import { gscReady, gscSite, parseServiceAccount } from '@/lib/server/gsc';
+import { DEFAULT_KEYWORDS, keywords, overrides, type Proposal, type Snapshot } from '@/lib/server/seo';
+import { META, type Lang, type PageId } from '@/lib/pages';
 import * as A from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -53,7 +56,10 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const p = getParams(); const ks = readJSON<{ ok: boolean; at: string } | null>('key-status.json', null); const hasKey = !!cfg.apiKey;
   const veille = readJSON<Veille>('veille.json', { days: [] }); const ech = readJSON<Echeances>('echeances.json', { mois: {} });
   const hist = (fs.existsSync(/*turbopackIgnore: true*/ DATA_DIR) ? fs.readdirSync(/*turbopackIgnore: true*/ DATA_DIR) : []).filter((f) => /^params-\d{8}-\d{6}\.json$/.test(f)).sort().reverse().slice(0, 8);
-  const envKey = !!process.env.ANTHROPIC_API_KEY; void dataPath;
+  const envKey = cfg.keySource === 'env'; void dataPath;
+  const seo = readJSON<Snapshot | null>('seo-latest.json', null); const props = readJSON<Proposal[]>('seo-propositions.json', []);
+  const ov = overrides(); const sa = parseServiceAccount(cfg.gscKey);
+  const arrow = (a: number | null, b: number | null) => (a === null || b === null ? '' : b < a ? ' ▲' : b > a ? ' ▼' : ' =');
   const qr = cfg.totpPending ? await QRCode.toString(otpauthUrl(cfg.totpPending), { type: 'svg', margin: 1, width: 200 }) : '';
   return shell(<main>{notice}
     <h2>État du site</h2>
@@ -67,19 +73,64 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
 
     <h2>Clé API Claude</h2>
     <div className="panel">
-      {hasKey ? <><p>Clé enregistrée : <code>{maskKey(cfg.apiKey)}</code>{envKey && ' (fournie par la variable d’environnement ANTHROPIC_API_KEY)'}{cfg.workspaceId && <> · espace de travail : <code>{cfg.workspaceId}</code></>}</p>
+      {hasKey ? <><p>Clé enregistrée : <code>{maskKey(cfg.apiKey)}</code>{envKey ? ' (provenant du fichier .env du serveur — une clé saisie ci-dessous la remplacera)' : ' (saisie dans cette page)'}{cfg.workspaceId && cfg.apiKey?.startsWith('sk-ant-usr') && <> · espace de travail : <code>{cfg.workspaceId}</code></>}</p>
         <form className="i" action={A.testKey}><button className="alt">Tester la clé</button></form>
         {!envKey && <form className="i" action={A.deleteKey}><button className="del">Supprimer la clé</button></form>}</>
         : <p className="hint">Sans clé, l&apos;assistant répond à partir de la FAQ et les contenus ne sont pas actualisés par Claude.</p>}
-      {!envKey && <form action={A.saveKey} autoComplete="off" style={{ marginTop: 12 }}>
-        <label>{hasKey ? 'Remplacer la clé (laisser vide pour la conserver)' : 'Coller la clé API'}<input type="password" name="key" placeholder="sk-ant-api03-… ou sk-ant-usr-…" required={!hasKey} /></label>
+      {<form action={A.saveKey} autoComplete="off" style={{ marginTop: 12 }}>
+        <label>{hasKey && !envKey ? 'Remplacer la clé (laisser vide pour la conserver)' : 'Coller la clé API'}<input type="password" name="key" placeholder="sk-ant-api03-… ou sk-ant-usr-…" required={!hasKey || envKey} /></label>
         <label>ID de l&apos;espace de travail (obligatoire pour une clé « sk-ant-usr- »)<input type="text" name="workspace" defaultValue={cfg.workspaceId || ''} placeholder="wrkspc_…" /></label>
         <p className="hint">À créer sur <b>console.anthropic.com</b> → Clés API. Pour une clé « sk-ant-usr- », l&apos;ID d&apos;espace de travail s&apos;obtient par le lien « Trouver l&apos;ID de votre espace de travail » de la Console. Attention : ces clés ont une <b>date d&apos;expiration</b> (à renouveler ici avant l&apos;échéance). Fixez aussi un <b>plafond de dépense mensuel</b> (Billing → Limits). La clé est enregistrée sur le serveur, hors du site public, et n&apos;est jamais réaffichée en entier.</p>
         <button>Enregistrer</button></form>}
     </div>
 
+    <h2>Référencement Google (suivi quotidien)</h2>
+    <div className="grid">
+      <div className="st"><b>Search Console</b>{gscReady() ? <span className="ok">● Reliée ({gscSite()})</span> : <span className="ko">● À relier</span>}</div>
+      <div className="st"><b>Dernier contrôle</b>{seo ? `${seo.date}${seo.periode ? ` · données ${seo.periode.split(' (')[0]}` : ''}` : 'jamais'}</div>
+      <div className="st"><b>Clics / apparitions (7 j)</b>{seo?.totals ? `${seo.totals.cur.clicks} / ${seo.totals.cur.impressions} (avant : ${seo.totals.prev.clicks} / ${seo.totals.prev.impressions})` : '—'}</div>
+      <div className="st"><b>Alertes</b>{seo ? (seo.alerts.length ? <span className="ko">● {seo.alerts.length}</span> : <span className="ok">● Aucune</span>) : '—'}</div>
+    </div>
+    {seo?.alerts.map((a, i) => <p key={i} className={a.niveau === 'élevée' ? 'err' : 'msg'}>[{a.niveau}] {a.texte}</p>)}
+
+    {props.filter((p) => p.statut === 'en attente').length > 0 && <><p><b>Propositions à valider</b> — rien n&apos;est modifié sur le site sans votre accord :</p>
+      {props.filter((p) => p.statut === 'en attente').map((p) => <div key={p.id} className="card"><div>
+        <b>[{p.priorite}] {p.type === 'meta' ? `Titre et description — page ${p.page} (${p.lang})` : p.type === 'article' ? 'Article à publier dans la veille' : 'Action à mener par le cabinet'}</b>
+        {p.type === 'meta' && p.lang && p.page && <div className="meta">Actuel : {(ov[`${p.lang}:${p.page}`] || META[p.lang as Lang][p.page as PageId]).title}<br />Proposé : <b>{p.title}</b><br />{p.description}</div>}
+        {p.type === 'article' && <div className="meta">{p.sujet}{p.requete && <> — requête visée : « {p.requete} »</>}</div>}
+        {p.type === 'action' && <div className="meta">{p.texte}</div>}
+        <div className="meta">Pourquoi : {p.raison} · proposé le {p.date}</div></div>
+        <div><form className="i" action={A.seoDecide}><input type="hidden" name="id" value={p.id} /><input type="hidden" name="d" value="ok" /><button>Valider</button></form>
+          <form className="i" action={A.seoDecide}><input type="hidden" name="id" value={p.id} /><input type="hidden" name="d" value="non" /><button className="del">Rejeter</button></form></div></div>)}</>}
+
+    {seo && seo.keywords.length > 0 && <div className="panel" style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
+      <thead><tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}><th>Recherche Google</th><th>Position (avant → maintenant)</th><th>Clics</th><th>Apparitions</th></tr></thead>
+      <tbody>{seo.keywords.map((k) => <tr key={k.q} style={{ borderBottom: '1px solid #eee', opacity: k.tracked ? 1 : 0.75 }}>
+        <td>{k.tracked ? <b>{k.q}</b> : k.q}</td><td>{k.prev.position ?? '—'} → {k.cur.position ?? 'non classé'}<span className={k.cur.position !== null && k.prev.position !== null && k.cur.position > k.prev.position ? 'ko' : 'ok'}>{arrow(k.prev.position, k.cur.position)}</span></td>
+        <td>{k.cur.clicks}</td><td>{k.cur.impressions}</td></tr>)}</tbody></table>
+      <p className="hint">En gras : recherches suivies. Position 1 = premier résultat. « Non classé » : le site n&apos;est pas apparu sur cette recherche pendant la période.</p></div>}
+    {seo && <p className="hint">Contrôles techniques : {seo.tech.map((t) => `${t.check} ${t.ok ? '✓' : '✗ ' + t.detail}`).join(' · ')}{seo.sitemaps && ` · Google : ${seo.sitemaps}`}</p>}
+
+    {Object.keys(ov).length > 0 && <><p><b>Titres modifiés à la suite du suivi :</b></p>{Object.entries(ov).map(([k, o]) =>
+      <div key={k} className="card"><div><b>{k}</b> — {o.title}<div className="meta">{o.description} · le {o.date}</div></div>
+        <form action={A.seoRevert}><input type="hidden" name="k" value={k} /><button className="alt">Rétablir l&apos;original</button></form></div>)}</>}
+
+    <details className="panel" open={!gscReady()} style={{ marginTop: 10 }}><summary><b>Réglages du suivi</b></summary>
+      {sa ? <p>Compte de service : <code>{sa.client_email}</code> — il doit figurer dans Search Console → Paramètres → Utilisateurs et autorisations (autorisation « Restreint » suffisante).</p>
+        : <p className="hint">Relier Search Console : créez un compte de service Google Cloud (API « Google Search Console » activée), téléchargez sa clé JSON, collez son contenu ci-dessous, puis ajoutez son adresse e-mail comme utilisateur de la propriété gemabm.com dans Search Console.</p>}
+      <form action={A.saveGsc} autoComplete="off">
+        <label>{sa ? 'Remplacer la clé JSON du compte de service (laisser vide pour la conserver)' : 'Clé JSON du compte de service'}<textarea name="gsckey" rows={4} style={{ width: '100%', fontFamily: 'monospace', fontSize: 12 }} placeholder={'{"type": "service_account", "client_email": "…", "private_key": "…"}'} /></label>
+        <label>Propriété Search Console<input type="text" name="gscsite" defaultValue={gscSite()} /></label>
+        <label>Recherches suivies (une par ligne)<textarea name="keywords" rows={8} style={{ width: '100%', fontSize: 13 }} defaultValue={keywords().join('\n')} /></label>
+        <label style={{ fontWeight: 400 }}><input type="checkbox" name="daily" defaultChecked={cfg.seoDaily !== false} /> Recevoir chaque matin le rapport quotidien complet par e-mail (référencement, alertes, santé du site, demandes reçues)</label>
+        <p className="hint">Par défaut : {DEFAULT_KEYWORDS.length} recherches (« expert comptable tunis », « commissaire aux comptes tunis »…). Le contrôle a lieu chaque jour à 8 h ; un e-mail est envoyé en cas de baisse et chaque lundi.</p>
+        <button>Enregistrer</button></form>
+      {sa && <form className="i" action={A.deleteGsc} style={{ marginTop: 8 }}><button className="del">Supprimer la clé</button></form>}
+    </details>
+    {sa && <form className="i" action={A.testGscAction} style={{ marginTop: 8 }}><button className="alt">Tester la connexion à Search Console</button></form>}
+
     <h2>Relancer une tâche maintenant</h2>
-    {[['news', 'Actualité de la profession'], ['veille', 'Veille du jour'], ['reperes', 'Vérifier les repères fiscaux'], ['echeances', 'Échéances du mois']].map(([k, l]) =>
+    {[['news', 'Actualité de la profession'], ['veille', 'Veille du jour'], ['reperes', 'Vérifier les repères fiscaux'], ['echeances', 'Échéances du mois'], ['seo', 'Suivi du référencement']].map(([k, l]) =>
       <form key={k} className="i" action={A.runNow}><input type="hidden" name="t" value={k} /><button className="alt">{l}</button></form>)}
     <p className="hint">Les tâches IA durent de 1 à 3 minutes.</p>
 

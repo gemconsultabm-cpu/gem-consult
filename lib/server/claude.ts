@@ -27,7 +27,8 @@ export async function claude(system: string, messages: Msg[], o: Opts = {}): Pro
   if (!key) { log(`${tag} : clé API absente`); return ''; }
   // Clés de compte (sk-ant-usr) : l'ID de l'espace de travail est obligatoire (en-tête anthropic-workspace-id)
   const baseHeaders: Record<string, string> = { 'content-type': 'application/json', 'anthropic-version': '2023-06-01' };
-  if (cfg.workspaceId) baseHeaders['anthropic-workspace-id'] = cfg.workspaceId;
+  // L'en-tête d'espace de travail ne concerne que les clés de compte : l'envoyer avec une clé standard la ferait refuser.
+  if (cfg.workspaceId && key.startsWith('sk-ant-usr')) baseHeaders['anthropic-workspace-id'] = cfg.workspaceId;
   let auth: Record<string, string> = { 'x-api-key': key };
   const body: Record<string, unknown> = { model: o.model || MODEL, max_tokens: o.maxTokens || 2500, system, messages: [...messages] };
   if (o.web) body.tools = [{ type: WEB_SEARCH, name: 'web_search', max_uses: o.web }];
