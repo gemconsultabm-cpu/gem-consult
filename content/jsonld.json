@@ -38,7 +38,7 @@
       "Audit des associations",
       "Audit des organismes publics"
     ],
-    "openingHours": "Mo-Fr 08:30-17:30",
+    "openingHours": "Mo-Fr 08:00-17:30",
     "geo": {
       "@type": "GeoCoordinates",
       "latitude": 36.8165,
