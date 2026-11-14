@@ -91,7 +91,7 @@
       },
       {
         "@type": "Question",
-        "name": "Les données de la plateforme AFGC sont-elles protégées ?",
+        "name": "Les données de la plateforme AFGC (Audit Financier GEM Consult) sont-elles protégées ?",
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "Oui. Les données sont chiffrées, hébergées en Union européenne et traitées conformément au RGPD et à la réglementation tunisienne de protection des données personnelles (INPDP). L'accès est strictement contrôlé et journalisé."
